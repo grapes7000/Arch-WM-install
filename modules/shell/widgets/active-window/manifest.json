@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "active-window",
+  "name": "Active Window",
+  "description": "Current application title from Hyprland.",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop"],
+  "variants": ["compact", "standard"],
+  "lockSafe": false,
+  "services": ["active-window"],
+  "capabilities": [],
+  "constraints": {
+    "compact": {"minWidth": 140, "minHeight": 24},
+    "standard": {"minWidth": 260, "minHeight": 36}
+  }
+}
