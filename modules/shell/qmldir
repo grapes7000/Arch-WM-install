@@ -2,4 +2,7 @@ module ArchWmShell
 singleton Theme 1.0 core/Theme.qml
 singleton WidgetRegistry 1.0 core/WidgetRegistry.qml
 singleton SurfaceRegistry 1.0 core/SurfaceRegistry.qml
+singleton TimeService 1.0 services/TimeService.qml
+singleton SystemStatsService 1.0 services/SystemStatsService.qml
+singleton ActiveWindowService 1.0 services/ActiveWindowService.qml
 WidgetContext 1.0 core/WidgetContext.qml
