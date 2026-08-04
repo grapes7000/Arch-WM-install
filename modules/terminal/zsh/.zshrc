@@ -17,13 +17,13 @@ setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS HIST_REDUCE_BLANKS HIST_IGNORE_SPA
 setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS INTERACTIVE_COMMENTS
 setopt NO_BEEP
 
-# Native completion with a cached dump keeps startup quick.
+# Native completion with a cached dump keeps repeat startup quick.
 autoload -Uz compinit
 _zcompdump="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-${ZSH_VERSION}"
-if [[ -n "${_zcompdump}"(#qN.mh+24) ]]; then
-  compinit -d "$_zcompdump"
-else
+if [[ -s "$_zcompdump" ]]; then
   compinit -C -d "$_zcompdump"
+else
+  compinit -d "$_zcompdump"
 fi
 unset _zcompdump
 zstyle ':completion:*' menu select
