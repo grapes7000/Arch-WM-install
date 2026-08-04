@@ -1,0 +1,13 @@
+{
+  "name": "workstation",
+  "description": "Desktop profile plus development and advanced terminal workflow tools.",
+  "manifests": [
+    "packages-base.txt",
+    "packages-hyprland.txt",
+    "packages-shell.txt",
+    "packages-terminal.txt",
+    "packages-desktop.txt",
+    "packages-workstation.txt"
+  ],
+  "services": ["NetworkManager", "bluetooth", "power-profiles-daemon"]
+}
