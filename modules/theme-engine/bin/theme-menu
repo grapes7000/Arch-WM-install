@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+mapfile -t themes < <(theme --list)
+[[ ${#themes[@]} -gt 0 ]] || {
+  echo 'theme-menu: no themes are installed' >&2
+  exit 1
+}
+
+selection=""
+if command -v fuzzel >/dev/null 2>&1; then
+  selection="$(printf '%s\n' "${themes[@]}" | fuzzel --dmenu --prompt='Theme > ' --lines=14 --width=42)" || exit 0
+elif command -v wofi >/dev/null 2>&1; then
+  selection="$(printf '%s\n' "${themes[@]}" | wofi --dmenu --prompt='Theme')" || exit 0
+elif command -v rofi >/dev/null 2>&1; then
+  selection="$(printf '%s\n' "${themes[@]}" | rofi -dmenu -p Theme)" || exit 0
+elif command -v fzf >/dev/null 2>&1; then
+  selection="$(printf '%s\n' "${themes[@]}" | fzf --prompt='Theme > ' --height=70% --layout=reverse --border)" || exit 0
+else
+  printf 'Available themes:\n'
+  select selection in "${themes[@]}"; do
+    [[ -n "$selection" ]] && break
+  done
+fi
+
+[[ -n "$selection" ]] && exec theme "$selection"
