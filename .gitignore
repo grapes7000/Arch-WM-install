@@ -6,9 +6,4 @@ __pycache__/
 .state/
 build/
 dist/
-vendor/themes/*
-!vendor/themes/.gitkeep
-vendor/hyprland/*
-!vendor/hyprland/.gitkeep
-vendor/UPSTREAM_LOCK.json
 modules/shell/generated/
