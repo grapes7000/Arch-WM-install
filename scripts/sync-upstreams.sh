@@ -27,7 +27,7 @@ rsync -a --delete \
   --exclude='*/eww/**' \
   "$TMP_DIR/hyprland/" "$ROOT_DIR/vendor/hyprland/"
 
-if find "$ROOT_DIR/vendor/hyprland" -type d -iname '*eww*' -o -type f -iname '*eww*' | grep -q .; then
+if find "$ROOT_DIR/vendor/hyprland" \( -type d -o -type f \) -iname '*eww*' | grep -q .; then
   echo 'Refusing import: Eww content remains in vendor/hyprland.' >&2
   exit 1
 fi
@@ -57,5 +57,5 @@ payload = {
 pathlib.Path(path).write_text(json.dumps(payload, indent=2) + "\n")
 PY
 
-"$ROOT_DIR/scripts/check-no-eww.sh"
+"$ROOT_DIR/scripts/check-legacy-widget-free.sh"
 echo "Synced themes@$THEMES_SHA and hyprland-setup@$HYPR_SHA"
