@@ -5,4 +5,5 @@ singleton SurfaceRegistry 1.0 core/SurfaceRegistry.qml
 singleton TimeService 1.0 services/TimeService.qml
 singleton SystemStatsService 1.0 services/SystemStatsService.qml
 singleton ActiveWindowService 1.0 services/ActiveWindowService.qml
+singleton LayoutService 1.0 services/LayoutService.qml
 WidgetContext 1.0 core/WidgetContext.qml
