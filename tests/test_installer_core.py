@@ -88,12 +88,15 @@ class ThemeTests(unittest.TestCase):
             self.assertEqual(contract["schema_version"], 1)
             self.assertEqual(contract["name"], "y2k")
             self.assertIs(contract["style"]["blur_on"], False)
+            self.assertIn("surface_0", contract["roles"])
+            self.assertEqual(contract["wallpaper"]["generator"], "wallgen")
 
             expected = (
                 config / "hypr/generated/theme.lua",
                 config / "hypr/generated/theme.conf",
                 config / "kitty/generated/theme.conf",
                 config / "theme-engine/generated/starship.toml",
+                config / "nvim/lua/generated_theme.lua",
                 config / "theme-engine/generated/.active",
             )
             for path in expected:
@@ -127,6 +130,98 @@ class ThemeTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(active.read_text(encoding="utf-8"), '{"name":"known-good"}\n')
+
+
+class ThemeCatalogTests(unittest.TestCase):
+    @staticmethod
+    def theme_payload(name: str) -> dict:
+        return {
+            "schema_version": 1,
+            "name": name,
+            "dark": True,
+            "roles": {
+                "bg": "#101010",
+                "bg_alt": "#181818",
+                "text": "#F0F0F0",
+                "text_dim": "#A0A0A0",
+                "focus": "#FF00AA",
+                "border_normal": "#404040",
+                "accent": "#00DDFF",
+                "accent2": "#FF00AA",
+                "urgent": "#FF3355",
+            },
+            "style": {"corner_radius": 8, "blur_on": False},
+        }
+
+    def test_pinned_catalog_installs_36_themes_and_preserves_custom_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            source = root / "source/themes"
+            source.mkdir(parents=True)
+            for index in range(36):
+                name = f"theme-{index:02d}"
+                (source / f"{name}.json").write_text(
+                    json.dumps(self.theme_payload(name)) + "\n",
+                    encoding="utf-8",
+                )
+
+            config = root / "config"
+            installed = config / "theme-engine/themes"
+            installed.mkdir(parents=True)
+            custom = installed / "my-custom.json"
+            custom.write_text(json.dumps(self.theme_payload("my-custom")) + "\n", encoding="utf-8")
+
+            environment = os.environ.copy()
+            environment["HOME"] = str(root / "home")
+            environment["XDG_CONFIG_HOME"] = str(config)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "modules/theme-engine/bin/theme-catalog-sync"),
+                    "--source",
+                    str(root / "source"),
+                ],
+                env=environment,
+                text=True,
+                capture_output=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(len(list(installed.glob("theme-*.json"))), 36)
+            self.assertTrue(custom.is_file())
+            lock = json.loads(
+                (config / "theme-engine/upstream-lock.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(lock["theme_count"], 36)
+            self.assertEqual(
+                lock["commit"],
+                "3c6edb333406efce1920d762b7ed67b4168d4024",
+            )
+            self.assertEqual(len(lock["managed_files"]), 36)
+
+    def test_catalog_rejects_incomplete_upstream(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            source = root / "source/themes"
+            source.mkdir(parents=True)
+            payload = self.theme_payload("only-one")
+            (source / "only-one.json").write_text(json.dumps(payload) + "\n", encoding="utf-8")
+            environment = os.environ.copy()
+            environment["HOME"] = str(root / "home")
+            environment["XDG_CONFIG_HOME"] = str(root / "config")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "modules/theme-engine/bin/theme-catalog-sync"),
+                    "--source",
+                    str(root / "source"),
+                ],
+                env=environment,
+                text=True,
+                capture_output=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("expected at least 36", result.stderr)
+            self.assertFalse((root / "config/theme-engine/upstream-lock.json").exists())
 
 
 if __name__ == "__main__":
