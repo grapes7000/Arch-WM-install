@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
 import os
 import random
 import shutil
@@ -43,6 +42,22 @@ def load_theme(name: str) -> dict:
     return payload
 
 
+def gradient(width: int, height: int, start: tuple[int, int, int], end: tuple[int, int, int]) -> Image.Image:
+    # Build a tiny gradient and upscale it. This is visually smooth after the
+    # glow blur and dramatically faster under software-rendered VMs.
+    sample_width = 96
+    sample_height = 54
+    image = Image.new("RGB", (sample_width, sample_height), start)
+    pixels = image.load()
+    for y in range(sample_height):
+        vertical = y / max(1, sample_height - 1)
+        for x in range(sample_width):
+            horizontal = x / max(1, sample_width - 1)
+            amount = min(1.0, 0.15 + vertical * 0.55 + horizontal * 0.20)
+            pixels[x, y] = blend(start, end, amount)
+    return image.resize((width, height), Image.Resampling.BICUBIC)
+
+
 def generate(name: str, width: int, height: int) -> Path:
     payload = load_theme(name)
     roles = payload["roles"]
@@ -55,15 +70,7 @@ def generate(name: str, width: int, height: int) -> Path:
         hex_rgb(roles.get("urgent", roles.get("accent2", roles["text"]))),
     ]
 
-    canvas = Image.new("RGB", (width, height), background)
-    pixels = canvas.load()
-    for y in range(height):
-        vertical = y / max(1, height - 1)
-        for x in range(width):
-            horizontal = x / max(1, width - 1)
-            amount = min(1.0, 0.15 + vertical * 0.55 + horizontal * 0.20)
-            pixels[x, y] = blend(background, background_alt, amount)
-
+    canvas = gradient(width, height, background, background_alt).convert("RGBA")
     seed = int(hashlib.sha256(name.encode("utf-8")).hexdigest()[:16], 16)
     rng = random.Random(seed)
     glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -80,18 +87,13 @@ def generate(name: str, width: int, height: int) -> Path:
             fill=(*color, opacity),
         )
     glow = glow.filter(ImageFilter.GaussianBlur(radius=max(24, round(scale * 0.08))))
-    canvas = Image.alpha_composite(canvas.convert("RGBA"), glow)
+    canvas = Image.alpha_composite(canvas, glow)
 
-    # Subtle deterministic grain keeps gradients from banding without looking noisy.
-    grain = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    grain_pixels = grain.load()
-    grain_rng = random.Random(seed ^ 0xA5A5A5)
-    for y in range(0, height, 2):
-        for x in range(0, width, 2):
-            value = grain_rng.randint(0, 255)
-            alpha = 5 if value > 128 else 3
-            shade = 255 if value > 128 else 0
-            grain_pixels[x, y] = (shade, shade, shade, alpha)
+    # Lightweight deterministic grain to avoid visible banding.
+    noise = Image.effect_noise((max(1, width // 3), max(1, height // 3)), 18)
+    noise = noise.resize((width, height), Image.Resampling.BILINEAR)
+    grain = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+    grain.putalpha(noise.point(lambda value: 4 if value > 128 else 1))
     canvas = Image.alpha_composite(canvas, grain)
 
     WALLPAPER_DIR.mkdir(parents=True, exist_ok=True)
