@@ -2,13 +2,14 @@
   "surface": "bar",
   "regions": {
     "start": [
-      {"instance": "workspaces-main", "widget": "workspaces", "variant": "compact"}
+      {"instance": "workspaces-main", "widget": "workspaces", "variant": "compact"},
+      {"instance": "active-main", "widget": "active-window", "variant": "compact"}
     ],
     "center": [
       {"instance": "clock-main", "widget": "clock", "variant": "compact"}
     ],
     "end": [
-      {"instance": "system-main", "widget": "system-status", "variant": "compact"}
+      {"instance": "system-main", "widget": "system-stats", "variant": "compact"}
     ]
   }
 }
