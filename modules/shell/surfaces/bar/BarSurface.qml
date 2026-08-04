@@ -1,44 +1,107 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
-import "../.."
-import "../../core"
-import "../../widgets/clock" as Clock
+import ArchWmShell 1.0
+import "../../components"
 
-PanelWindow {
-    id: root
+Scope {
+    Variants {
+        variants: Quickshell.screens
 
-    anchors {
-        top: true
-        left: true
-        right: true
-    }
+        PanelWindow {
+            id: root
 
-    implicitHeight: 44
-    color: Theme.roles.bg || "#0a0a0f"
+            required property var modelData
+            screen: modelData
 
-    WidgetContext {
-        id: clockContext
-        surface: "bar"
-        instanceId: "clock-main"
-        variant: "compact"
-        density: 1.0
-        locked: false
-        availableWidth: 180
-        availableHeight: root.implicitHeight
-        capabilities: SurfaceRegistry.capabilities("bar")
-    }
+            anchors {
+                top: true
+                left: true
+                right: true
+            }
 
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: Theme.style.gaps ?? 4
-        color: Theme.roles.bg_alt || "#15121a"
-        radius: Theme.style.corner_radius ?? 0
-        border.width: Theme.style.border_width ?? 2
-        border.color: Theme.roles.accent2 || "#ff1493"
+            implicitHeight: Theme.barHeight
+            exclusiveZone: implicitHeight
+            color: "transparent"
 
-        Clock.Widget {
-            anchors.centerIn: parent
-            context: clockContext
+            Rectangle {
+                id: background
+                anchors.fill: parent
+                anchors.margins: Math.max(2, Math.floor(Theme.gap / 2))
+                color: Theme.surface
+                radius: Theme.radius
+                border.width: Theme.borderWidth
+                border.color: Theme.accent2
+
+                RowLayout {
+                    id: startRegion
+                    anchors {
+                        left: parent.left
+                        leftMargin: Theme.gap
+                        verticalCenter: parent.verticalCenter
+                    }
+                    spacing: Theme.gap
+
+                    Repeater {
+                        model: LayoutService.bar.regions.start || []
+
+                        WidgetHost {
+                            required property var modelData
+                            widgetId: modelData.widget
+                            surfaceKind: "bar"
+                            instanceId: modelData.instance
+                            variant: modelData.variant || "compact"
+                            settings: modelData.settings || ({})
+                            Layout.preferredWidth: implicitWidth
+                            Layout.preferredHeight: background.height - Theme.gap
+                        }
+                    }
+                }
+
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: Theme.gap
+
+                    Repeater {
+                        model: LayoutService.bar.regions.center || []
+
+                        WidgetHost {
+                            required property var modelData
+                            widgetId: modelData.widget
+                            surfaceKind: "bar"
+                            instanceId: modelData.instance
+                            variant: modelData.variant || "compact"
+                            settings: modelData.settings || ({})
+                            Layout.preferredWidth: implicitWidth
+                            Layout.preferredHeight: background.height - Theme.gap
+                        }
+                    }
+                }
+
+                RowLayout {
+                    anchors {
+                        right: parent.right
+                        rightMargin: Theme.gap
+                        verticalCenter: parent.verticalCenter
+                    }
+                    spacing: Theme.gap
+
+                    Repeater {
+                        model: LayoutService.bar.regions.end || []
+
+                        WidgetHost {
+                            required property var modelData
+                            widgetId: modelData.widget
+                            surfaceKind: "bar"
+                            instanceId: modelData.instance
+                            variant: modelData.variant || "compact"
+                            settings: modelData.settings || ({})
+                            Layout.preferredWidth: implicitWidth
+                            Layout.preferredHeight: background.height - Theme.gap
+                        }
+                    }
+                }
+            }
         }
     }
 }
