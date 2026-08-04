@@ -31,6 +31,9 @@ Scope {
     readonly property var style: data.style || ({})
 
     function parse(contents) {
+        if (!contents || contents.trim().length === 0)
+            return
+
         try {
             const parsed = JSON.parse(contents)
             if (!parsed.roles || !parsed.style)
@@ -46,7 +49,9 @@ Scope {
         path: root.path
         blockLoading: true
         watchChanges: true
-        onLoaded: root.parse(text)
+        onTextChanged: root.parse(text)
         onFileChanged: reload()
     }
+
+    Component.onCompleted: root.parse(themeFile.text)
 }
