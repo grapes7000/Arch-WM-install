@@ -1,0 +1,19 @@
+# Fast, modern terminal environment
+zsh
+kitty
+starship
+zsh-autosuggestions
+zsh-syntax-highlighting
+zsh-completions
+fzf
+ripgrep
+fd
+bat
+eza
+zoxide
+atuin
+yazi
+git-delta
+tealdeer
+ttf-jetbrains-mono-nerd
+neovim
