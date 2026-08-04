@@ -1,0 +1,6 @@
+-- Machine-local overrides belong here.
+-- The installer creates this file as part of the initial managed payload, then
+-- preserves user changes through its backup/restore ownership model.
+--
+-- Example:
+-- hl.monitor({ output = "eDP-1", mode = "preferred", position = "0x0", scale = 1.25 })
