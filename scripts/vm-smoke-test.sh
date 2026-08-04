@@ -17,7 +17,7 @@ static_checks() {
 
   heading 'Shell syntax'
   bash -n "$ROOT_DIR/install.sh" "$ROOT_DIR/uninstall.sh" "$ROOT_DIR"/scripts/*.sh
-  "$ROOT_DIR/scripts/check-legacy-widget-free.sh"
+  bash "$ROOT_DIR/scripts/check-legacy-widget-free.sh"
 
   heading 'Python syntax'
   python -m compileall -q "$ROOT_DIR/installer" "$ROOT_DIR/modules/theme-engine/bin/theme"
@@ -27,7 +27,7 @@ case "$MODE" in
   preflight)
     static_checks
     heading 'Installer dry run'
-    "$ROOT_DIR/install.sh" \
+    bash "$ROOT_DIR/install.sh" \
       --profile "$PROFILE" \
       --theme "$THEME" \
       --dry-run \
@@ -38,7 +38,7 @@ case "$MODE" in
   install)
     static_checks
     heading 'Install desktop into this disposable Arch VM'
-    "$ROOT_DIR/install.sh" \
+    bash "$ROOT_DIR/install.sh" \
       --profile "$PROFILE" \
       --theme "$THEME" \
       --noninteractive
@@ -46,7 +46,7 @@ case "$MODE" in
     PYTHONPATH="$ROOT_DIR${PYTHONPATH:+:$PYTHONPATH}" \
       python -m installer doctor --profile "$PROFILE" --theme "$THEME"
     printf '\nInstall stage passed. Start or restart Hyprland, then run:\n'
-    printf '  %q post-login\n' "$0"
+    printf '  bash %q post-login\n' "$0"
     ;;
 
   post-login)
@@ -102,14 +102,14 @@ case "$MODE" in
 
   rollback)
     heading 'Preview rollback'
-    "$ROOT_DIR/uninstall.sh" --dry-run --profile "$PROFILE" --theme "$THEME"
+    bash "$ROOT_DIR/uninstall.sh" --dry-run --profile "$PROFILE" --theme "$THEME"
     echo
     echo 'To perform the tracked rollback in this disposable VM:'
-    printf '  %q --profile %q --theme %q\n' "$ROOT_DIR/uninstall.sh" "$PROFILE" "$THEME"
+    printf '  bash %q --profile %q --theme %q\n' "$ROOT_DIR/uninstall.sh" "$PROFILE" "$THEME"
     ;;
 
   *)
-    echo "Usage: $0 {preflight|install|post-login|rollback}" >&2
+    echo "Usage: bash $0 {preflight|install|post-login|rollback}" >&2
     exit 2
     ;;
 esac
