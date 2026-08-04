@@ -1,0 +1,4 @@
+singleton Theme 1.0 Theme.qml
+singleton WidgetRegistry 1.0 WidgetRegistry.qml
+singleton SurfaceRegistry 1.0 SurfaceRegistry.qml
+WidgetContext 1.0 WidgetContext.qml
