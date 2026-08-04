@@ -1,29 +1,38 @@
 import QtQuick
-import "../.."
+import QtQuick.Layouts
+import ArchWmShell 1.0
 
 Item {
     id: root
 
     required property var context
-    implicitWidth: label.implicitWidth
-    implicitHeight: label.implicitHeight
 
-    property date now: new Date()
+    implicitWidth: content.implicitWidth
+    implicitHeight: content.implicitHeight
 
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: root.now = new Date()
-    }
+    ColumnLayout {
+        id: content
+        anchors.centerIn: parent
+        spacing: context.variant === "compact" ? 0 : 4
 
-    Text {
-        id: label
-        text: context.variant === "compact"
-            ? Qt.formatTime(root.now, "hh:mm")
-            : Qt.formatDateTime(root.now, "dddd, MMMM d  hh:mm")
-        color: Theme.roles.text || "#ffffff"
-        font.pixelSize: context.variant === "compact" ? 15 : 22
-        font.bold: context.variant === "compact"
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: context.variant === "compact"
+                ? TimeService.timeShort
+                : TimeService.timeLong
+            color: Theme.foreground
+            font.pixelSize: context.variant === "compact" ? 15
+                : context.variant === "standard" ? 28 : 48
+            font.bold: true
+        }
+
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            visible: context.variant !== "compact"
+            text: context.variant === "expanded"
+                ? TimeService.dateLong : TimeService.dateShort
+            color: Theme.muted
+            font.pixelSize: context.variant === "expanded" ? 16 : 13
+        }
     }
 }
