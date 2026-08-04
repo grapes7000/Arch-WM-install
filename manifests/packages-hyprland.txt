@@ -1,0 +1,18 @@
+# Compositor and session packages
+hyprland
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+polkit-gnome
+wayland
+wayland-protocols
+wl-clipboard
+cliphist
+grim
+slurp
+hyprpicker
+pipewire
+pipewire-pulse
+wireplumber
+networkmanager
+brightnessctl
+playerctl

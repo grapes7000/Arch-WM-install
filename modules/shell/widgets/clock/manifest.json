@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "clock",
+  "name": "Clock",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop", "lockscreen"],
+  "variants": ["compact", "standard", "expanded"],
+  "lockSafe": true,
+  "services": ["time"],
+  "capabilities": [],
+  "constraints": {
+    "compact": {"minWidth": 56, "minHeight": 24},
+    "standard": {"minWidth": 160, "minHeight": 80},
+    "expanded": {"minWidth": 240, "minHeight": 180}
+  }
+}

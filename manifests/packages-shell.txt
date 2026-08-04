@@ -1,0 +1,6 @@
+# Final package names must be verified against current Arch/AUR repositories
+quickshell
+qt6-declarative
+qt6-wayland
+qt6-svg
+qt6-multimedia

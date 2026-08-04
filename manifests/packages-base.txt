@@ -1,0 +1,10 @@
+# Core tools used by the installer and desktop
+git
+rsync
+python
+python-pip
+jq
+curl
+wget
+unzip
+base-devel

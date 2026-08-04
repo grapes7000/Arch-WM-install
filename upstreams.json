@@ -1,0 +1,13 @@
+{
+  "themes": {
+    "url": "https://github.com/grapes7000/themes.git",
+    "destination": "vendor/themes",
+    "strategy": "snapshot"
+  },
+  "hyprland": {
+    "url": "https://github.com/grapes7000/hyprland-setup.git",
+    "destination": "vendor/hyprland",
+    "strategy": "snapshot",
+    "exclude": ["eww", "**/eww", "**/eww/**"]
+  }
+}

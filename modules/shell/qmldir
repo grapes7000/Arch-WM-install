@@ -1,0 +1,5 @@
+module ArchWmShell
+singleton Theme 1.0 core/Theme.qml
+singleton WidgetRegistry 1.0 core/WidgetRegistry.qml
+singleton SurfaceRegistry 1.0 core/SurfaceRegistry.qml
+WidgetContext 1.0 core/WidgetContext.qml

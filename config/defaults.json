@@ -1,0 +1,11 @@
+{
+  "profile": "desktop",
+  "theme": "y2k",
+  "aur_helper": "yay",
+  "display_manager": "greetd",
+  "shell_config_name": "arch-wm",
+  "enable_lock_surface": false,
+  "allow_network_widgets": false,
+  "backup_root": "~/.local/share/arch-wm-install/backups",
+  "state_root": "~/.local/state/arch-wm-install"
+}
