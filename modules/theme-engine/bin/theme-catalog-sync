@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+UPSTREAM_REPOSITORY = "https://github.com/grapes7000/themes.git"
+UPSTREAM_COMMIT = "3c6edb333406efce1920d762b7ed67b4168d4024"
+EXPECTED_MINIMUM = 36
+
+HOME = Path.home()
+CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+THEME_ROOT = CONFIG_HOME / "theme-engine"
+THEME_DIR = THEME_ROOT / "themes"
+LOCK_FILE = THEME_ROOT / "upstream-lock.json"
+COMPAT_THEME_DIR = CONFIG_HOME / "hypr" / "themes"
+
+
+class SyncError(RuntimeError):
+    pass
+
+
+def run(command: list[str], *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip()
+        raise SyncError(f"command failed: {' '.join(command)}" + (f"\n{detail}" if detail else ""))
+    return result
+
+
+def atomic_write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def validate_catalog(source: Path) -> list[tuple[str, str]]:
+    theme_dir = source / "themes"
+    if not theme_dir.is_dir():
+        raise SyncError(f"upstream theme directory is missing: {theme_dir}")
+
+    catalog: list[tuple[str, str]] = []
+    names: set[str] = set()
+    for path in sorted(theme_dir.glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as error:
+            raise SyncError(f"invalid JSON in {path}: {error}") from error
+        name = payload.get("name")
+        if not isinstance(name, str) or name != path.stem:
+            raise SyncError(f"theme filename/name mismatch: {path.name} / {name!r}")
+        if name in names:
+            raise SyncError(f"duplicate theme name: {name}")
+        if not isinstance(payload.get("roles"), dict) or not isinstance(payload.get("style"), dict):
+            raise SyncError(f"theme requires roles and style objects: {path}")
+        names.add(name)
+        catalog.append((path.name, json.dumps(payload, indent=2, sort_keys=True) + "\n"))
+
+    if len(catalog) < EXPECTED_MINIMUM:
+        raise SyncError(
+            f"upstream catalog contains only {len(catalog)} themes; expected at least {EXPECTED_MINIMUM}"
+        )
+    return catalog
+
+
+def checkout_upstream(destination: Path) -> Path:
+    if shutil.which("git") is None:
+        raise SyncError("git is required to install the upstream theme catalog")
+    run(["git", "init", "--quiet", str(destination)])
+    run(["git", "-C", str(destination), "remote", "add", "origin", UPSTREAM_REPOSITORY])
+    run(
+        [
+            "git",
+            "-C",
+            str(destination),
+            "fetch",
+            "--quiet",
+            "--depth=1",
+            "origin",
+            UPSTREAM_COMMIT,
+        ]
+    )
+    run(["git", "-C", str(destination), "checkout", "--quiet", "--detach", "FETCH_HEAD"])
+    actual = run(["git", "-C", str(destination), "rev-parse", "HEAD"]).stdout.strip()
+    if actual != UPSTREAM_COMMIT:
+        raise SyncError(f"upstream commit mismatch: expected {UPSTREAM_COMMIT}, got {actual}")
+    return destination
+
+
+def install_catalog(source: Path) -> int:
+    catalog = validate_catalog(source)
+    THEME_DIR.mkdir(parents=True, exist_ok=True)
+    COMPAT_THEME_DIR.mkdir(parents=True, exist_ok=True)
+
+    managed_names = {filename for filename, _ in catalog}
+    for filename, text in catalog:
+        atomic_write(THEME_DIR / filename, text)
+        atomic_write(COMPAT_THEME_DIR / filename, text)
+
+    # Remove only stale files that were previously supplied by this pinned catalog.
+    previous: set[str] = set()
+    if LOCK_FILE.is_file():
+        try:
+            payload = json.loads(LOCK_FILE.read_text(encoding="utf-8"))
+            previous = set(payload.get("managed_files", []))
+        except (OSError, json.JSONDecodeError):
+            previous = set()
+    for filename in previous - managed_names:
+        for root in (THEME_DIR, COMPAT_THEME_DIR):
+            path = root / filename
+            if path.is_file():
+                path.unlink()
+
+    lock = {
+        "schema_version": 1,
+        "repository": "grapes7000/themes",
+        "commit": UPSTREAM_COMMIT,
+        "installed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "theme_count": len(catalog),
+        "managed_files": sorted(managed_names),
+    }
+    atomic_write(LOCK_FILE, json.dumps(lock, indent=2, sort_keys=True) + "\n")
+    print(f"Installed {len(catalog)} themes from grapes7000/themes@{UPSTREAM_COMMIT[:12]}")
+    return 0
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(
+        prog="theme-catalog-sync",
+        description="Install the pinned grapes7000/themes catalog safely",
+    )
+    result.add_argument("--source", type=Path, help="use an existing upstream checkout")
+    result.add_argument("--print-commit", action="store_true")
+    return result
+
+
+def main() -> int:
+    args = parser().parse_args()
+    if args.print_commit:
+        print(UPSTREAM_COMMIT)
+        return 0
+    try:
+        if args.source:
+            return install_catalog(args.source.resolve())
+        with tempfile.TemporaryDirectory(prefix="arch-wm-themes-") as temporary:
+            source = checkout_upstream(Path(temporary) / "themes")
+            return install_catalog(source)
+    except SyncError as error:
+        print(f"theme-catalog-sync: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
