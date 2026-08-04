@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "widgets": [
+    {
+      "id": "workspaces",
+      "name": "Workspaces",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop"],
+      "variants": ["compact", "standard"],
+      "lockSafe": false,
+      "services": ["hyprland"],
+      "capabilities": ["workspace.switch"]
+    },
+    {
+      "id": "active-window",
+      "name": "Active Window",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop"],
+      "variants": ["compact", "standard"],
+      "lockSafe": false,
+      "services": ["active-window"],
+      "capabilities": []
+    },
+    {
+      "id": "clock",
+      "name": "Clock",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop", "lockscreen"],
+      "variants": ["compact", "standard", "expanded"],
+      "lockSafe": true,
+      "services": ["time"],
+      "capabilities": []
+    },
+    {
+      "id": "system-stats",
+      "name": "System Stats",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop"],
+      "variants": ["compact", "standard", "expanded"],
+      "lockSafe": false,
+      "services": ["system-stats"],
+      "capabilities": []
+    }
+  ]
+}
