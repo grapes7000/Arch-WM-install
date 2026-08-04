@@ -67,10 +67,10 @@ for workspace = 1, 10 do
     }))
 end
 
-hl.bind(main .. " + S", hl.dsp.workspace.toggle_special("scratch"), {
+hl.bind(main .. " + Z", hl.dsp.workspace.toggle_special("scratch"), {
     description = "Toggle scratch workspace",
 })
-hl.bind(main .. " + SHIFT + S", hl.dsp.window.move({
+hl.bind(main .. " + SHIFT + Z", hl.dsp.window.move({
     workspace = "special:scratch",
 }))
 
