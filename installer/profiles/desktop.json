@@ -1,0 +1,12 @@
+{
+  "name": "desktop",
+  "description": "Complete daily-driver shell, widgets and desktop integrations.",
+  "manifests": [
+    "packages-base.txt",
+    "packages-hyprland.txt",
+    "packages-shell.txt",
+    "packages-terminal.txt",
+    "packages-desktop.txt"
+  ],
+  "services": ["NetworkManager", "bluetooth", "power-profiles-daemon"]
+}
