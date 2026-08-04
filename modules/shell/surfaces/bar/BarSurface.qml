@@ -7,7 +7,7 @@ import "../../components"
 
 Scope {
     Variants {
-        variants: Quickshell.screens
+        model: Quickshell.screens
 
         PanelWindow {
             id: root
