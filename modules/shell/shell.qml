@@ -1,8 +1,11 @@
 import Quickshell
 import "surfaces/bar"
+import "surfaces/desktop"
 
 ShellRoot {
-    // The scaffold starts only the bar. Desktop and lock-screen surfaces become
-    // layout-driven after the registry and security policy are implemented.
     BarSurface {}
+    DesktopSurface {}
+
+    // The custom Quickshell lock surface remains intentionally disabled.
+    // Hyprlock is the verified authentication boundary for the VM milestone.
 }

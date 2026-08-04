@@ -1,7 +1,14 @@
-# Compositor and session packages
+# Compositor, session and first-boot safety packages
 hyprland
+hyprland-guiutils
+hyprshutdown
+hyprpaper
+hypridle
+hyprlock
+fuzzel
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
+xdg-user-dirs
 polkit-gnome
 wayland
 wayland-protocols

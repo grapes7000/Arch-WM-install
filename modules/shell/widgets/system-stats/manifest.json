@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "system-stats",
+  "name": "System Stats",
+  "description": "CPU, memory, disk and uptime from one shared service.",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop"],
+  "variants": ["compact", "standard", "expanded"],
+  "lockSafe": false,
+  "services": ["system-stats"],
+  "capabilities": [],
+  "constraints": {
+    "compact": {"minWidth": 180, "minHeight": 24},
+    "standard": {"minWidth": 240, "minHeight": 80},
+    "expanded": {"minWidth": 320, "minHeight": 180}
+  }
+}

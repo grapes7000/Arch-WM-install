@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "workspaces",
+  "name": "Workspaces",
+  "description": "Clickable Hyprland workspace switcher.",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop"],
+  "variants": ["compact", "standard"],
+  "lockSafe": false,
+  "services": ["hyprland"],
+  "capabilities": ["workspace.switch"],
+  "constraints": {
+    "compact": {"minWidth": 120, "minHeight": 28},
+    "standard": {"minWidth": 240, "minHeight": 38}
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "minimal",
+  "description": "Hyprland, Quickshell, terminal, audio, networking and essential portals.",
+  "manifests": [
+    "packages-base.txt",
+    "packages-hyprland.txt",
+    "packages-shell.txt",
+    "packages-terminal.txt"
+  ],
+  "services": ["NetworkManager"]
+}

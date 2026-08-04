@@ -4,8 +4,6 @@
     "center": [
       {"instance": "clock-lock", "widget": "clock", "variant": "expanded"}
     ],
-    "bottom": [
-      {"instance": "media-lock", "widget": "media", "variant": "compact"}
-    ]
+    "bottom": []
   }
 }

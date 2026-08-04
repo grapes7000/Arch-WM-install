@@ -1,0 +1,18 @@
+# Standard desktop utilities and integrations
+hyprpaper
+hypridle
+hyprlock
+network-manager-applet
+bluez
+bluez-utils
+blueman
+pavucontrol
+power-profiles-daemon
+udiskie
+noto-fonts
+noto-fonts-emoji
+fastfetch
+lazygit
+bottom
+dust
+duf

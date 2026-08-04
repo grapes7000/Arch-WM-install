@@ -1,11 +1,9 @@
 {
   "surface": "desktop",
   "regions": {
-    "top_left": [
-      {"instance": "clock-desktop", "widget": "clock", "variant": "expanded"}
-    ],
-    "bottom_right": [
-      {"instance": "system-desktop", "widget": "system-status", "variant": "standard"}
+    "top_right": [
+      {"instance": "clock-desktop", "widget": "clock", "variant": "expanded"},
+      {"instance": "system-desktop", "widget": "system-stats", "variant": "expanded"}
     ]
   }
 }

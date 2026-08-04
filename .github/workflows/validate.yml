@@ -1,4 +1,4 @@
-name: Validate scaffold
+name: Validate implementation
 
 on:
   push:
@@ -12,11 +12,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: Validate layouts
+      - name: Validate layouts and widget registry
         run: python scripts/validate-layouts.py
-      - name: Run tests
-        run: python -m unittest discover -s tests
+      - name: Run installer and theme tests
+        run: python -m unittest discover -s tests -v
       - name: Check shell scripts
-        run: bash -n install.sh uninstall.sh scripts/*.sh
+        run: bash -n install.sh uninstall.sh scripts/*.sh modules/terminal/bin/term
+      - name: Check Python syntax
+        run: python -m compileall -q installer modules/theme-engine/bin/theme scripts/validate-layouts.py
       - name: Enforce no Eww paths
-        run: ./scripts/check-legacy-widget-free.sh
+        run: bash scripts/check-legacy-widget-free.sh

@@ -1,14 +1,26 @@
 pragma Singleton
 
-import QtQuick
+import Quickshell
 
-QtObject {
+Singleton {
     readonly property var policies: ({
         bar: {
-            capabilities: ["media.control", "audio.control", "workspace.switch"]
+            capabilities: [
+                "media.control",
+                "audio.control",
+                "workspace.switch",
+                "launcher.open",
+                "session.lock"
+            ]
         },
         desktop: {
-            capabilities: ["media.control", "audio.control", "workspace.switch", "launcher.open"]
+            capabilities: [
+                "media.control",
+                "audio.control",
+                "workspace.switch",
+                "launcher.open",
+                "session.lock"
+            ]
         },
         lockscreen: {
             capabilities: ["media.control", "audio.control"]
@@ -18,5 +30,10 @@ QtObject {
     function capabilities(surface) {
         const policy = policies[surface]
         return policy ? policy.capabilities : []
+    }
+
+    function grant(surface, requested) {
+        const allowed = capabilities(surface)
+        return (requested || []).filter(capability => allowed.indexOf(capability) !== -1)
     }
 }

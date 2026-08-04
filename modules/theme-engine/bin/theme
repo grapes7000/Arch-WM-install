@@ -1,0 +1,425 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+HOME = Path.home()
+CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+THEME_ROOT = CONFIG / "theme-engine"
+THEME_DIR = THEME_ROOT / "themes"
+GENERATED = THEME_ROOT / "generated"
+HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+REQUIRED_ROLES = (
+    "bg",
+    "bg_alt",
+    "text",
+    "text_dim",
+    "focus",
+    "border_normal",
+    "accent",
+    "accent2",
+    "urgent",
+)
+
+DEFAULT_STYLE: dict[str, Any] = {
+    "corner_radius": 8,
+    "opacity": 1.0,
+    "opacity_inactive": 0.96,
+    "inactive_dim": 0.0,
+    "blur_on": True,
+    "blur_strength": 6,
+    "blur_passes": 2,
+    "shadow_on": True,
+    "shadow_radius": 20,
+    "shadow_render_power": 3,
+    "shadow_opacity": 0.45,
+    "shadow_color": "#000000",
+    "shadow_offset": "0 4",
+    "gaps": 8,
+    "border_width": 2,
+    "bar_height": 44,
+    "animation_ms": 160,
+}
+
+
+class ThemeError(RuntimeError):
+    pass
+
+
+def atomic_write(path: Path, text: str, mode: int = 0o644) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary, mode)
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def bool_value(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
+def alpha(value: float) -> str:
+    return f"{max(0, min(255, round(float(value) * 255))):02x}"
+
+
+def color(value: str) -> str:
+    if not HEX.fullmatch(value):
+        raise ThemeError(f"invalid color: {value!r}")
+    return value.upper()
+
+
+def rgb(value: str) -> str:
+    return color(value).lstrip("#")
+
+
+def load_theme(name: str) -> dict[str, Any]:
+    if not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", name):
+        raise ThemeError(f"invalid theme name: {name!r}")
+    path = THEME_DIR / f"{name}.json"
+    if not path.is_file():
+        raise ThemeError(f"theme not found: {name}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ThemeError(f"{path}: {error}") from error
+    return normalize(payload, expected_name=name)
+
+
+def normalize(payload: dict[str, Any], *, expected_name: str | None = None) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        raise ThemeError("theme root must be an object")
+    name = payload.get("name")
+    if not isinstance(name, str):
+        raise ThemeError("theme requires a string name")
+    if expected_name and name != expected_name:
+        raise ThemeError(f"theme filename/name mismatch: {expected_name} != {name}")
+    roles = payload.get("roles")
+    style = payload.get("style")
+    if not isinstance(roles, dict) or not isinstance(style, dict):
+        raise ThemeError("theme requires roles and style objects")
+    for role in REQUIRED_ROLES:
+        if role not in roles:
+            raise ThemeError(f"missing required role: {role}")
+
+    normalized_roles = {key: color(str(value)) for key, value in roles.items()}
+    normalized_style = dict(DEFAULT_STYLE)
+    normalized_style.update(style)
+    normalized_style["blur_on"] = bool_value(normalized_style["blur_on"])
+    normalized_style["shadow_on"] = bool_value(normalized_style["shadow_on"])
+    normalized_style["opacity"] = float(normalized_style["opacity"])
+    normalized_style["opacity_inactive"] = float(normalized_style["opacity_inactive"])
+    normalized_style["inactive_dim"] = float(normalized_style["inactive_dim"])
+    normalized_style["shadow_opacity"] = float(normalized_style["shadow_opacity"])
+
+    for key in ("opacity", "opacity_inactive", "inactive_dim", "shadow_opacity"):
+        if not 0 <= normalized_style[key] <= 1:
+            raise ThemeError(f"{key} must be between 0 and 1")
+
+    for key in (
+        "corner_radius",
+        "blur_strength",
+        "blur_passes",
+        "shadow_radius",
+        "shadow_render_power",
+        "gaps",
+        "border_width",
+        "bar_height",
+        "animation_ms",
+    ):
+        normalized_style[key] = int(normalized_style[key])
+        if normalized_style[key] < 0:
+            raise ThemeError(f"{key} cannot be negative")
+
+    normalized_style["shadow_color"] = color(str(normalized_style["shadow_color"]))
+    normalized_style["shadow_offset"] = str(normalized_style["shadow_offset"])
+
+    return {
+        "schema_version": 1,
+        "name": name,
+        "dark": bool_value(payload.get("dark", True)),
+        "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "roles": normalized_roles,
+        "style": normalized_style,
+    }
+
+
+def ansi_roles(roles: dict[str, str]) -> list[str]:
+    fallback = roles["text"]
+    names = (
+        "ansi_black",
+        "ansi_red",
+        "ansi_green",
+        "ansi_yellow",
+        "ansi_blue",
+        "ansi_magenta",
+        "ansi_cyan",
+        "ansi_white",
+        "ansi_br_black",
+        "ansi_br_red",
+        "ansi_br_green",
+        "ansi_br_yellow",
+        "ansi_br_blue",
+        "ansi_br_magenta",
+        "ansi_br_cyan",
+        "ansi_br_white",
+    )
+    return [roles.get(name, fallback) for name in names]
+
+
+def render_hypr(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    style = theme["style"]
+    blur = "true" if style["blur_on"] else "false"
+    shadow = "true" if style["shadow_on"] else "false"
+    dimmed = "true" if style["inactive_dim"] > 0 else "false"
+    return f'''# Generated by theme. Edit the source JSON, not this file.
+$bg = rgb({rgb(roles["bg"])})
+$bg_alt = rgb({rgb(roles["bg_alt"])})
+$fg = rgb({rgb(roles["text"])})
+$fg_dim = rgb({rgb(roles["text_dim"])})
+$accent = rgb({rgb(roles["accent"])})
+$accent2 = rgb({rgb(roles["accent2"])})
+$urgent = rgb({rgb(roles["urgent"])})
+
+general {{
+    border_size = {style["border_width"]}
+    gaps_in = {max(0, style["gaps"] // 2)}
+    gaps_out = {style["gaps"]}
+    col.active_border = rgba({rgb(roles["focus"])}ff) rgba({rgb(roles["accent2"])}ff) 45deg
+    col.inactive_border = rgba({rgb(roles["border_normal"])}aa)
+}}
+
+decoration {{
+    rounding = {style["corner_radius"]}
+    active_opacity = {style["opacity"]}
+    inactive_opacity = {style["opacity_inactive"]}
+    dim_inactive = {dimmed}
+    dim_strength = {style["inactive_dim"]}
+
+    blur {{
+        enabled = {blur}
+        size = {max(1, style["blur_strength"])}
+        passes = {max(1, style["blur_passes"])}
+        new_optimizations = true
+    }}
+
+    shadow {{
+        enabled = {shadow}
+        range = {style["shadow_radius"]}
+        render_power = {max(1, min(4, style["shadow_render_power"]))}
+        offset = {style["shadow_offset"]}
+        color = rgba({rgb(style["shadow_color"])}{alpha(style["shadow_opacity"])})
+    }}
+}}
+'''
+
+
+def render_hypr_lua(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    style = theme["style"]
+    shadow_argb = alpha(style["shadow_opacity"]) + rgb(style["shadow_color"])
+    return f'''-- Generated by theme. Edit the source JSON, not this file.
+hl.config({{
+    general = {{
+        border_size = {style["border_width"]},
+        gaps_in = {max(0, style["gaps"] // 2)},
+        gaps_out = {style["gaps"]},
+        col = {{
+            active_border = {{
+                colors = {{ "rgba({rgb(roles["focus"])}ff)", "rgba({rgb(roles["accent2"])}ff)" }},
+                angle = 45,
+            }},
+            inactive_border = "rgba({rgb(roles["border_normal"])}aa)",
+        }},
+    }},
+    decoration = {{
+        rounding = {style["corner_radius"]},
+        active_opacity = {style["opacity"]},
+        inactive_opacity = {style["opacity_inactive"]},
+        dim_inactive = {str(style["inactive_dim"] > 0).lower()},
+        dim_strength = {style["inactive_dim"]},
+        blur = {{
+            enabled = {str(style["blur_on"]).lower()},
+            size = {max(1, style["blur_strength"])},
+            passes = {max(1, style["blur_passes"])},
+            vibrancy = 0.16,
+        }},
+        shadow = {{
+            enabled = {str(style["shadow_on"]).lower()},
+            range = {style["shadow_radius"]},
+            render_power = {max(1, min(4, style["shadow_render_power"]))},
+            color = 0x{shadow_argb},
+        }},
+    }},
+}})
+'''
+
+
+def render_kitty(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    style = theme["style"]
+    lines = [
+        "# Generated by theme. Included by kitty.conf.",
+        f"background {roles['bg']}",
+        f"foreground {roles['text']}",
+        f"cursor {roles['accent']}",
+        f"cursor_text_color {roles['bg']}",
+        f"selection_background {roles.get('selection_bg', roles['accent'])}",
+        f"selection_foreground {roles.get('selection_fg', roles['bg'])}",
+        f"url_color {roles['accent2']}",
+        f"active_border_color {roles['focus']}",
+        f"inactive_border_color {roles['border_normal']}",
+        f"active_tab_background {roles['accent']}",
+        f"active_tab_foreground {roles['bg']}",
+        f"inactive_tab_background {roles['bg_alt']}",
+        f"inactive_tab_foreground {roles['text_dim']}",
+        f"background_opacity {style['opacity']}",
+    ]
+    lines.extend(f"color{index} {value}" for index, value in enumerate(ansi_roles(roles)))
+    return "\n".join(lines) + "\n"
+
+
+def render_starship(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    return f'''"$schema" = "https://starship.rs/config-schema.json"
+format = "$directory$git_branch$git_status$character"
+right_format = "$status$cmd_duration$jobs$python$nodejs$rust$golang$container$ssh_symbol"
+add_newline = false
+command_timeout = 750
+palette = "arch_wm"
+
+[palettes.arch_wm]
+bg = "{roles["bg"]}"
+surface = "{roles["bg_alt"]}"
+fg = "{roles["text"]}"
+muted = "{roles["text_dim"]}"
+accent = "{roles["accent"]}"
+accent2 = "{roles["accent2"]}"
+urgent = "{roles["urgent"]}"
+
+[directory]
+style = "bold accent"
+truncation_length = 4
+truncate_to_repo = true
+read_only = " 󰌾"
+
+[git_branch]
+symbol = " "
+style = "bold accent2"
+
+[git_status]
+style = "bold urgent"
+format = "([$all_status$ahead_behind]($style) )"
+
+[character]
+success_symbol = "[❯](bold accent)"
+error_symbol = "[❯](bold urgent)"
+vimcmd_symbol = "[❮](bold accent2)"
+
+[status]
+disabled = false
+format = "[$status]($style) "
+style = "bold urgent"
+
+[cmd_duration]
+min_time = 1200
+format = "[󰔛 $duration]($style) "
+style = "muted"
+
+[jobs]
+symbol = "󰜎 "
+style = "accent2"
+
+[container]
+symbol = " "
+style = "accent2"
+
+[ssh_symbol]
+symbol = "󰣀 "
+style = "accent"
+'''
+
+
+def apply(name: str) -> None:
+    theme = load_theme(name)
+    outputs = {
+        GENERATED / "theme.json": json.dumps(theme, indent=2, sort_keys=True) + "\n",
+        CONFIG / "hypr/generated/theme.conf": render_hypr(theme),
+        CONFIG / "hypr/generated/theme.lua": render_hypr_lua(theme),
+        CONFIG / "kitty/generated/theme.conf": render_kitty(theme),
+        GENERATED / "starship.toml": render_starship(theme),
+        GENERATED / ".active": name + "\n",
+    }
+    for path, text in outputs.items():
+        atomic_write(path, text)
+    print(f"Applied theme: {name}")
+
+
+def list_themes() -> list[str]:
+    return sorted(path.stem for path in THEME_DIR.glob("*.json"))
+
+
+def validate(name: str | None) -> int:
+    names = [name] if name else list_themes()
+    if not names:
+        raise ThemeError(f"no themes found in {THEME_DIR}")
+    for item in names:
+        load_theme(item)
+        print(f"OK {item}")
+    return 0
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(prog="theme", description="Apply the Arch WM universal theme")
+    result.add_argument("name", nargs="?")
+    result.add_argument("--list", action="store_true")
+    result.add_argument("--validate", action="store_true")
+    return result
+
+
+def main() -> int:
+    args = parser().parse_args()
+    try:
+        if args.list:
+            print("\n".join(list_themes()))
+            return 0
+        if args.validate:
+            return validate(args.name)
+        if not args.name:
+            active = GENERATED / ".active"
+            if active.exists():
+                print(active.read_text(encoding="utf-8").strip())
+                return 0
+            raise ThemeError("provide a theme name or use --list")
+        apply(args.name)
+        return 0
+    except ThemeError as error:
+        print(f"theme: {error}", file=os.sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
