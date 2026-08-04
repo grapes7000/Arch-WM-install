@@ -16,6 +16,14 @@ jobs:
         run: python scripts/validate-layouts.py
       - name: Run installer and theme tests
         run: python -m unittest discover -s tests -v
+      - name: Validate pinned upstream theme catalog
+        env:
+          HOME: ${{ runner.temp }}/theme-home
+          XDG_CONFIG_HOME: ${{ runner.temp }}/theme-config
+        run: |
+          python modules/theme-engine/bin/theme-catalog-sync
+          test "$(find "$XDG_CONFIG_HOME/theme-engine/themes" -maxdepth 1 -name '*.json' | wc -l)" -ge 36
+          python modules/theme-engine/bin/theme --validate
       - name: Check shell scripts
         run: |
           bash -n install.sh uninstall.sh scripts/*.sh modules/terminal/bin/term
