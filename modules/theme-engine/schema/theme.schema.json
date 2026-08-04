@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/grapes7000/Arch-WM-install/schemas/theme.schema.json",
+  "title": "Arch WM universal theme contract",
+  "type": "object",
+  "required": ["schema_version", "name", "dark", "roles", "style"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "dark": {"type": "boolean"},
+    "roles": {
+      "type": "object",
+      "required": ["bg", "bg_alt", "text", "text_dim", "focus", "border_normal", "accent", "accent2", "urgent"],
+      "additionalProperties": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
+    },
+    "style": {
+      "type": "object",
+      "required": ["corner_radius", "opacity", "opacity_inactive", "blur_on", "shadow_on", "gaps", "border_width"],
+      "properties": {
+        "corner_radius": {"type": "integer", "minimum": 0},
+        "opacity": {"type": "number", "minimum": 0, "maximum": 1},
+        "opacity_inactive": {"type": "number", "minimum": 0, "maximum": 1},
+        "inactive_dim": {"type": "number", "minimum": 0, "maximum": 1},
+        "blur_on": {"type": "boolean"},
+        "blur_strength": {"type": "integer", "minimum": 1},
+        "blur_passes": {"type": "integer", "minimum": 1},
+        "shadow_on": {"type": "boolean"},
+        "shadow_radius": {"type": "integer", "minimum": 0},
+        "shadow_render_power": {"type": "integer", "minimum": 1, "maximum": 4},
+        "shadow_opacity": {"type": "number", "minimum": 0, "maximum": 1},
+        "shadow_color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+        "shadow_offset": {"type": "string"},
+        "gaps": {"type": "integer", "minimum": 0},
+        "border_width": {"type": "integer", "minimum": 0},
+        "bar_height": {"type": "integer", "minimum": 24},
+        "animation_ms": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
