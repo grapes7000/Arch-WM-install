@@ -1,0 +1,133 @@
+from __future__ import annotations
+
+import json
+import os
+import pathlib
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from installer.runtime import manifest
+from installer.state import StateStore
+
+
+class ManifestTests(unittest.TestCase):
+    def test_manifests_are_unique_and_comment_aware(self) -> None:
+        for path in sorted((ROOT / "manifests").glob("packages-*.txt")):
+            values = manifest(path)
+            self.assertEqual(len(values), len(set(values)), path)
+            self.assertTrue(values, path)
+            self.assertTrue(all(" " not in value for value in values), path)
+
+    def test_profiles_reference_existing_manifests(self) -> None:
+        for path in sorted((ROOT / "installer/profiles").glob("*.json")):
+            profile = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(path.stem, profile["name"])
+            self.assertTrue(profile["manifests"])
+            for filename in profile["manifests"]:
+                self.assertTrue((ROOT / "manifests" / filename).is_file(), filename)
+
+
+class StateTests(unittest.TestCase):
+    def test_backup_restore_and_created_path_ownership(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            state = StateStore(root / "state", root / "backups", "run-1")
+            target = root / "config.txt"
+            target.write_text("before\n", encoding="utf-8")
+            state.backup_target(target)
+            target.write_text("after\n", encoding="utf-8")
+
+            created = root / "created.txt"
+            created.write_text("owned\n", encoding="utf-8")
+            state.record_created_path(created)
+
+            actions = state.restore()
+            self.assertEqual(target.read_text(encoding="utf-8"), "before\n")
+            self.assertFalse(created.exists())
+            self.assertTrue(any("restore" in action for action in actions))
+            self.assertTrue(any("remove" in action for action in actions))
+
+    def test_state_file_is_valid_json(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            state = StateStore(root / "state", root / "backups", "run-2")
+            state.set_metadata(profile="desktop", theme="y2k")
+            payload = json.loads(state.path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["schema_version"], 1)
+            self.assertEqual(payload["profile"], "desktop")
+            self.assertEqual(payload["theme"], "y2k")
+
+
+class ThemeTests(unittest.TestCase):
+    def test_theme_generates_all_consumers_atomically(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            config = root / "config"
+            theme_dir = config / "theme-engine/themes"
+            theme_dir.mkdir(parents=True)
+            shutil.copy2(
+                ROOT / "modules/theme-engine/themes/y2k.json",
+                theme_dir / "y2k.json",
+            )
+            environment = os.environ.copy()
+            environment["HOME"] = str(root / "home")
+            environment["XDG_CONFIG_HOME"] = str(config)
+            command = [sys.executable, str(ROOT / "modules/theme-engine/bin/theme"), "y2k"]
+            result = subprocess.run(command, env=environment, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            contract = json.loads(
+                (config / "theme-engine/generated/theme.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(contract["schema_version"], 1)
+            self.assertEqual(contract["name"], "y2k")
+            self.assertIs(contract["style"]["blur_on"], False)
+
+            expected = (
+                config / "hypr/generated/theme.lua",
+                config / "hypr/generated/theme.conf",
+                config / "kitty/generated/theme.conf",
+                config / "theme-engine/generated/starship.toml",
+                config / "theme-engine/generated/.active",
+            )
+            for path in expected:
+                self.assertTrue(path.is_file(), path)
+                self.assertGreater(path.stat().st_size, 0, path)
+            self.assertIn("hl.config", expected[0].read_text(encoding="utf-8"))
+            self.assertIn("cursor", expected[2].read_text(encoding="utf-8"))
+
+    def test_invalid_theme_does_not_replace_active_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            config = root / "config"
+            theme_dir = config / "theme-engine/themes"
+            generated = config / "theme-engine/generated"
+            theme_dir.mkdir(parents=True)
+            generated.mkdir(parents=True)
+            active = generated / "theme.json"
+            active.write_text('{"name":"known-good"}\n', encoding="utf-8")
+            (theme_dir / "broken.json").write_text(
+                '{"schema_version":1,"name":"broken","roles":{},"style":{}}\n',
+                encoding="utf-8",
+            )
+            environment = os.environ.copy()
+            environment["HOME"] = str(root / "home")
+            environment["XDG_CONFIG_HOME"] = str(config)
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "modules/theme-engine/bin/theme"), "broken"],
+                env=environment,
+                text=True,
+                capture_output=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(active.read_text(encoding="utf-8"), '{"name":"known-good"}\n')
+
+
+if __name__ == "__main__":
+    unittest.main()
