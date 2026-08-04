@@ -19,4 +19,4 @@ jobs:
       - name: Check shell scripts
         run: bash -n install.sh uninstall.sh scripts/*.sh
       - name: Enforce no Eww paths
-        run: ./scripts/check-no-eww.sh
+        run: ./scripts/check-legacy-widget-free.sh
