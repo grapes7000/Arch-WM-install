@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+THEME_DIR = CONFIG / "theme-engine/themes"
+NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(prog="theme-new", description="Create a new Arch WM theme")
+    result.add_argument("name")
+    result.add_argument("--from", dest="base", default="catppuccin_mocha")
+    result.add_argument("--edit", action="store_true")
+    result.add_argument("--force", action="store_true")
+    return result
+
+
+def main() -> int:
+    args = parser().parse_args()
+    if not NAME.fullmatch(args.name):
+        print("theme-new: names must use lowercase letters, numbers, dashes or underscores", file=sys.stderr)
+        return 2
+    source = THEME_DIR / f"{args.base}.json"
+    target = THEME_DIR / f"{args.name}.json"
+    if not source.is_file():
+        print(f"theme-new: base theme not found: {args.base}", file=sys.stderr)
+        return 1
+    if target.exists() and not args.force:
+        print(f"theme-new: theme already exists: {args.name} (use --force to replace)", file=sys.stderr)
+        return 1
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        print(f"theme-new: invalid base theme: {error}", file=sys.stderr)
+        return 1
+    payload["name"] = args.name
+    payload["description"] = f"Custom theme based on {args.base}"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(target)
+    if args.edit:
+        editor = os.environ.get("EDITOR") or os.environ.get("VISUAL") or "nvim"
+        return subprocess.call([editor, str(target)])
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
