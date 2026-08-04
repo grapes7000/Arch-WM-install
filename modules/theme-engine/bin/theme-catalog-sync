@@ -20,7 +20,6 @@ CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
 THEME_ROOT = CONFIG_HOME / "theme-engine"
 THEME_DIR = THEME_ROOT / "themes"
 LOCK_FILE = THEME_ROOT / "upstream-lock.json"
-COMPAT_THEME_DIR = CONFIG_HOME / "hypr" / "themes"
 
 
 class SyncError(RuntimeError):
@@ -108,14 +107,13 @@ def checkout_upstream(destination: Path) -> Path:
 def install_catalog(source: Path) -> int:
     catalog = validate_catalog(source)
     THEME_DIR.mkdir(parents=True, exist_ok=True)
-    COMPAT_THEME_DIR.mkdir(parents=True, exist_ok=True)
 
     managed_names = {filename for filename, _ in catalog}
     for filename, text in catalog:
         atomic_write(THEME_DIR / filename, text)
-        atomic_write(COMPAT_THEME_DIR / filename, text)
 
-    # Remove only stale files that were previously supplied by this pinned catalog.
+    # Remove only stale files that a previous pinned catalog supplied. Custom
+    # user-created theme files are deliberately left alone.
     previous: set[str] = set()
     if LOCK_FILE.is_file():
         try:
@@ -124,10 +122,9 @@ def install_catalog(source: Path) -> int:
         except (OSError, json.JSONDecodeError):
             previous = set()
     for filename in previous - managed_names:
-        for root in (THEME_DIR, COMPAT_THEME_DIR):
-            path = root / filename
-            if path.is_file():
-                path.unlink()
+        path = THEME_DIR / filename
+        if path.is_file():
+            path.unlink()
 
     lock = {
         "schema_version": 1,
