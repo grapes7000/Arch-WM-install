@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Sequence
@@ -53,6 +54,18 @@ def theme_verify(ctx: runtime.Context) -> bool:
     )
 
 
+def validate_apply(ctx: runtime.Context) -> None:
+    ctx.run([sys.executable, str(ctx.root / "scripts/validate-layouts.py")])
+    ctx.run(
+        [sys.executable, "-m", "unittest", "discover", "-s", str(ctx.root / "tests")]
+    )
+    ctx.run(["bash", str(ctx.root / "scripts/check-legacy-widget-free.sh")])
+    if ctx.has("hyprctl") and os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        result = ctx.run(["hyprctl", "configerrors"], capture=True)
+        if result.stdout.strip():
+            raise runtime.InstallError("Hyprland config errors:\n" + result.stdout.strip())
+
+
 def doctor_command(ctx: runtime.Context) -> int:
     checks = {
         "Arch Linux": Path("/etc/arch-release").exists(),
@@ -72,19 +85,29 @@ def doctor_command(ctx: runtime.Context) -> int:
 
 
 def patch_runtime() -> None:
-    replacements = {
-        "10-repositories": (repositories_apply, runtime.repositories_verify),
-        "40-theme-engine": (runtime.theme_apply, theme_verify),
-        "50-hyprland": (runtime.hypr_apply, hypr_verify),
-    }
     patched = []
     for stage in runtime.STAGES:
         if stage.name == "10-repositories":
-            patched.append(runtime.Stage(stage.name, stage.check, repositories_apply, runtime.repositories_verify))
+            patched.append(
+                runtime.Stage(
+                    stage.name,
+                    stage.check,
+                    repositories_apply,
+                    runtime.repositories_verify,
+                )
+            )
         elif stage.name == "40-theme-engine":
-            patched.append(runtime.Stage(stage.name, stage.check, runtime.theme_apply, theme_verify))
+            patched.append(
+                runtime.Stage(stage.name, stage.check, runtime.theme_apply, theme_verify)
+            )
         elif stage.name == "50-hyprland":
-            patched.append(runtime.Stage(stage.name, hypr_check, runtime.hypr_apply, hypr_verify))
+            patched.append(
+                runtime.Stage(stage.name, hypr_check, runtime.hypr_apply, hypr_verify)
+            )
+        elif stage.name == "90-validate":
+            patched.append(
+                runtime.Stage(stage.name, stage.check, validate_apply, stage.verify)
+            )
         else:
             patched.append(stage)
     runtime.STAGES = tuple(patched)
