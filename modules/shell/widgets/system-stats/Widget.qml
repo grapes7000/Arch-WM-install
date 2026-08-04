@@ -59,6 +59,7 @@ Item {
     }
 
     component StatRow: RowLayout {
+        id: row
         required property string label
         required property int value
         Layout.fillWidth: true
@@ -66,13 +67,14 @@ Item {
 
         Text {
             Layout.preferredWidth: 58
-            text: parent.label
+            text: row.label
             color: Theme.muted
             font.pixelSize: 11
             font.bold: true
         }
 
         Rectangle {
+            id: track
             Layout.fillWidth: true
             Layout.preferredHeight: 8
             radius: Theme.radius
@@ -81,18 +83,18 @@ Item {
             border.color: Theme.roles.border_normal
 
             Rectangle {
-                width: parent.width * Math.max(0, Math.min(100, parent.parent.value)) / 100
-                height: parent.height
-                radius: parent.radius
-                color: parent.parent.value >= 90 ? Theme.urgent
-                    : parent.parent.value >= 70 ? Theme.accent2 : Theme.accent
+                width: track.width * Math.max(0, Math.min(100, row.value)) / 100
+                height: track.height
+                radius: track.radius
+                color: row.value >= 90 ? Theme.urgent
+                    : row.value >= 70 ? Theme.accent2 : Theme.accent
             }
         }
 
         Text {
             Layout.preferredWidth: 38
             horizontalAlignment: Text.AlignRight
-            text: parent.value + "%"
+            text: row.value + "%"
             color: Theme.foreground
             font.pixelSize: 11
         }
