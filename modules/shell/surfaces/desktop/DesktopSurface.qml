@@ -20,21 +20,20 @@ Scope {
                 right: true
             }
             margins {
-                top: Core.Theme.barHeight + Core.Theme.gap
+                top: Core.Theme.barHeight + Core.Theme.gap * 3
                 right: Core.Theme.gap
             }
 
-            implicitWidth: 360
-            implicitHeight: panel.implicitHeight
+            implicitWidth: 340
+            implicitHeight: desktopColumn.implicitHeight + Core.Theme.gap * 2
             aboveWindows: false
             focusable: false
             exclusionMode: ExclusionMode.Ignore
             color: "transparent"
+            visible: (Services.LayoutService.desktop.regions.top_right || []).length > 0
 
             Rectangle {
-                id: panel
-                width: parent.width
-                implicitHeight: desktopColumn.implicitHeight + Core.Theme.gap * 2
+                anchors.fill: parent
                 color: Core.Theme.surface
                 radius: Core.Theme.radius
                 border.width: Core.Theme.borderWidth
@@ -42,12 +41,8 @@ Scope {
 
                 ColumnLayout {
                     id: desktopColumn
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        top: parent.top
-                        margins: Core.Theme.gap
-                    }
+                    anchors.fill: parent
+                    anchors.margins: Core.Theme.gap
                     spacing: Core.Theme.gap
 
                     Repeater {
