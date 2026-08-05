@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="${ARCH_WM_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 REF="origin/fix/arch-wm-ui"
 TARGET="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/arch-wm"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/arch-wm-install"
