@@ -9,7 +9,7 @@ from typing import Sequence
 
 from . import runtime
 
-THEME_UPSTREAM_COMMIT = "3c6edb333406efce1920d762b7ed67b4168d4024"
+THEME_UPSTREAM_COMMIT = "c609410fbd88ddc2a15c51ab142743c49ae861e0"
 THEME_COMMANDS = (
     "theme",
     "theme-catalog-sync",
@@ -66,13 +66,13 @@ def payload_version_matches(source: Path, installed: Path) -> bool:
 def theme_catalog_valid(ctx: runtime.Context) -> bool:
     theme_dir = ctx.config / "theme-engine/themes"
     lock_path = ctx.config / "theme-engine/upstream-lock.json"
-    if len(list(theme_dir.glob("*.json"))) < 36 or not lock_path.is_file():
+    if len(list(theme_dir.glob("*.json"))) < 40 or not lock_path.is_file():
         return False
     try:
         lock = runtime.json_file(lock_path)
     except (OSError, json.JSONDecodeError):
         return False
-    return lock.get("commit") == THEME_UPSTREAM_COMMIT and int(lock.get("theme_count", 0)) >= 36
+    return lock.get("commit") == THEME_UPSTREAM_COMMIT and int(lock.get("theme_count", 0)) >= 40
 
 
 def theme_check(ctx: runtime.Context) -> bool:
@@ -241,7 +241,7 @@ def doctor_command(ctx: runtime.Context) -> int:
         "Hyprland": ctx.has("Hyprland"),
         "Quickshell": ctx.has("qs"),
         "theme": (ctx.home / ".local/bin/theme").is_file(),
-        "full theme catalog": theme_count >= 36 and theme_catalog_valid(ctx),
+        "full theme catalog": theme_count >= 40 and theme_catalog_valid(ctx),
         "terminal profile": (ctx.config / "kitty/kitty.conf").is_file(),
         "Hyprland payload current": hypr_check(ctx),
         "Hyprland theme": (ctx.config / "hypr/generated/theme.lua").is_file(),
