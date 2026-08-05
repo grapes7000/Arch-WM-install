@@ -7,14 +7,43 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    property var widgets: ({})
+    property var widgets: ({
+        "workspaces": {
+            id: "workspaces",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop"],
+            variants: ["compact", "standard"],
+            lockSafe: false,
+            capabilities: ["workspace.switch"]
+        },
+        "active-window": {
+            id: "active-window",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop"],
+            variants: ["compact", "standard"],
+            lockSafe: false,
+            capabilities: []
+        },
+        "clock": {
+            id: "clock",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop", "lockscreen"],
+            variants: ["compact", "standard", "expanded"],
+            lockSafe: true,
+            capabilities: []
+        },
+        "system-stats": {
+            id: "system-stats",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop"],
+            variants: ["compact", "standard", "expanded"],
+            lockSafe: false,
+            capabilities: []
+        }
+    })
     property string error: ""
 
-    readonly property string _shellDir: {
-        var base = Quickshell.env("XDG_CONFIG_HOME")
-        if (!base) base = Quickshell.env("HOME") + "/.config"
-        return base + "/quickshell/arch-wm"
-    }
+    readonly property string registryPath: Quickshell.shellDir + "/generated/widgets.json"
 
     function parse(contents) {
         if (!contents || typeof contents !== "string" || contents.length === 0)
@@ -35,7 +64,7 @@ Singleton {
             root.error = ""
         } catch (failure) {
             root.error = String(failure)
-            console.warn("Widget registry update rejected:", failure)
+            console.warn("Widget registry update rejected; using last known-good registry:", failure)
         }
     }
 
@@ -55,17 +84,17 @@ Singleton {
         const item = definition(widgetId)
         if (!item)
             return ""
-        return "file://" + root._shellDir + "/widgets/" + widgetId + "/" + item.entry
+        return Qt.resolvedUrl("../widgets/" + widgetId + "/" + item.entry)
     }
 
     FileView {
         id: registryFile
-        path: root._shellDir + "/generated/widgets.json"
+        path: root.registryPath
         blockLoading: true
         watchChanges: true
-        onTextChanged: root.parse(registryFile.text)
+        onTextChanged: root.parse(registryFile.text())
         onFileChanged: registryFile.reload()
     }
 
-    Component.onCompleted: root.parse(registryFile.text)
+    Component.onCompleted: root.parse(registryFile.text())
 }
