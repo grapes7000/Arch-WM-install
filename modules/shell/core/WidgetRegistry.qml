@@ -9,12 +9,7 @@ Singleton {
 
     property var widgets: ({})
     property string error: ""
-
-    readonly property string _shellDir: {
-        var base = Quickshell.env("XDG_CONFIG_HOME")
-        if (!base) base = Quickshell.env("HOME") + "/.config"
-        return base + "/quickshell/arch-wm"
-    }
+    property string _shellDir: ""
 
     function parse(contents) {
         if (!contents || typeof contents !== "string" || contents.length === 0)
@@ -58,14 +53,16 @@ Singleton {
         return "file://" + root._shellDir + "/widgets/" + widgetId + "/" + item.entry
     }
 
-    FileView {
-        id: registryFile
-        path: root._shellDir + "/generated/widgets.json"
-        blockLoading: true
-        watchChanges: true
-        onTextChanged: root.parse(registryFile.text)
-        onFileChanged: registryFile.reload()
+    Process {
+        id: registryProc
+        stdout: StdioCollector { onStreamFinished: root.parse(text) }
     }
 
-    Component.onCompleted: root.parse(registryFile.text)
+    Component.onCompleted: {
+        var base = Quickshell.env("XDG_CONFIG_HOME")
+        if (!base) base = Quickshell.env("HOME") + "/.config"
+        root._shellDir = base + "/quickshell/arch-wm"
+        registryProc.command = ["cat", root._shellDir + "/generated/widgets.json"]
+        registryProc.running = true
+    }
 }

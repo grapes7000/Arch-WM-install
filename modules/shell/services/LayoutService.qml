@@ -16,11 +16,7 @@ Singleton {
         regions: { top_right: [] }
     })
 
-    readonly property string _shellDir: {
-        var base = Quickshell.env("XDG_CONFIG_HOME")
-        if (!base) base = Quickshell.env("HOME") + "/.config"
-        return base + "/quickshell/arch-wm"
-    }
+    property string _shellDir: ""
 
     function parse(contents, expectedSurface) {
         if (!contents || typeof contents !== "string" || contents.length === 0)
@@ -31,38 +27,39 @@ Singleton {
         return parsed
     }
 
-    FileView {
-        id: barFile
-        path: root._shellDir + "/layouts/bar.default.json"
-        blockLoading: true
-        watchChanges: true
-        onTextChanged: {
-            try {
-                root.bar = root.parse(barFile.text, "bar")
-            } catch (error) {
-                console.warn("Bar layout rejected; keeping last known-good layout:", error)
+    Process {
+        id: barProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root.bar = root.parse(text, "bar")
+                } catch (error) {
+                    console.warn("Bar layout rejected:", error)
+                }
             }
         }
-        onFileChanged: barFile.reload()
     }
 
-    FileView {
-        id: desktopFile
-        path: root._shellDir + "/layouts/desktop.default.json"
-        blockLoading: true
-        watchChanges: true
-        onTextChanged: {
-            try {
-                root.desktop = root.parse(desktopFile.text, "desktop")
-            } catch (error) {
-                console.warn("Desktop layout rejected; keeping last known-good layout:", error)
+    Process {
+        id: desktopProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root.desktop = root.parse(text, "desktop")
+                } catch (error) {
+                    console.warn("Desktop layout rejected:", error)
+                }
             }
         }
-        onFileChanged: desktopFile.reload()
     }
 
     Component.onCompleted: {
-        try { root.bar = root.parse(barFile.text, "bar") } catch (error) {}
-        try { root.desktop = root.parse(desktopFile.text, "desktop") } catch (error) {}
+        var base = Quickshell.env("XDG_CONFIG_HOME")
+        if (!base) base = Quickshell.env("HOME") + "/.config"
+        root._shellDir = base + "/quickshell/arch-wm"
+        barProc.command = ["cat", root._shellDir + "/layouts/bar.default.json"]
+        barProc.running = true
+        desktopProc.command = ["cat", root._shellDir + "/layouts/desktop.default.json"]
+        desktopProc.running = true
     }
 }

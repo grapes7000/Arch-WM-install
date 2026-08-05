@@ -65,14 +65,17 @@ Singleton {
         }
     }
 
-    FileView {
-        id: themeFile
-        path: root.path
-        blockLoading: true
-        watchChanges: true
-        onTextChanged: root.parse(themeFile.text)
-        onFileChanged: themeFile.reload()
+    Process {
+        id: themeProc
+        command: ["cat", root.path]
+        stdout: StdioCollector { onStreamFinished: root.parse(text) }
     }
 
-    Component.onCompleted: root.parse(themeFile.text)
+    Timer {
+        interval: 5000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: { if (!themeProc.running) themeProc.running = true }
+    }
 }
