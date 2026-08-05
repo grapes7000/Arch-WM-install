@@ -50,7 +50,7 @@ Singleton {
     readonly property int animationMs: style.animation_ms === undefined ? 160 : style.animation_ms
 
     function parse(contents) {
-        if (!contents || contents.trim().length === 0)
+        if (!contents || typeof contents !== "string" || contents.length === 0)
             return
 
         try {
@@ -70,8 +70,8 @@ Singleton {
         path: root.path
         blockLoading: true
         watchChanges: true
-        onTextChanged: root.parse(text)
-        onFileChanged: reload()
+        onTextChanged: root.parse(themeFile.text)
+        onFileChanged: themeFile.reload()
     }
 
     Component.onCompleted: root.parse(themeFile.text)
