@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+BIN_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 TARGETS="$CONFIG_HOME/theme-engine/targets.conf"
 NONINTERACTIVE=0
@@ -22,12 +23,16 @@ EOF
   esac
 done
 
-command -v theme-catalog-sync >/dev/null 2>&1 || {
-  echo 'theme-install: theme-catalog-sync is not installed' >&2
+[[ -x "$BIN_DIR/theme-catalog-sync" ]] || {
+  echo "theme-install: missing $BIN_DIR/theme-catalog-sync" >&2
+  exit 1
+}
+[[ -x "$BIN_DIR/theme" ]] || {
+  echo "theme-install: missing $BIN_DIR/theme" >&2
   exit 1
 }
 
-theme-catalog-sync
+"$BIN_DIR/theme-catalog-sync"
 
 mkdir -p "$(dirname "$TARGETS")"
 if [[ ! -e "$TARGETS" ]]; then
@@ -58,7 +63,7 @@ else
   echo "Preserved existing $TARGETS"
 fi
 
-count="$(theme --list | wc -l)"
+count="$("$BIN_DIR/theme" --list | wc -l)"
 echo "Theme Engine ready with $count themes."
 if [[ "$NONINTERACTIVE" -eq 0 ]]; then
   echo 'Run `theme` for the picker or `theme <name>` to apply one.'
