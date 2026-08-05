@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import ArchWmShell 1.0
+import "../../core" as Core
+import "../../services" as Services
 
 Item {
     id: root
@@ -18,9 +19,9 @@ Item {
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: context.variant === "compact"
-                ? TimeService.timeShort
-                : TimeService.timeLong
-            color: Theme.foreground
+                ? Services.TimeService.timeShort
+                : Services.TimeService.timeLong
+            color: Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 15
                 : context.variant === "standard" ? 28 : 48
             font.bold: true
@@ -30,8 +31,8 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             visible: context.variant !== "compact"
             text: context.variant === "expanded"
-                ? TimeService.dateLong : TimeService.dateShort
-            color: Theme.muted
+                ? Services.TimeService.dateLong : Services.TimeService.dateShort
+            color: Core.Theme.muted
             font.pixelSize: context.variant === "expanded" ? 16 : 13
         }
     }

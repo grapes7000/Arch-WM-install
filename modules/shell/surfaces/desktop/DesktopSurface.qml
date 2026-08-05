@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import ArchWmShell 1.0
+import "../../core" as Core
+import "../../services" as Services
 import "../../components"
 
 Scope {
     Variants {
-        variants: Quickshell.screens
+        model: Quickshell.screens
 
         PanelWindow {
             id: root
@@ -19,8 +20,8 @@ Scope {
                 right: true
             }
             margins {
-                top: Theme.barHeight + Theme.gap
-                right: Theme.gap
+                top: Core.Theme.barHeight + Core.Theme.gap
+                right: Core.Theme.gap
             }
 
             implicitWidth: 360
@@ -33,11 +34,11 @@ Scope {
             Rectangle {
                 id: panel
                 width: parent.width
-                implicitHeight: desktopColumn.implicitHeight + Theme.gap * 2
-                color: Theme.surface
-                radius: Theme.radius
-                border.width: Theme.borderWidth
-                border.color: Theme.accent2
+                implicitHeight: desktopColumn.implicitHeight + Core.Theme.gap * 2
+                color: Core.Theme.surface
+                radius: Core.Theme.radius
+                border.width: Core.Theme.borderWidth
+                border.color: Core.Theme.accent2
 
                 ColumnLayout {
                     id: desktopColumn
@@ -45,12 +46,12 @@ Scope {
                         left: parent.left
                         right: parent.right
                         top: parent.top
-                        margins: Theme.gap
+                        margins: Core.Theme.gap
                     }
-                    spacing: Theme.gap
+                    spacing: Core.Theme.gap
 
                     Repeater {
-                        model: LayoutService.desktop.regions.top_right || []
+                        model: Services.LayoutService.desktop.regions.top_right || []
 
                         WidgetHost {
                             required property var modelData

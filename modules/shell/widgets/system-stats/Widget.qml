@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import ArchWmShell 1.0
+import "../../core" as Core
+import "../../services" as Services
 
 Item {
     id: root
@@ -15,10 +16,10 @@ Item {
         id: compactText
         anchors.centerIn: parent
         visible: context.variant === "compact"
-        text: "CPU " + SystemStatsService.cpuPercent + "%  "
-            + "MEM " + SystemStatsService.memoryPercent + "%  "
-            + "DSK " + SystemStatsService.diskPercent + "%"
-        color: Theme.foreground
+        text: "CPU " + Services.SystemStatsService.cpuPercent + "%  "
+            + "MEM " + Services.SystemStatsService.memoryPercent + "%  "
+            + "DSK " + Services.SystemStatsService.diskPercent + "%"
+        color: Core.Theme.foreground
         font.pixelSize: 12
         font.bold: true
     }
@@ -31,29 +32,29 @@ Item {
         Text {
             Layout.fillWidth: true
             text: "SYSTEM"
-            color: Theme.accent
+            color: Core.Theme.accent
             font.pixelSize: context.variant === "expanded" ? 18 : 14
             font.bold: true
         }
 
         StatRow {
             label: "CPU"
-            value: SystemStatsService.cpuPercent
+            value: Services.SystemStatsService.cpuPercent
         }
         StatRow {
             label: "MEMORY"
-            value: SystemStatsService.memoryPercent
+            value: Services.SystemStatsService.memoryPercent
         }
         StatRow {
             label: "DISK"
-            value: SystemStatsService.diskPercent
+            value: Services.SystemStatsService.diskPercent
         }
 
         Text {
             Layout.fillWidth: true
             visible: context.variant === "expanded"
-            text: "UPTIME  " + SystemStatsService.uptime
-            color: Theme.muted
+            text: "UPTIME  " + Services.SystemStatsService.uptime
+            color: Core.Theme.muted
             font.pixelSize: 13
         }
     }
@@ -68,7 +69,7 @@ Item {
         Text {
             Layout.preferredWidth: 58
             text: row.label
-            color: Theme.muted
+            color: Core.Theme.muted
             font.pixelSize: 11
             font.bold: true
         }
@@ -77,17 +78,17 @@ Item {
             id: track
             Layout.fillWidth: true
             Layout.preferredHeight: 8
-            radius: Theme.radius
-            color: Theme.background
+            radius: Core.Theme.radius
+            color: Core.Theme.background
             border.width: 1
-            border.color: Theme.roles.border_normal
+            border.color: Core.Theme.roles.border_normal
 
             Rectangle {
                 width: track.width * Math.max(0, Math.min(100, row.value)) / 100
                 height: track.height
                 radius: track.radius
-                color: row.value >= 90 ? Theme.urgent
-                    : row.value >= 70 ? Theme.accent2 : Theme.accent
+                color: row.value >= 90 ? Core.Theme.urgent
+                    : row.value >= 70 ? Core.Theme.accent2 : Core.Theme.accent
             }
         }
 
@@ -95,7 +96,7 @@ Item {
             Layout.preferredWidth: 38
             horizontalAlignment: Text.AlignRight
             text: row.value + "%"
-            color: Theme.foreground
+            color: Core.Theme.foreground
             font.pixelSize: 11
         }
     }

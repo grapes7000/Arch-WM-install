@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
 import json
 import os
 import re
+import shutil
+import subprocess
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 
 HOME = Path.home()
 CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
 THEME_ROOT = CONFIG / "theme-engine"
 THEME_DIR = THEME_ROOT / "themes"
 GENERATED = THEME_ROOT / "generated"
+TARGETS_FILE = THEME_ROOT / "targets.conf"
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
+CORE_TARGETS = {"hypr", "quickshell", "kitty", "starship", "wallpaper", "nvim"}
 REQUIRED_ROLES = (
     "bg",
     "bg_alt",
@@ -29,15 +33,19 @@ REQUIRED_ROLES = (
     "accent2",
     "urgent",
 )
-
 DEFAULT_STYLE: dict[str, Any] = {
     "corner_radius": 8,
+    "rounding_power": 2.0,
     "opacity": 1.0,
     "opacity_inactive": 0.96,
     "inactive_dim": 0.0,
     "blur_on": True,
     "blur_strength": 6,
     "blur_passes": 2,
+    "blur_noise": 0.0117,
+    "blur_contrast": 0.8916,
+    "blur_brightness": 0.8172,
+    "blur_vibrancy": 0.1696,
     "shadow_on": True,
     "shadow_radius": 20,
     "shadow_render_power": 3,
@@ -95,8 +103,104 @@ def rgb(value: str) -> str:
     return color(value).lstrip("#")
 
 
+def hex_rgb(value: str) -> tuple[int, int, int]:
+    value = rgb(value)
+    return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))
+
+
+def rgb_hex(values: tuple[float, float, float]) -> str:
+    return "#{:02X}{:02X}{:02X}".format(
+        *(max(0, min(255, round(value))) for value in values)
+    )
+
+
+def blend(left: str, right: str, amount: float) -> str:
+    left_rgb = hex_rgb(left)
+    right_rgb = hex_rgb(right)
+    amount = max(0.0, min(1.0, amount))
+    return rgb_hex(tuple(a + (b - a) * amount for a, b in zip(left_rgb, right_rgb)))
+
+
+def luminance(value: str) -> float:
+    channels = []
+    for channel in hex_rgb(value):
+        normalized = channel / 255.0
+        channels.append(
+            normalized / 12.92
+            if normalized <= 0.04045
+            else ((normalized + 0.055) / 1.055) ** 2.4
+        )
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+
+
+def contrast(left: str, right: str) -> float:
+    high = max(luminance(left), luminance(right))
+    low = min(luminance(left), luminance(right))
+    return (high + 0.05) / (low + 0.05)
+
+
+def semantic_roles(roles: dict[str, str]) -> dict[str, str]:
+    result = dict(roles)
+    bg = result["bg"]
+    bg_alt = result.get("bg_alt", bg)
+    text = result["text"]
+    text_dim = result.get("text_dim", text)
+    accent = result.get("accent", text)
+    accent2 = result.get("accent2", accent)
+    urgent = result.get("urgent", accent2)
+    candidates = [bg, text]
+    defaults = {
+        "surface_0": bg,
+        "surface_1": bg_alt,
+        "surface_2": blend(bg_alt, text, 0.08),
+        "overlay": bg,
+        "hover": blend(bg_alt, accent, 0.15),
+        "selected": accent,
+        "border_subtle": result.get("border_normal", bg_alt),
+        "border_strong": result.get("focus", accent),
+        "success": result.get("ansi_green", accent2),
+        "warning": result.get("ansi_yellow", accent2),
+        "info": result.get("ansi_blue", accent2),
+        "disabled": text_dim,
+        "shadow": "#000000",
+        "on_accent": max(candidates, key=lambda item: contrast(accent, item)),
+        "on_urgent": max(candidates, key=lambda item: contrast(urgent, item)),
+    }
+    for key, value in defaults.items():
+        result.setdefault(key, value)
+    return result
+
+
+def load_targets() -> dict[str, str | bool]:
+    if not TARGETS_FILE.is_file():
+        return {target: True for target in CORE_TARGETS}
+    targets: dict[str, str | bool] = {}
+    for raw in TARGETS_FILE.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if "=" in line:
+            key, value = line.split("=", 1)
+            targets[key.strip()] = os.path.expanduser(value.strip())
+        else:
+            targets[line] = True
+    return targets
+
+
+def list_themes() -> list[str]:
+    return sorted(path.stem for path in THEME_DIR.glob("*.json"))
+
+
+def active_theme() -> str | None:
+    path = GENERATED / ".active"
+    try:
+        return path.read_text(encoding="utf-8").strip() or None
+    except OSError:
+        return None
+
+
 def load_theme(name: str) -> dict[str, Any]:
-    if not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", name):
+    if not NAME.fullmatch(name):
         raise ThemeError(f"invalid theme name: {name!r}")
     path = THEME_DIR / f"{name}.json"
     if not path.is_file():
@@ -124,20 +228,27 @@ def normalize(payload: dict[str, Any], *, expected_name: str | None = None) -> d
         if role not in roles:
             raise ThemeError(f"missing required role: {role}")
 
-    normalized_roles = {key: color(str(value)) for key, value in roles.items()}
+    normalized_roles = semantic_roles({key: color(str(value)) for key, value in roles.items()})
     normalized_style = dict(DEFAULT_STYLE)
     normalized_style.update(style)
-    normalized_style["blur_on"] = bool_value(normalized_style["blur_on"])
-    normalized_style["shadow_on"] = bool_value(normalized_style["shadow_on"])
-    normalized_style["opacity"] = float(normalized_style["opacity"])
-    normalized_style["opacity_inactive"] = float(normalized_style["opacity_inactive"])
-    normalized_style["inactive_dim"] = float(normalized_style["inactive_dim"])
-    normalized_style["shadow_opacity"] = float(normalized_style["shadow_opacity"])
 
+    for key in ("blur_on", "shadow_on"):
+        normalized_style[key] = bool_value(normalized_style[key])
+    for key in (
+        "opacity",
+        "opacity_inactive",
+        "inactive_dim",
+        "shadow_opacity",
+        "rounding_power",
+        "blur_noise",
+        "blur_contrast",
+        "blur_brightness",
+        "blur_vibrancy",
+    ):
+        normalized_style[key] = float(normalized_style[key])
     for key in ("opacity", "opacity_inactive", "inactive_dim", "shadow_opacity"):
         if not 0 <= normalized_style[key] <= 1:
             raise ThemeError(f"{key} must be between 0 and 1")
-
     for key in (
         "corner_radius",
         "blur_strength",
@@ -152,39 +263,31 @@ def normalize(payload: dict[str, Any], *, expected_name: str | None = None) -> d
         normalized_style[key] = int(normalized_style[key])
         if normalized_style[key] < 0:
             raise ThemeError(f"{key} cannot be negative")
-
     normalized_style["shadow_color"] = color(str(normalized_style["shadow_color"]))
     normalized_style["shadow_offset"] = str(normalized_style["shadow_offset"])
 
     return {
         "schema_version": 1,
         "name": name,
+        "description": str(payload.get("description", "")),
         "dark": bool_value(payload.get("dark", True)),
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "roles": normalized_roles,
         "style": normalized_style,
+        "wallpaper": {
+            "path": str(CONFIG / "hypr/wallpapers" / f"{name}.png"),
+            "generator": "wallgen",
+        },
     }
 
 
 def ansi_roles(roles: dict[str, str]) -> list[str]:
     fallback = roles["text"]
     names = (
-        "ansi_black",
-        "ansi_red",
-        "ansi_green",
-        "ansi_yellow",
-        "ansi_blue",
-        "ansi_magenta",
-        "ansi_cyan",
-        "ansi_white",
-        "ansi_br_black",
-        "ansi_br_red",
-        "ansi_br_green",
-        "ansi_br_yellow",
-        "ansi_br_blue",
-        "ansi_br_magenta",
-        "ansi_br_cyan",
-        "ansi_br_white",
+        "ansi_black", "ansi_red", "ansi_green", "ansi_yellow",
+        "ansi_blue", "ansi_magenta", "ansi_cyan", "ansi_white",
+        "ansi_br_black", "ansi_br_red", "ansi_br_green", "ansi_br_yellow",
+        "ansi_br_blue", "ansi_br_magenta", "ansi_br_cyan", "ansi_br_white",
     )
     return [roles.get(name, fallback) for name in names]
 
@@ -192,9 +295,6 @@ def ansi_roles(roles: dict[str, str]) -> list[str]:
 def render_hypr(theme: dict[str, Any]) -> str:
     roles = theme["roles"]
     style = theme["style"]
-    blur = "true" if style["blur_on"] else "false"
-    shadow = "true" if style["shadow_on"] else "false"
-    dimmed = "true" if style["inactive_dim"] > 0 else "false"
     return f'''# Generated by theme. Edit the source JSON, not this file.
 $bg = rgb({rgb(roles["bg"])})
 $bg_alt = rgb({rgb(roles["bg_alt"])})
@@ -214,20 +314,23 @@ general {{
 
 decoration {{
     rounding = {style["corner_radius"]}
+    rounding_power = {style["rounding_power"]}
     active_opacity = {style["opacity"]}
     inactive_opacity = {style["opacity_inactive"]}
-    dim_inactive = {dimmed}
+    dim_inactive = {str(style["inactive_dim"] > 0).lower()}
     dim_strength = {style["inactive_dim"]}
-
     blur {{
-        enabled = {blur}
+        enabled = {str(style["blur_on"]).lower()}
         size = {max(1, style["blur_strength"])}
         passes = {max(1, style["blur_passes"])}
+        noise = {style["blur_noise"]}
+        contrast = {style["blur_contrast"]}
+        brightness = {style["blur_brightness"]}
+        vibrancy = {style["blur_vibrancy"]}
         new_optimizations = true
     }}
-
     shadow {{
-        enabled = {shadow}
+        enabled = {str(style["shadow_on"]).lower()}
         range = {style["shadow_radius"]}
         render_power = {max(1, min(4, style["shadow_render_power"]))}
         offset = {style["shadow_offset"]}
@@ -257,6 +360,7 @@ hl.config({{
     }},
     decoration = {{
         rounding = {style["corner_radius"]},
+        rounding_power = {style["rounding_power"]},
         active_opacity = {style["opacity"]},
         inactive_opacity = {style["opacity_inactive"]},
         dim_inactive = {str(style["inactive_dim"] > 0).lower()},
@@ -265,7 +369,10 @@ hl.config({{
             enabled = {str(style["blur_on"]).lower()},
             size = {max(1, style["blur_strength"])},
             passes = {max(1, style["blur_passes"])},
-            vibrancy = 0.16,
+            noise = {style["blur_noise"]},
+            contrast = {style["blur_contrast"]},
+            brightness = {style["blur_brightness"]},
+            vibrancy = {style["blur_vibrancy"]},
         }},
         shadow = {{
             enabled = {str(style["shadow_on"]).lower()},
@@ -285,15 +392,15 @@ def render_kitty(theme: dict[str, Any]) -> str:
         "# Generated by theme. Included by kitty.conf.",
         f"background {roles['bg']}",
         f"foreground {roles['text']}",
-        f"cursor {roles['accent']}",
+        f"cursor {roles.get('cursor', roles['accent'])}",
         f"cursor_text_color {roles['bg']}",
-        f"selection_background {roles.get('selection_bg', roles['accent'])}",
-        f"selection_foreground {roles.get('selection_fg', roles['bg'])}",
+        f"selection_background {roles.get('sel_bg', roles['accent'])}",
+        f"selection_foreground {roles.get('sel_fg', roles['bg'])}",
         f"url_color {roles['accent2']}",
         f"active_border_color {roles['focus']}",
         f"inactive_border_color {roles['border_normal']}",
         f"active_tab_background {roles['accent']}",
-        f"active_tab_foreground {roles['bg']}",
+        f"active_tab_foreground {roles['on_accent']}",
         f"inactive_tab_background {roles['bg_alt']}",
         f"inactive_tab_foreground {roles['text_dim']}",
         f"background_opacity {style['opacity']}",
@@ -363,26 +470,163 @@ style = "accent"
 '''
 
 
-def apply(name: str) -> None:
-    theme = load_theme(name)
-    outputs = {
+def render_nvim(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    return f'''-- Generated by theme. Source from init.lua if desired.
+local c = {{
+  bg = "{roles['bg']}", fg = "{roles['text']}", muted = "{roles['text_dim']}",
+  accent = "{roles['accent']}", accent2 = "{roles['accent2']}", urgent = "{roles['urgent']}",
+  surface = "{roles['bg_alt']}", border = "{roles['border_normal']}",
+}}
+vim.cmd("highlight clear")
+vim.o.termguicolors = true
+vim.api.nvim_set_hl(0, "Normal", {{ fg = c.fg, bg = c.bg }})
+vim.api.nvim_set_hl(0, "NormalFloat", {{ fg = c.fg, bg = c.surface }})
+vim.api.nvim_set_hl(0, "Comment", {{ fg = c.muted, italic = true }})
+vim.api.nvim_set_hl(0, "Identifier", {{ fg = c.accent }})
+vim.api.nvim_set_hl(0, "Function", {{ fg = c.accent2, bold = true }})
+vim.api.nvim_set_hl(0, "String", {{ fg = "{roles.get('ansi_green', roles['accent2'])}" }})
+vim.api.nvim_set_hl(0, "DiagnosticError", {{ fg = c.urgent }})
+vim.api.nvim_set_hl(0, "Visual", {{ bg = "{roles['selected']}" }})
+vim.api.nvim_set_hl(0, "FloatBorder", {{ fg = c.accent2, bg = c.surface }})
+'''
+
+
+def render_waybar(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    keys = (
+        "bg", "bg_alt", "text", "text_dim", "accent", "accent2", "urgent", "focus",
+        "surface_0", "surface_1", "surface_2", "overlay", "hover", "selected",
+        "border_subtle", "border_strong", "success", "warning", "info", "disabled",
+        "on_accent", "on_urgent",
+    )
+    return "/* Generated by theme. */\n" + "".join(
+        f"@define-color {key} {roles[key]};\n" for key in keys
+    )
+
+
+def render_wofi(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    style = theme["style"]
+    return f'''/* Generated by theme. */
+window {{ background: {roles['bg']}; color: {roles['text']}; border: {style['border_width']}px solid {roles['accent2']}; border-radius: {style['corner_radius']}px; }}
+#input {{ background: {roles['bg_alt']}; color: {roles['text']}; border: 1px solid {roles['border_normal']}; border-radius: {style['corner_radius']}px; }}
+#entry:selected {{ background: {roles['accent']}; color: {roles['on_accent']}; }}
+#text {{ color: inherit; }}
+'''
+
+
+def render_rofi(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    style = theme["style"]
+    return f'''/* Generated by theme. */
+* {{
+  background: {roles['bg']}; background-alt: {roles['bg_alt']}; foreground: {roles['text']};
+  selected: {roles['accent']}; selected-foreground: {roles['on_accent']}; urgent: {roles['urgent']};
+  border-color: {roles['accent2']}; border-width: {style['border_width']}px; radius: {style['corner_radius']}px;
+}}
+'''
+
+
+def render_dunst(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    style = theme["style"]
+    return f'''# Generated by theme. Include from dunst.conf.
+[global]
+    background = "{roles['bg']}"
+    foreground = "{roles['text']}"
+    frame_color = "{roles['accent2']}"
+    frame_width = {style['border_width']}
+    corner_radius = {style['corner_radius']}
+[urgency_critical]
+    frame_color = "{roles['urgent']}"
+'''
+
+
+def render_hyprlock(theme: dict[str, Any]) -> str:
+    roles = theme["roles"]
+    return f'''# Generated palette for Hyprlock.
+$lock_bg = rgba({rgb(roles['bg'])}ff)
+$lock_surface = rgba({rgb(roles['bg_alt'])}ff)
+$lock_text = rgba({rgb(roles['text'])}ff)
+$lock_muted = rgba({rgb(roles['text_dim'])}ff)
+$lock_accent = rgba({rgb(roles['accent'])}ff)
+$lock_accent2 = rgba({rgb(roles['accent2'])}ff)
+$lock_urgent = rgba({rgb(roles['urgent'])}ff)
+'''
+
+
+def write_outputs(theme: dict[str, Any], targets: dict[str, str | bool]) -> None:
+    name = theme["name"]
+    outputs: dict[Path, str] = {
         GENERATED / "theme.json": json.dumps(theme, indent=2, sort_keys=True) + "\n",
-        CONFIG / "hypr/generated/theme.conf": render_hypr(theme),
-        CONFIG / "hypr/generated/theme.lua": render_hypr_lua(theme),
-        CONFIG / "kitty/generated/theme.conf": render_kitty(theme),
-        GENERATED / "starship.toml": render_starship(theme),
         GENERATED / ".active": name + "\n",
     }
+    if "hypr" in targets:
+        outputs[CONFIG / "hypr/generated/theme.conf"] = render_hypr(theme)
+        outputs[CONFIG / "hypr/generated/theme.lua"] = render_hypr_lua(theme)
+    if "kitty" in targets:
+        outputs[CONFIG / "kitty/generated/theme.conf"] = render_kitty(theme)
+    if "starship" in targets:
+        outputs[GENERATED / "starship.toml"] = render_starship(theme)
+    if "nvim" in targets:
+        outputs[CONFIG / "nvim/lua/generated_theme.lua"] = render_nvim(theme)
+    if "waybar" in targets:
+        outputs[CONFIG / "waybar/generated/theme.css"] = render_waybar(theme)
+    if "wofi" in targets:
+        outputs[CONFIG / "wofi/generated/theme.css"] = render_wofi(theme)
+    if "rofi" in targets:
+        outputs[CONFIG / "rofi/generated/theme.rasi"] = render_rofi(theme)
+    if "dunst" in targets:
+        outputs[CONFIG / "dunst/generated/theme.conf"] = render_dunst(theme)
+    if "hyprlock" in targets:
+        outputs[CONFIG / "hypr/generated/hyprlock-theme.conf"] = render_hyprlock(theme)
     for path, text in outputs.items():
         atomic_write(path, text)
+
+
+def run_quiet(command: list[str]) -> bool:
+    try:
+        return subprocess.run(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        ).returncode == 0
+    except OSError:
+        return False
+
+
+def reload_consumers(targets: dict[str, str | bool]) -> None:
+    if "hypr" in targets and os.environ.get("HYPRLAND_INSTANCE_SIGNATURE") and shutil.which("hyprctl"):
+        run_quiet(["hyprctl", "reload"])
+    if "kitty" in targets and os.environ.get("KITTY_LISTEN_ON") and shutil.which("kitty"):
+        run_quiet(
+            [
+                "kitty", "@", "set-colors", "--all", "-c",
+                str(CONFIG / "kitty/generated/theme.conf"),
+            ]
+        )
+    if "dunst" in targets and shutil.which("dunstctl"):
+        run_quiet(["dunstctl", "reload"])
+
+
+def apply(name: str) -> None:
+    theme = load_theme(name)
+    targets = load_targets()
+    write_outputs(theme, targets)
+    if "wallpaper" in targets and shutil.which("wallgen"):
+        command = ["wallgen", name]
+        if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            command.append("--set")
+        result = subprocess.run(command, text=True, capture_output=True, check=False)
+        if result.returncode != 0:
+            print(result.stderr.strip() or "wallpaper generation failed", file=sys.stderr)
+    reload_consumers(targets)
     print(f"Applied theme: {name}")
 
 
-def list_themes() -> list[str]:
-    return sorted(path.stem for path in THEME_DIR.glob("*.json"))
-
-
-def validate(name: str | None) -> int:
+def validate(name: str | None = None) -> int:
     names = [name] if name else list_themes()
     if not names:
         raise ThemeError(f"no themes found in {THEME_DIR}")
@@ -392,32 +636,81 @@ def validate(name: str | None) -> int:
     return 0
 
 
-def parser() -> argparse.ArgumentParser:
-    result = argparse.ArgumentParser(prog="theme", description="Apply the Arch WM universal theme")
-    result.add_argument("name", nargs="?")
-    result.add_argument("--list", action="store_true")
-    result.add_argument("--validate", action="store_true")
-    return result
+def exec_command(command: str, arguments: list[str]) -> int:
+    path = shutil.which(command)
+    if not path:
+        raise ThemeError(f"helper command is not installed: {command}")
+    os.execv(path, [command, *arguments])
+    return 0
+
+
+def print_help() -> None:
+    print(
+        """Usage:
+  theme                         Open the theme picker
+  theme <name>                  Apply a theme everywhere
+  theme --list                  List installed themes
+  theme validate [name]         Validate one or all themes
+  theme current                 Print the active theme
+  theme install                 Reinstall the pinned full catalog
+  theme new <name> [options]    Create a custom theme
+  theme wallpaper [args]        Generate theme wallpaper(s)
+  theme targets                 Show the target configuration
+  theme starship                Regenerate only the active Starship config
+"""
+    )
 
 
 def main() -> int:
-    args = parser().parse_args()
+    arguments = sys.argv[1:]
     try:
-        if args.list:
+        if not arguments:
+            return exec_command("theme-menu", [])
+        command = arguments[0]
+        rest = arguments[1:]
+        if command in {"-h", "--help", "help"}:
+            print_help()
+            return 0
+        if command in {"--list", "list"}:
             print("\n".join(list_themes()))
             return 0
-        if args.validate:
-            return validate(args.name)
-        if not args.name:
-            active = GENERATED / ".active"
-            if active.exists():
-                print(active.read_text(encoding="utf-8").strip())
+        if command in {"--validate", "validate"}:
+            return validate(rest[0] if rest else None)
+        if command in {"current", "status"}:
+            current = active_theme()
+            if current:
+                print(current)
                 return 0
-            raise ThemeError("provide a theme name or use --list")
-        apply(args.name)
+            raise ThemeError("no active theme")
+        if command == "install":
+            return exec_command("theme-install", rest)
+        if command == "new":
+            return exec_command("theme-new", rest)
+        if command in {"menu", "picker"}:
+            return exec_command("theme-menu", rest)
+        if command in {"wallpaper", "wallgen"}:
+            return exec_command("wallgen", rest)
+        if command == "targets":
+            print(TARGETS_FILE)
+            if TARGETS_FILE.is_file():
+                print(TARGETS_FILE.read_text(encoding="utf-8"), end="")
+            return 0
+        if command == "starship":
+            current = active_theme()
+            if not current:
+                raise ThemeError("no active theme")
+            theme = load_theme(current)
+            atomic_write(GENERATED / "starship.toml", render_starship(theme))
+            print("Regenerated Starship for " + current)
+            return 0
+        if command.startswith("-"):
+            raise ThemeError(f"unknown option: {command}")
+        if rest:
+            raise ThemeError("theme names do not accept extra arguments")
+        apply(command)
         return 0
     except ThemeError as error:
-        print(f"theme: {error}", file=os.sys.stderr)
+        print(f"theme: {error}", file=sys.stderr)
         return 1
 
 

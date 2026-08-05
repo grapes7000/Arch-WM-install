@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import random
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    from PIL import Image, ImageDraw, ImageFilter
+except ImportError:
+    print("wallgen: python-pillow is required (sudo pacman -S python-pillow)", file=sys.stderr)
+    raise SystemExit(1)
+
+HOME = Path.home()
+CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+THEME_DIR = CONFIG / "theme-engine/themes"
+WALLPAPER_DIR = CONFIG / "hypr/wallpapers"
+
+
+def hex_rgb(value: str) -> tuple[int, int, int]:
+    value = value.lstrip("#")
+    return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))
+
+
+def blend(left: tuple[int, int, int], right: tuple[int, int, int], amount: float) -> tuple[int, int, int]:
+    return tuple(round(a + (b - a) * amount) for a, b in zip(left, right))
+
+
+def load_theme(name: str) -> dict:
+    path = THEME_DIR / f"{name}.json"
+    if not path.is_file():
+        raise RuntimeError(f"theme not found: {name}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload.get("roles"), dict):
+        raise RuntimeError(f"theme has no roles object: {name}")
+    return payload
+
+
+def gradient(width: int, height: int, start: tuple[int, int, int], end: tuple[int, int, int]) -> Image.Image:
+    # Build a tiny gradient and upscale it. This is visually smooth after the
+    # glow blur and dramatically faster under software-rendered VMs.
+    sample_width = 96
+    sample_height = 54
+    image = Image.new("RGB", (sample_width, sample_height), start)
+    pixels = image.load()
+    for y in range(sample_height):
+        vertical = y / max(1, sample_height - 1)
+        for x in range(sample_width):
+            horizontal = x / max(1, sample_width - 1)
+            amount = min(1.0, 0.15 + vertical * 0.55 + horizontal * 0.20)
+            pixels[x, y] = blend(start, end, amount)
+    return image.resize((width, height), Image.Resampling.BICUBIC)
+
+
+def generate(name: str, width: int, height: int) -> Path:
+    payload = load_theme(name)
+    roles = payload["roles"]
+    background = hex_rgb(roles["bg"])
+    background_alt = hex_rgb(roles.get("bg_alt", roles["bg"]))
+    accents = [
+        hex_rgb(roles.get("accent", roles["text"])),
+        hex_rgb(roles.get("accent2", roles.get("accent", roles["text"]))),
+        hex_rgb(roles.get("focus", roles.get("accent", roles["text"]))),
+        hex_rgb(roles.get("urgent", roles.get("accent2", roles["text"]))),
+    ]
+
+    canvas = gradient(width, height, background, background_alt).convert("RGBA")
+    seed = int(hashlib.sha256(name.encode("utf-8")).hexdigest()[:16], 16)
+    rng = random.Random(seed)
+    glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(glow, "RGBA")
+    scale = min(width, height)
+    for index in range(8):
+        color = accents[index % len(accents)]
+        radius = rng.randint(round(scale * 0.15), round(scale * 0.38))
+        center_x = rng.randint(-radius // 3, width + radius // 3)
+        center_y = rng.randint(-radius // 3, height + radius // 3)
+        opacity = rng.randint(45, 105)
+        draw.ellipse(
+            (center_x - radius, center_y - radius, center_x + radius, center_y + radius),
+            fill=(*color, opacity),
+        )
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=max(24, round(scale * 0.08))))
+    canvas = Image.alpha_composite(canvas, glow)
+
+    # Lightweight deterministic grain to avoid visible banding.
+    noise = Image.effect_noise((max(1, width // 3), max(1, height // 3)), 18)
+    noise = noise.resize((width, height), Image.Resampling.BILINEAR)
+    grain = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+    grain.putalpha(noise.point(lambda value: 4 if value > 128 else 1))
+    canvas = Image.alpha_composite(canvas, grain)
+
+    WALLPAPER_DIR.mkdir(parents=True, exist_ok=True)
+    output = WALLPAPER_DIR / f"{name}.png"
+    temporary = output.with_suffix(".png.tmp")
+    canvas.convert("RGB").save(temporary, "PNG", optimize=True)
+    temporary.replace(output)
+    print(output)
+    return output
+
+
+def set_wallpaper(path: Path) -> None:
+    if shutil.which("hyprctl") is None or not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        print("wallgen: wallpaper generated; start Hyprland to apply it live", file=sys.stderr)
+        return
+    commands = (
+        ["hyprctl", "hyprpaper", "reload", f",{path}"],
+        ["hyprctl", "hyprpaper", "preload", str(path)],
+        ["hyprctl", "hyprpaper", "wallpaper", f",{path}"],
+    )
+    for command in commands:
+        result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        if result.returncode == 0:
+            return
+    print("wallgen: hyprpaper did not accept a live reload; the file is ready for next login", file=sys.stderr)
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(prog="wallgen", description="Generate deterministic theme wallpapers")
+    result.add_argument("name", nargs="?")
+    result.add_argument("--all", action="store_true")
+    result.add_argument("--set", action="store_true")
+    result.add_argument("--width", type=int, default=2560)
+    result.add_argument("--height", type=int, default=1440)
+    return result
+
+
+def main() -> int:
+    args = parser().parse_args()
+    if args.width < 320 or args.height < 240:
+        print("wallgen: dimensions are too small", file=sys.stderr)
+        return 2
+    if args.all:
+        names = sorted(path.stem for path in THEME_DIR.glob("*.json"))
+    elif args.name:
+        names = [args.name]
+    else:
+        active = CONFIG / "theme-engine/generated/.active"
+        if not active.is_file():
+            print("wallgen: provide a theme name or apply a theme first", file=sys.stderr)
+            return 2
+        names = [active.read_text(encoding="utf-8").strip()]
+    try:
+        outputs = [generate(name, args.width, args.height) for name in names]
+    except (OSError, json.JSONDecodeError, RuntimeError) as error:
+        print(f"wallgen: {error}", file=sys.stderr)
+        return 1
+    if args.set and outputs:
+        set_wallpaper(outputs[-1])
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

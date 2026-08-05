@@ -1,0 +1,4 @@
+singleton TimeService 1.0 TimeService.qml
+singleton SystemStatsService 1.0 SystemStatsService.qml
+singleton ActiveWindowService 1.0 ActiveWindowService.qml
+singleton LayoutService 1.0 LayoutService.qml

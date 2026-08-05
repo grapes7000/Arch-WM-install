@@ -3,6 +3,7 @@ git
 rsync
 python
 python-pip
+python-pillow
 jq
 curl
 wget

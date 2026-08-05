@@ -1,5 +1,5 @@
 import QtQuick
-import ArchWmShell 1.0
+import "../core" as Core
 
 Item {
     id: root
@@ -12,8 +12,8 @@ Item {
     property var settings: ({})
     property real density: 1.0
 
-    readonly property var definition: WidgetRegistry.definition(widgetId)
-    readonly property bool supported: WidgetRegistry.supports(widgetId, surfaceKind, locked)
+    readonly property var definition: Core.WidgetRegistry.definition(widgetId)
+    readonly property bool supported: Core.WidgetRegistry.supports(widgetId, surfaceKind, locked)
     readonly property var requestedCapabilities: definition && definition.capabilities
         ? definition.capabilities : []
 
@@ -21,7 +21,7 @@ Item {
     implicitHeight: loader.item ? loader.item.implicitHeight : 0
     visible: supported
 
-    WidgetContext {
+    Core.WidgetContext {
         id: widgetContext
         surface: root.surfaceKind
         instanceId: root.instanceId
@@ -30,7 +30,7 @@ Item {
         locked: root.locked
         availableWidth: root.width
         availableHeight: root.height
-        capabilities: SurfaceRegistry.grant(root.surfaceKind, root.requestedCapabilities)
+        capabilities: Core.SurfaceRegistry.grant(root.surfaceKind, root.requestedCapabilities)
         settings: root.settings
     }
 
@@ -38,7 +38,7 @@ Item {
         id: loader
         anchors.fill: parent
         active: root.supported
-        source: root.supported ? WidgetRegistry.entryUrl(root.widgetId) : ""
+        source: root.supported ? Core.WidgetRegistry.entryUrl(root.widgetId) : ""
         onLoaded: {
             if (item)
                 item.context = widgetContext

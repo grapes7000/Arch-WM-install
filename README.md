@@ -18,13 +18,16 @@ Implemented for this milestone:
 - staged Python installer with `minimal`, `desktop`, and `workstation` profiles
 - dry-run, resume, stage selection, doctor, tracked backups, rollback, and uninstall
 - current Hyprland Lua configuration with machine-local overrides
-- atomic universal theme generation for Quickshell, Hyprland, Kitty, and Starship
+- pinned installation of the complete 36-theme `grapes7000/themes` catalog
+- atomic universal theme generation for Quickshell, Hyprland, Kitty, Starship, and Neovim
+- optional generated targets for Waybar, Wofi, Rofi, Dunst, and Hyprlock
+- deterministic theme wallpapers with safe Hyprpaper live reload
 - a modern Kitty/Zsh terminal profile with an animated Kitty cursor trail
 - a manifest-backed portable widget registry
 - shared clock, active-window, workspace, and system-stat widgets
 - multi-monitor bar and desktop surface hosts driven by JSON layouts
 - Hyprlock as the verified authentication boundary for the first milestone
-- automated layout, ownership, rollback, theme, syntax, and Eww-exclusion checks
+- automated layout, ownership, rollback, upstream-theme, syntax, and Eww-exclusion checks
 
 Not yet production-complete:
 
@@ -57,15 +60,75 @@ Arch-WM-install/
 ├── modules/
 │   ├── shell/                 # Quickshell surfaces, widgets, services and layouts
 │   ├── terminal/              # Kitty, Zsh, Atuin and terminal command palette
-│   ├── theme-engine/          # universal theme contract and generators
+│   ├── theme-engine/          # full catalog installer, contract and generators
 │   └── hyprland/              # current Lua compositor/session configuration
 ├── vendor/
-│   ├── themes/                # optional synced upstream snapshot
-│   └── hyprland/              # optional synced upstream snapshot without Eww
+│   ├── themes/                # optional maintainer snapshot
+│   └── hyprland/              # optional maintainer snapshot without Eww
 ├── scripts/                   # sync, validation and VM smoke-test tools
 ├── docs/                      # design and operating contracts
 └── tests/                     # installer, theme and structural tests
 ```
+
+## Theme Engine
+
+The installer pins `grapes7000/themes` to an exact reviewed commit and verifies the catalog before installing it. It does **not** execute the old upstream installer, install Oh My Zsh, prompt for broad package changes, or import Eww.
+
+The installed catalog contains all 36 upstream themes, including:
+
+- Catppuccin Mocha, Macchiato, Frappe, and Latte
+- Dracula and Dracula Light
+- Tokyo Night, Storm, and Day
+- Everforest Dark and Light
+- Kanagawa, Wave, and Dragon
+- Gruvbox, Gruvbox Material, and Gruvbox Light
+- Rose Pine, Moon, and Dawn
+- Nord, One Dark, Material, Monokai, Solarized, Ayu, Oxocarbon
+- Hacker Pink, Y2K, Cyber Green, Cappuccino, iOS Glassy, and Vintage Mac
+
+Open the picker:
+
+```bash
+theme
+```
+
+Apply a theme directly:
+
+```bash
+theme catppuccin_mocha
+```
+
+Useful commands:
+
+```bash
+theme --list
+theme validate
+theme current
+theme targets
+theme install
+theme new synthwave --from tokyonight --edit
+theme wallpaper y2k --set
+wallgen --all
+```
+
+Theme targets are stored at:
+
+```text
+~/.config/theme-engine/targets.conf
+```
+
+Core targets enabled by default are:
+
+```text
+hypr
+quickshell
+kitty
+starship
+wallpaper
+nvim
+```
+
+Optional compatibility targets from the original theme project are included but commented out until explicitly enabled.
 
 ## First Arch VM smoke test
 
@@ -124,11 +187,13 @@ Dry-run:
 bash install.sh --profile desktop --theme y2k --dry-run --noninteractive
 ```
 
-Install:
+Install or update an existing managed VM:
 
 ```bash
 bash install.sh --profile desktop --theme y2k --noninteractive
 ```
+
+Payload version markers cause changed Hyprland and Quickshell modules to refresh automatically while unchanged stages remain idempotent.
 
 Resume an interrupted run:
 
@@ -142,12 +207,18 @@ Health check:
 PYTHONPATH="$PWD" python -m installer doctor --profile desktop --theme y2k
 ```
 
-## Upstream import
+## Upstream imports
 
-Maintainers can run:
+The runtime theme catalog is downloaded from an exact pinned upstream commit and recorded in:
+
+```text
+~/.config/theme-engine/upstream-lock.json
+```
+
+Maintainers can additionally refresh repository snapshots with:
 
 ```bash
 bash scripts/sync-upstreams.sh
 ```
 
-This copies the theme repository into `vendor/themes`, copies the Hyprland repository into `vendor/hyprland`, excludes all Eww paths, and records both source commit SHAs. Runtime installation uses the reviewed modules in this monorepo rather than downloading mutable upstream code.
+This copies the theme repository into `vendor/themes`, copies the Hyprland repository into `vendor/hyprland`, excludes all Eww paths, and records both source commit SHAs. Runtime installation never follows an unpinned mutable upstream branch.

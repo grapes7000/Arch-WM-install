@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import ArchWmShell 1.0
+import "../../core" as Core
+import "../../services" as Services
 import "../../components"
 
 Scope {
     Variants {
-        variants: Quickshell.screens
+        model: Quickshell.screens
 
         PanelWindow {
             id: root
@@ -20,30 +21,30 @@ Scope {
                 right: true
             }
 
-            implicitHeight: Theme.barHeight
+            implicitHeight: Core.Theme.barHeight
             exclusiveZone: implicitHeight
             color: "transparent"
 
             Rectangle {
                 id: background
                 anchors.fill: parent
-                anchors.margins: Math.max(2, Math.floor(Theme.gap / 2))
-                color: Theme.surface
-                radius: Theme.radius
-                border.width: Theme.borderWidth
-                border.color: Theme.accent2
+                anchors.margins: Math.max(2, Math.floor(Core.Theme.gap / 2))
+                color: Core.Theme.surface
+                radius: Core.Theme.radius
+                border.width: Core.Theme.borderWidth
+                border.color: Core.Theme.accent2
 
                 RowLayout {
                     id: startRegion
                     anchors {
                         left: parent.left
-                        leftMargin: Theme.gap
+                        leftMargin: Core.Theme.gap
                         verticalCenter: parent.verticalCenter
                     }
-                    spacing: Theme.gap
+                    spacing: Core.Theme.gap
 
                     Repeater {
-                        model: LayoutService.bar.regions.start || []
+                        model: Services.LayoutService.bar.regions.start || []
 
                         WidgetHost {
                             required property var modelData
@@ -53,17 +54,17 @@ Scope {
                             variant: modelData.variant || "compact"
                             settings: modelData.settings || ({})
                             Layout.preferredWidth: implicitWidth
-                            Layout.preferredHeight: background.height - Theme.gap
+                            Layout.preferredHeight: background.height - Core.Theme.gap
                         }
                     }
                 }
 
                 RowLayout {
                     anchors.centerIn: parent
-                    spacing: Theme.gap
+                    spacing: Core.Theme.gap
 
                     Repeater {
-                        model: LayoutService.bar.regions.center || []
+                        model: Services.LayoutService.bar.regions.center || []
 
                         WidgetHost {
                             required property var modelData
@@ -73,7 +74,7 @@ Scope {
                             variant: modelData.variant || "compact"
                             settings: modelData.settings || ({})
                             Layout.preferredWidth: implicitWidth
-                            Layout.preferredHeight: background.height - Theme.gap
+                            Layout.preferredHeight: background.height - Core.Theme.gap
                         }
                     }
                 }
@@ -81,13 +82,13 @@ Scope {
                 RowLayout {
                     anchors {
                         right: parent.right
-                        rightMargin: Theme.gap
+                        rightMargin: Core.Theme.gap
                         verticalCenter: parent.verticalCenter
                     }
-                    spacing: Theme.gap
+                    spacing: Core.Theme.gap
 
                     Repeater {
-                        model: LayoutService.bar.regions.end || []
+                        model: Services.LayoutService.bar.regions.end || []
 
                         WidgetHost {
                             required property var modelData
@@ -97,7 +98,7 @@ Scope {
                             variant: modelData.variant || "compact"
                             settings: modelData.settings || ({})
                             Layout.preferredWidth: implicitWidth
-                            Layout.preferredHeight: background.height - Theme.gap
+                            Layout.preferredHeight: background.height - Core.Theme.gap
                         }
                     }
                 }
