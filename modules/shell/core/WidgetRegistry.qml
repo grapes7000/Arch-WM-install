@@ -7,16 +7,43 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    property var widgets: ({})
+    property var widgets: ({
+        "workspaces": {
+            id: "workspaces",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop"],
+            variants: ["compact", "standard"],
+            lockSafe: false,
+            capabilities: ["workspace.switch"]
+        },
+        "active-window": {
+            id: "active-window",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop"],
+            variants: ["compact", "standard"],
+            lockSafe: false,
+            capabilities: []
+        },
+        "clock": {
+            id: "clock",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop", "lockscreen"],
+            variants: ["compact", "standard", "expanded"],
+            lockSafe: true,
+            capabilities: []
+        },
+        "system-stats": {
+            id: "system-stats",
+            entry: "Widget.qml",
+            surfaces: ["bar", "desktop"],
+            variants: ["compact", "standard", "expanded"],
+            lockSafe: false,
+            capabilities: []
+        }
+    })
     property string error: ""
 
-    readonly property string _shellDir: {
-        var url = Qt.resolvedUrl("..")
-        var s = url.toString()
-        if (s.startsWith("file://")) s = s.substring(7)
-        if (s.endsWith("/")) s = s.substring(0, s.length - 1)
-        return s
-    }
+    readonly property string registryPath: Quickshell.shellDir + "/generated/widgets.json"
 
     function parse(contents) {
         if (!contents || typeof contents !== "string" || contents.length === 0)
@@ -37,7 +64,7 @@ Singleton {
             root.error = ""
         } catch (failure) {
             root.error = String(failure)
-            console.warn("Widget registry update rejected:", failure)
+            console.warn("Widget registry update rejected; using last known-good registry:", failure)
         }
     }
 
@@ -62,12 +89,12 @@ Singleton {
 
     FileView {
         id: registryFile
-        path: root._shellDir + "/generated/widgets.json"
+        path: root.registryPath
         blockLoading: true
         watchChanges: true
-        onTextChanged: root.parse(registryFile.text)
+        onTextChanged: root.parse(registryFile.text())
         onFileChanged: registryFile.reload()
     }
 
-    Component.onCompleted: root.parse(registryFile.text)
+    Component.onCompleted: root.parse(registryFile.text())
 }

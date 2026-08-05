@@ -6,7 +6,12 @@ import "../../services" as Services
 Item {
     id: root
 
-    required property var context
+    property var context: ({
+        variant: "standard",
+        settings: ({}),
+        locked: false,
+        allows: function() { return false }
+    })
 
     implicitWidth: context.variant === "compact" ? compactText.implicitWidth : 280
     implicitHeight: context.variant === "compact" ? compactText.implicitHeight
@@ -16,11 +21,10 @@ Item {
         id: compactText
         anchors.centerIn: parent
         visible: context.variant === "compact"
-        text: "CPU " + Services.SystemStatsService.cpuPercent + "%  "
-            + "MEM " + Services.SystemStatsService.memoryPercent + "%  "
-            + "DSK " + Services.SystemStatsService.diskPercent + "%"
+        text: "CPU " + Services.SystemStatsService.cpuPercent + "%  ·  RAM "
+            + Services.SystemStatsService.memoryPercent + "%"
         color: Core.Theme.foreground
-        font.pixelSize: 12
+        font.pixelSize: 11
         font.bold: true
     }
 

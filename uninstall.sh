@@ -3,4 +3,5 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 export PYTHONPATH="$ROOT_DIR${PYTHONPATH:+:$PYTHONPATH}"
+if [ "${1:-}" = "uninstall" ]; then shift; fi
 exec python -m installer uninstall "$@"

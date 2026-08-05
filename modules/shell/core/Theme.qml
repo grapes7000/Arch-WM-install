@@ -7,8 +7,11 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property string path: Quickshell.env("HOME")
-        + "/.config/theme-engine/generated/theme.json"
+    readonly property string configHome: {
+        const configured = Quickshell.env("XDG_CONFIG_HOME")
+        return configured || (Quickshell.env("HOME") + "/.config")
+    }
+    readonly property string path: configHome + "/theme-engine/generated/theme.json"
 
     property var data: ({
         schema_version: 1,
@@ -26,7 +29,7 @@ Singleton {
             urgent: "#ff0055"
         },
         style: {
-            corner_radius: 0,
+            corner_radius: 10,
             gaps: 8,
             border_width: 2,
             bar_height: 48,
@@ -43,7 +46,7 @@ Singleton {
     readonly property string accent: roles.accent || "#00e5ff"
     readonly property string accent2: roles.accent2 || "#ff1493"
     readonly property string urgent: roles.urgent || "#ff0055"
-    readonly property int radius: style.corner_radius === undefined ? 0 : style.corner_radius
+    readonly property int radius: style.corner_radius === undefined ? 10 : style.corner_radius
     readonly property int gap: style.gaps === undefined ? 8 : style.gaps
     readonly property int borderWidth: style.border_width === undefined ? 2 : style.border_width
     readonly property int barHeight: style.bar_height === undefined ? 48 : style.bar_height
@@ -70,9 +73,9 @@ Singleton {
         path: root.path
         blockLoading: true
         watchChanges: true
-        onTextChanged: root.parse(themeFile.text)
+        onTextChanged: root.parse(themeFile.text())
         onFileChanged: themeFile.reload()
     }
 
-    Component.onCompleted: root.parse(themeFile.text)
+    Component.onCompleted: root.parse(themeFile.text())
 }

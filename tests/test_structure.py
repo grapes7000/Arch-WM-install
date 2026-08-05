@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -30,6 +31,54 @@ class StructureTests(unittest.TestCase):
             set(manifest["surfaces"]), {"bar", "desktop", "lockscreen"}
         )
         self.assertTrue(manifest["lockSafe"])
+
+    def test_fileview_text_is_called_as_a_method(self) -> None:
+        readers = {
+            "modules/shell/core/Theme.qml": ("themeFile",),
+            "modules/shell/core/WidgetRegistry.qml": ("registryFile",),
+            "modules/shell/services/LayoutService.qml": ("barFile", "desktopFile"),
+        }
+        for relative, object_names in readers.items():
+            content = (ROOT / relative).read_text(encoding="utf-8")
+            for object_name in object_names:
+                self.assertIn(f"{object_name}.text()", content, relative)
+                self.assertIsNone(
+                    re.search(rf"\b{re.escape(object_name)}\.text(?!\s*\()", content),
+                    relative,
+                )
+
+    def test_widget_context_is_set_during_object_construction(self) -> None:
+        content = (
+            ROOT / "modules/shell/components/WidgetHost.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "component.createObject(root, { context: widgetContext })",
+            content,
+        )
+        self.assertNotIn("item.context = widgetContext", content)
+        self.assertNotIn("loader.setSource", content)
+
+    def test_widgets_have_safe_default_contexts(self) -> None:
+        widgets = sorted((ROOT / "modules/shell/widgets").glob("*/Widget.qml"))
+        self.assertTrue(widgets)
+        for path in widgets:
+            content = path.read_text(encoding="utf-8")
+            self.assertNotIn("required property var context", content, str(path))
+            self.assertIn("property var context:", content, str(path))
+            self.assertIn("allows: function() { return false }", content, str(path))
+
+    def test_surface_geometry_is_bounded(self) -> None:
+        bar = (
+            ROOT / "modules/shell/surfaces/bar/BarSurface.qml"
+        ).read_text(encoding="utf-8")
+        desktop = (
+            ROOT / "modules/shell/surfaces/desktop/DesktopSurface.qml"
+        ).read_text(encoding="utf-8")
+        for cell in ("startCell", "centerCell", "endCell"):
+            self.assertIn(f"id: {cell}", bar)
+        self.assertGreaterEqual(bar.count("Layout.fillWidth: true"), 3)
+        self.assertIn("anchors.fill: parent", desktop)
+        self.assertIn("exclusionMode: ExclusionMode.Ignore", desktop)
 
 
 if __name__ == "__main__":
