@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Sequence
 
@@ -36,6 +37,30 @@ def own_for_write(ctx: runtime.Context, path: Path) -> None:
         ctx.state.backup_target(path, dry_run=ctx.options.dry_run)
     elif not ctx.options.dry_run:
         ctx.state.record_created_path(path)
+
+
+def atomic_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def payload_version_matches(source: Path, installed: Path) -> bool:
+    try:
+        return source.read_text(encoding="utf-8").strip() == installed.read_text(encoding="utf-8").strip()
+    except OSError:
+        return False
 
 
 def theme_catalog_valid(ctx: runtime.Context) -> bool:
@@ -100,19 +125,25 @@ def theme_apply(ctx: runtime.Context) -> None:
     ctx.run([str(ctx.home / ".local/bin/theme-install"), "--noninteractive"])
 
     # On a fresh install, stage 50 must own ~/.config/hypr before generated
-    # Hyprland and wallpaper files are written. Existing managed installs can
-    # safely receive the full live theme during a stage-40 refresh.
+    # Hyprland and wallpaper files are written. Temporarily suppress only those
+    # targets; the exact original targets file is restored even when apply fails.
     skip_hypr = not (ctx.config / "hypr/.arch-wm-managed").is_file()
-    previous = os.environ.get("ARCH_WM_THEME_SKIP_HYPR")
+    targets_path = ctx.config / "theme-engine/targets.conf"
+    original_targets: str | None = None
+    if skip_hypr and not ctx.options.dry_run and targets_path.is_file():
+        original_targets = targets_path.read_text(encoding="utf-8")
+        filtered: list[str] = []
+        for raw in original_targets.splitlines():
+            value = raw.split("#", 1)[0].strip().split("=", 1)[0].strip()
+            if value in {"hypr", "wallpaper", "hyprlock"}:
+                continue
+            filtered.append(raw)
+        atomic_text(targets_path, "\n".join(filtered) + "\n")
     try:
-        if skip_hypr:
-            os.environ["ARCH_WM_THEME_SKIP_HYPR"] = "1"
         ctx.run([str(ctx.home / ".local/bin/theme"), ctx.options.theme])
     finally:
-        if previous is None:
-            os.environ.pop("ARCH_WM_THEME_SKIP_HYPR", None)
-        else:
-            os.environ["ARCH_WM_THEME_SKIP_HYPR"] = previous
+        if original_targets is not None:
+            atomic_text(targets_path, original_targets)
 
 
 def theme_verify(ctx: runtime.Context) -> bool:
@@ -136,20 +167,58 @@ def theme_verify(ctx: runtime.Context) -> bool:
 
 
 def hypr_check(ctx: runtime.Context) -> bool:
-    return (ctx.config / "hypr/.arch-wm-managed").is_file() and (
-        ctx.config / "hypr/hyprland.lua"
-    ).is_file()
+    source_version = ctx.root / "modules/hyprland/config/.arch-wm-version"
+    installed_version = ctx.config / "hypr/.arch-wm-version"
+    return (
+        (ctx.config / "hypr/.arch-wm-managed").is_file()
+        and (ctx.config / "hypr/hyprland.lua").is_file()
+        and payload_version_matches(source_version, installed_version)
+    )
 
 
 def hypr_verify(ctx: runtime.Context) -> bool:
-    return ctx.options.dry_run or all(
+    if ctx.options.dry_run:
+        return True
+    return all(
         path.is_file()
         for path in (
             ctx.config / "hypr/hyprland.lua",
             ctx.config / "hypr/conf/autostart.lua",
             ctx.config / "hypr/generated/theme.lua",
             ctx.config / "hypr/.arch-wm-managed",
+            ctx.config / "hypr/.arch-wm-version",
         )
+    ) and payload_version_matches(
+        ctx.root / "modules/hyprland/config/.arch-wm-version",
+        ctx.config / "hypr/.arch-wm-version",
+    )
+
+
+def shell_check(ctx: runtime.Context) -> bool:
+    source_version = ctx.root / "modules/shell/.arch-wm-version"
+    installed_version = ctx.config / "quickshell/arch-wm/.arch-wm-version"
+    return (
+        (ctx.config / "quickshell/arch-wm/.arch-wm-managed").is_file()
+        and (ctx.config / "quickshell/arch-wm/shell.qml").is_file()
+        and payload_version_matches(source_version, installed_version)
+    )
+
+
+def shell_verify(ctx: runtime.Context) -> bool:
+    if ctx.options.dry_run:
+        return True
+    return all(
+        path.is_file()
+        for path in (
+            ctx.config / "quickshell/arch-wm/shell.qml",
+            ctx.config / "quickshell/arch-wm/core/Theme.qml",
+            ctx.config / "quickshell/arch-wm/surfaces/bar/BarSurface.qml",
+            ctx.config / "quickshell/arch-wm/.arch-wm-managed",
+            ctx.config / "quickshell/arch-wm/.arch-wm-version",
+        )
+    ) and payload_version_matches(
+        ctx.root / "modules/shell/.arch-wm-version",
+        ctx.config / "quickshell/arch-wm/.arch-wm-version",
     )
 
 
@@ -174,9 +243,9 @@ def doctor_command(ctx: runtime.Context) -> int:
         "theme": (ctx.home / ".local/bin/theme").is_file(),
         "full theme catalog": theme_count >= 36 and theme_catalog_valid(ctx),
         "terminal profile": (ctx.config / "kitty/kitty.conf").is_file(),
-        "Hyprland Lua config": (ctx.config / "hypr/hyprland.lua").is_file(),
+        "Hyprland payload current": hypr_check(ctx),
         "Hyprland theme": (ctx.config / "hypr/generated/theme.lua").is_file(),
-        "shell config": (ctx.config / "quickshell/arch-wm/shell.qml").is_file(),
+        "shell payload current": shell_check(ctx),
         "theme contract": (ctx.config / "theme-engine/generated/theme.json").is_file(),
     }
     width = max(map(len, checks))
@@ -202,6 +271,8 @@ def patch_runtime() -> None:
             patched.append(runtime.Stage(stage.name, theme_check, theme_apply, theme_verify))
         elif stage.name == "50-hyprland":
             patched.append(runtime.Stage(stage.name, hypr_check, runtime.hypr_apply, hypr_verify))
+        elif stage.name == "60-quickshell":
+            patched.append(runtime.Stage(stage.name, shell_check, runtime.shell_apply, shell_verify))
         elif stage.name == "90-validate":
             patched.append(runtime.Stage(stage.name, stage.check, validate_apply, stage.verify))
         else:
