@@ -20,85 +20,114 @@ Scope {
                 left: true
                 right: true
             }
+            margins {
+                top: Core.Theme.gap
+                left: Core.Theme.gap
+                right: Core.Theme.gap
+            }
 
             implicitHeight: Core.Theme.barHeight
-            exclusiveZone: implicitHeight
+            exclusiveZone: Core.Theme.barHeight + Core.Theme.gap * 2
+            focusable: false
             color: "transparent"
 
             Rectangle {
                 id: background
                 anchors.fill: parent
-                anchors.margins: Math.max(2, Math.floor(Core.Theme.gap / 2))
                 color: Core.Theme.surface
                 radius: Core.Theme.radius
                 border.width: Core.Theme.borderWidth
                 border.color: Core.Theme.accent2
 
                 RowLayout {
-                    id: startRegion
-                    anchors {
-                        left: parent.left
-                        leftMargin: Core.Theme.gap
-                        verticalCenter: parent.verticalCenter
-                    }
+                    anchors.fill: parent
+                    anchors.margins: Core.Theme.gap
                     spacing: Core.Theme.gap
 
-                    Repeater {
-                        model: Services.LayoutService.bar.regions.start || []
+                    Item {
+                        id: startCell
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
 
-                        WidgetHost {
-                            required property var modelData
-                            widgetId: modelData.widget
-                            surfaceKind: "bar"
-                            instanceId: modelData.instance
-                            variant: modelData.variant || "compact"
-                            settings: modelData.settings || ({})
-                            Layout.preferredWidth: implicitWidth
-                            Layout.preferredHeight: background.height - Core.Theme.gap
+                        RowLayout {
+                            anchors {
+                                left: parent.left
+                                verticalCenter: parent.verticalCenter
+                            }
+                            spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
+
+                            Repeater {
+                                model: Services.LayoutService.bar.regions.start || []
+
+                                WidgetHost {
+                                    required property var modelData
+                                    widgetId: modelData.widget
+                                    surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
+                                    Layout.preferredWidth: implicitWidth
+                                    Layout.preferredHeight: implicitHeight
+                                }
+                            }
                         }
                     }
-                }
 
-                RowLayout {
-                    anchors.centerIn: parent
-                    spacing: Core.Theme.gap
+                    Item {
+                        id: centerCell
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
 
-                    Repeater {
-                        model: Services.LayoutService.bar.regions.center || []
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
 
-                        WidgetHost {
-                            required property var modelData
-                            widgetId: modelData.widget
-                            surfaceKind: "bar"
-                            instanceId: modelData.instance
-                            variant: modelData.variant || "compact"
-                            settings: modelData.settings || ({})
-                            Layout.preferredWidth: implicitWidth
-                            Layout.preferredHeight: background.height - Core.Theme.gap
+                            Repeater {
+                                model: Services.LayoutService.bar.regions.center || []
+
+                                WidgetHost {
+                                    required property var modelData
+                                    widgetId: modelData.widget
+                                    surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
+                                    Layout.preferredWidth: implicitWidth
+                                    Layout.preferredHeight: implicitHeight
+                                }
+                            }
                         }
                     }
-                }
 
-                RowLayout {
-                    anchors {
-                        right: parent.right
-                        rightMargin: Core.Theme.gap
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Core.Theme.gap
+                    Item {
+                        id: endCell
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
 
-                    Repeater {
-                        model: Services.LayoutService.bar.regions.end || []
+                        RowLayout {
+                            anchors {
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                            }
+                            spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
 
-                        WidgetHost {
-                            required property var modelData
-                            widgetId: modelData.widget
-                            surfaceKind: "bar"
-                            instanceId: modelData.instance
-                            variant: modelData.variant || "compact"
-                            settings: modelData.settings || ({})
-                            Layout.preferredWidth: implicitWidth
-                            Layout.preferredHeight: background.height - Core.Theme.gap
+                            Repeater {
+                                model: Services.LayoutService.bar.regions.end || []
+
+                                WidgetHost {
+                                    required property var modelData
+                                    widgetId: modelData.widget
+                                    surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
+                                    Layout.preferredWidth: implicitWidth
+                                    Layout.preferredHeight: implicitHeight
+                                }
+                            }
                         }
                     }
                 }
