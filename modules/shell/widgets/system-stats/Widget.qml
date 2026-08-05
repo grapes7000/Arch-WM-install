@@ -6,7 +6,12 @@ import "../../services" as Services
 Item {
     id: root
 
-    required property var context
+    property var context: ({
+        variant: "standard",
+        settings: ({}),
+        locked: false,
+        allows: function() { return false }
+    })
 
     implicitWidth: context.variant === "compact" ? compactText.implicitWidth : 280
     implicitHeight: context.variant === "compact" ? compactText.implicitHeight
