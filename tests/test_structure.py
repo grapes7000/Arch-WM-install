@@ -47,15 +47,16 @@ class StructureTests(unittest.TestCase):
                     relative,
                 )
 
-    def test_widget_context_is_an_initial_loader_property(self) -> None:
+    def test_widget_context_is_set_during_object_construction(self) -> None:
         content = (
             ROOT / "modules/shell/components/WidgetHost.qml"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "loader.setSource(url, { context: widgetContext })",
+            "component.createObject(root, { context: widgetContext })",
             content,
         )
         self.assertNotIn("item.context = widgetContext", content)
+        self.assertNotIn("loader.setSource", content)
 
     def test_surface_geometry_is_bounded(self) -> None:
         bar = (
