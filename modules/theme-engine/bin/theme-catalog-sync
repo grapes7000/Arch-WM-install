@@ -12,8 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 UPSTREAM_REPOSITORY = "https://github.com/grapes7000/themes.git"
-UPSTREAM_COMMIT = "3c6edb333406efce1920d762b7ed67b4168d4024"
-EXPECTED_MINIMUM = 36
+UPSTREAM_COMMIT = "c609410fbd88ddc2a15c51ab142743c49ae861e0"
+EXPECTED_MINIMUM = 40
 
 HOME = Path.home()
 CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
