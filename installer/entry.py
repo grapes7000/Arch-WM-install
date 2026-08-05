@@ -29,6 +29,15 @@ def repositories_apply(ctx: runtime.Context) -> None:
     ctx.emit("  built-in modules selected; upstream sync is a maintainer operation")
 
 
+def own_for_write(ctx: runtime.Context, path: Path) -> None:
+    assert ctx.state is not None
+    if path.exists() or path.is_symlink():
+        ctx.emit(f"  backup {path}")
+        ctx.state.backup_target(path, dry_run=ctx.options.dry_run)
+    elif not ctx.options.dry_run:
+        ctx.state.record_created_path(path)
+
+
 def theme_catalog_valid(ctx: runtime.Context) -> bool:
     theme_dir = ctx.config / "theme-engine/themes"
     lock_path = ctx.config / "theme-engine/upstream-lock.json"
@@ -38,10 +47,7 @@ def theme_catalog_valid(ctx: runtime.Context) -> bool:
         lock = runtime.json_file(lock_path)
     except (OSError, json.JSONDecodeError):
         return False
-    return (
-        lock.get("commit") == THEME_UPSTREAM_COMMIT
-        and int(lock.get("theme_count", 0)) >= 36
-    )
+    return lock.get("commit") == THEME_UPSTREAM_COMMIT and int(lock.get("theme_count", 0)) >= 36
 
 
 def theme_check(ctx: runtime.Context) -> bool:
@@ -60,21 +66,53 @@ def theme_check(ctx: runtime.Context) -> bool:
 
 
 def theme_apply(ctx: runtime.Context) -> None:
+    assert ctx.state is not None
     theme = ctx.root / "modules/theme-engine"
     terminal = ctx.root / "modules/terminal"
     for name in THEME_COMMANDS:
         ctx.install(theme / "bin" / name, ctx.home / ".local/bin" / name, executable=True)
     ctx.install(terminal / "bin/term", ctx.home / ".local/bin/term", executable=True)
-    # Installing the seed catalog first records ownership of the whole directory.
-    # theme-install then expands it to the exact pinned 36-theme upstream catalog.
-    ctx.install(theme / "themes", ctx.config / "theme-engine/themes")
+
+    theme_target = ctx.config / "theme-engine/themes"
+    if theme_target.exists():
+        # Back up the whole current catalog but do not replace it with the seed
+        # directory; theme-catalog-sync merges the pinned set and preserves custom files.
+        own_for_write(ctx, theme_target)
+    else:
+        ctx.install(theme / "themes", theme_target)
     ctx.install(theme / "schema", ctx.config / "theme-engine/schema")
     ctx.install(terminal / "kitty/kitty.conf", ctx.config / "kitty/kitty.conf")
     ctx.install(terminal / "zsh/.zshrc", ctx.home / ".zshrc")
     ctx.install(terminal / "zsh/aliases.zsh", ctx.config / "zsh/aliases.zsh")
     ctx.install(terminal / "atuin/config.toml", ctx.config / "atuin/config.toml")
+
+    for path in (
+        ctx.config / "theme-engine/upstream-lock.json",
+        ctx.config / "theme-engine/targets.conf",
+        ctx.config / "theme-engine/generated/theme.json",
+        ctx.config / "theme-engine/generated/.active",
+        ctx.config / "theme-engine/generated/starship.toml",
+        ctx.config / "kitty/generated/theme.conf",
+        ctx.config / "nvim/lua/generated_theme.lua",
+    ):
+        own_for_write(ctx, path)
+
     ctx.run([str(ctx.home / ".local/bin/theme-install"), "--noninteractive"])
-    ctx.run([str(ctx.home / ".local/bin/theme"), ctx.options.theme])
+
+    # On a fresh install, stage 50 must own ~/.config/hypr before generated
+    # Hyprland and wallpaper files are written. Existing managed installs can
+    # safely receive the full live theme during a stage-40 refresh.
+    skip_hypr = not (ctx.config / "hypr/.arch-wm-managed").is_file()
+    previous = os.environ.get("ARCH_WM_THEME_SKIP_HYPR")
+    try:
+        if skip_hypr:
+            os.environ["ARCH_WM_THEME_SKIP_HYPR"] = "1"
+        ctx.run([str(ctx.home / ".local/bin/theme"), ctx.options.theme])
+    finally:
+        if previous is None:
+            os.environ.pop("ARCH_WM_THEME_SKIP_HYPR", None)
+        else:
+            os.environ["ARCH_WM_THEME_SKIP_HYPR"] = previous
 
 
 def theme_verify(ctx: runtime.Context) -> bool:
@@ -90,7 +128,6 @@ def theme_verify(ctx: runtime.Context) -> bool:
         and all(
             path.is_file()
             for path in (
-                ctx.config / "hypr/generated/theme.lua",
                 ctx.config / "kitty/generated/theme.conf",
                 ctx.config / "theme-engine/generated/starship.toml",
             )
@@ -162,17 +199,11 @@ def patch_runtime() -> None:
                 )
             )
         elif stage.name == "40-theme-engine":
-            patched.append(
-                runtime.Stage(stage.name, theme_check, theme_apply, theme_verify)
-            )
+            patched.append(runtime.Stage(stage.name, theme_check, theme_apply, theme_verify))
         elif stage.name == "50-hyprland":
-            patched.append(
-                runtime.Stage(stage.name, hypr_check, runtime.hypr_apply, hypr_verify)
-            )
+            patched.append(runtime.Stage(stage.name, hypr_check, runtime.hypr_apply, hypr_verify))
         elif stage.name == "90-validate":
-            patched.append(
-                runtime.Stage(stage.name, stage.check, validate_apply, stage.verify)
-            )
+            patched.append(runtime.Stage(stage.name, stage.check, validate_apply, stage.verify))
         else:
             patched.append(stage)
     runtime.STAGES = tuple(patched)
