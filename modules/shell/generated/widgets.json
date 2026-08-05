@@ -40,6 +40,76 @@
       "lockSafe": false,
       "services": ["system-stats"],
       "capabilities": []
+    },
+    {
+      "id": "battery",
+      "name": "Battery",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop", "lockscreen"],
+      "variants": ["compact", "standard"],
+      "lockSafe": true,
+      "services": ["power"],
+      "capabilities": []
+    },
+    {
+      "id": "media",
+      "name": "Media",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop", "lockscreen"],
+      "variants": ["compact", "standard"],
+      "lockSafe": true,
+      "services": ["mpris"],
+      "capabilities": ["media.control"]
+    },
+    {
+      "id": "volume",
+      "name": "Volume",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop"],
+      "variants": ["compact", "standard"],
+      "lockSafe": false,
+      "services": ["audio"],
+      "capabilities": ["audio.control"]
+    },
+    {
+      "id": "network",
+      "name": "Network",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop", "lockscreen"],
+      "variants": ["compact", "standard"],
+      "lockSafe": true,
+      "services": ["network"],
+      "capabilities": []
+    },
+    {
+      "id": "notifications",
+      "name": "Notifications",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop"],
+      "variants": ["compact", "standard"],
+      "lockSafe": false,
+      "services": ["notifications"],
+      "capabilities": ["notification.dismiss"]
+    },
+    {
+      "id": "session",
+      "name": "Session",
+      "entry": "Widget.qml",
+      "surfaces": ["bar"],
+      "variants": ["compact", "standard"],
+      "lockSafe": false,
+      "services": ["session"],
+      "capabilities": ["session.lock"]
+    },
+    {
+      "id": "weather",
+      "name": "Weather",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop", "lockscreen"],
+      "variants": ["compact", "standard"],
+      "lockSafe": true,
+      "services": ["weather"],
+      "capabilities": []
     }
   ]
 }

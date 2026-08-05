@@ -10,8 +10,16 @@ Singleton {
     property var widgets: ({})
     property string error: ""
 
+    readonly property string _shellDir: {
+        var url = Qt.resolvedUrl("..")
+        var s = url.toString()
+        if (s.startsWith("file://")) s = s.substring(7)
+        if (s.endsWith("/")) s = s.substring(0, s.length - 1)
+        return s
+    }
+
     function parse(contents) {
-        if (!contents || contents.trim().length === 0)
+        if (!contents || typeof contents !== "string" || contents.length === 0)
             return
         try {
             const parsed = JSON.parse(contents)
@@ -54,11 +62,11 @@ Singleton {
 
     FileView {
         id: registryFile
-        path: Quickshell.shellRoot + "/generated/widgets.json"
+        path: root._shellDir + "/generated/widgets.json"
         blockLoading: true
         watchChanges: true
-        onTextChanged: root.parse(text)
-        onFileChanged: reload()
+        onTextChanged: root.parse(registryFile.text)
+        onFileChanged: registryFile.reload()
     }
 
     Component.onCompleted: root.parse(registryFile.text)

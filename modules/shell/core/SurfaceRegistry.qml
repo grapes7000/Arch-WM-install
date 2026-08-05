@@ -10,7 +10,8 @@ Singleton {
                 "audio.control",
                 "workspace.switch",
                 "launcher.open",
-                "session.lock"
+                "session.lock",
+                "notification.dismiss"
             ]
         },
         desktop: {
@@ -19,7 +20,8 @@ Singleton {
                 "audio.control",
                 "workspace.switch",
                 "launcher.open",
-                "session.lock"
+                "session.lock",
+                "notification.dismiss"
             ]
         },
         lockscreen: {

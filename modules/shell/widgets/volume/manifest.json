@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "volume",
+  "name": "Volume",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop"],
+  "variants": ["compact", "standard"],
+  "lockSafe": false,
+  "services": ["audio"],
+  "capabilities": ["audio.control"],
+  "constraints": {
+    "compact": {"minWidth": 56, "minHeight": 24},
+    "standard": {"minWidth": 120, "minHeight": 48}
+  }
+}

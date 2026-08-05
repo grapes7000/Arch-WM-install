@@ -2,3 +2,10 @@ singleton TimeService 1.0 TimeService.qml
 singleton SystemStatsService 1.0 SystemStatsService.qml
 singleton ActiveWindowService 1.0 ActiveWindowService.qml
 singleton LayoutService 1.0 LayoutService.qml
+singleton AudioService 1.0 AudioService.qml
+singleton MprisService 1.0 MprisService.qml
+singleton NetworkService 1.0 NetworkService.qml
+singleton PowerService 1.0 PowerService.qml
+singleton NotificationService 1.0 NotificationService.qml
+singleton SessionService 1.0 SessionService.qml
+singleton WeatherService 1.0 WeatherService.qml

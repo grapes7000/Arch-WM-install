@@ -16,7 +16,17 @@ Singleton {
         regions: { top_right: [] }
     })
 
+    readonly property string _shellDir: {
+        var url = Qt.resolvedUrl("..")
+        var s = url.toString()
+        if (s.startsWith("file://")) s = s.substring(7)
+        if (s.endsWith("/")) s = s.substring(0, s.length - 1)
+        return s
+    }
+
     function parse(contents, expectedSurface) {
+        if (!contents || typeof contents !== "string" || contents.length === 0)
+            throw new Error("empty " + expectedSurface + " layout")
         const parsed = JSON.parse(contents)
         if (parsed.surface !== expectedSurface || !parsed.regions)
             throw new Error("invalid " + expectedSurface + " layout")
@@ -25,32 +35,32 @@ Singleton {
 
     FileView {
         id: barFile
-        path: Quickshell.shellDir + "/layouts/bar.default.json"
+        path: root._shellDir + "/layouts/bar.default.json"
         blockLoading: true
         watchChanges: true
         onTextChanged: {
             try {
-                root.bar = root.parse(text, "bar")
+                root.bar = root.parse(barFile.text, "bar")
             } catch (error) {
                 console.warn("Bar layout rejected; keeping last known-good layout:", error)
             }
         }
-        onFileChanged: reload()
+        onFileChanged: barFile.reload()
     }
 
     FileView {
         id: desktopFile
-        path: Quickshell.shellDir + "/layouts/desktop.default.json"
+        path: root._shellDir + "/layouts/desktop.default.json"
         blockLoading: true
         watchChanges: true
         onTextChanged: {
             try {
-                root.desktop = root.parse(text, "desktop")
+                root.desktop = root.parse(desktopFile.text, "desktop")
             } catch (error) {
                 console.warn("Desktop layout rejected; keeping last known-good layout:", error)
             }
         }
-        onFileChanged: reload()
+        onFileChanged: desktopFile.reload()
     }
 
     Component.onCompleted: {
