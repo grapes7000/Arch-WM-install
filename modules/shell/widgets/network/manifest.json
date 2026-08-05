@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "network",
+  "name": "Network",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop", "lockscreen"],
+  "variants": ["compact", "standard"],
+  "lockSafe": true,
+  "services": ["network"],
+  "capabilities": [],
+  "constraints": {
+    "compact": {"minWidth": 56, "minHeight": 24},
+    "standard": {"minWidth": 120, "minHeight": 48}
+  }
+}

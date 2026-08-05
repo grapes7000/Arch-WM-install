@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "weather",
+  "name": "Weather",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop", "lockscreen"],
+  "variants": ["compact", "standard"],
+  "lockSafe": true,
+  "services": ["weather"],
+  "capabilities": [],
+  "constraints": {
+    "compact": {"minWidth": 56, "minHeight": 24},
+    "standard": {"minWidth": 140, "minHeight": 48}
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "media",
+  "name": "Media",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop", "lockscreen"],
+  "variants": ["compact", "standard"],
+  "lockSafe": true,
+  "services": ["mpris"],
+  "capabilities": ["media.control"],
+  "constraints": {
+    "compact": {"minWidth": 80, "minHeight": 24},
+    "standard": {"minWidth": 200, "minHeight": 48}
+  }
+}

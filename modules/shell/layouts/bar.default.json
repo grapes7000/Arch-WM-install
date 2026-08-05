@@ -6,10 +6,17 @@
       {"instance": "active-main", "widget": "active-window", "variant": "compact"}
     ],
     "center": [
+      {"instance": "media-main", "widget": "media", "variant": "compact"},
       {"instance": "clock-main", "widget": "clock", "variant": "compact"}
     ],
     "end": [
-      {"instance": "system-main", "widget": "system-stats", "variant": "compact"}
+      {"instance": "notifications-main", "widget": "notifications", "variant": "compact"},
+      {"instance": "volume-main", "widget": "volume", "variant": "compact"},
+      {"instance": "network-main", "widget": "network", "variant": "compact"},
+      {"instance": "battery-main", "widget": "battery", "variant": "compact"},
+      {"instance": "weather-main", "widget": "weather", "variant": "compact"},
+      {"instance": "system-main", "widget": "system-stats", "variant": "compact"},
+      {"instance": "session-main", "widget": "session", "variant": "compact"}
     ]
   }
 }

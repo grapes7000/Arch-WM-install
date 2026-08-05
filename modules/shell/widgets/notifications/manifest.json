@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "notifications",
+  "name": "Notifications",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop"],
+  "variants": ["compact", "standard"],
+  "lockSafe": false,
+  "services": ["notifications"],
+  "capabilities": ["notification.dismiss"],
+  "constraints": {
+    "compact": {"minWidth": 40, "minHeight": 24},
+    "standard": {"minWidth": 100, "minHeight": 48}
+  }
+}

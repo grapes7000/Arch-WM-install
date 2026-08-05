@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "session",
+  "name": "Session",
+  "entry": "Widget.qml",
+  "surfaces": ["bar"],
+  "variants": ["compact", "standard"],
+  "lockSafe": false,
+  "services": ["session"],
+  "capabilities": ["session.lock"],
+  "constraints": {
+    "compact": {"minWidth": 32, "minHeight": 24},
+    "standard": {"minWidth": 180, "minHeight": 48}
+  }
+}

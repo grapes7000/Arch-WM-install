@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "battery",
+  "name": "Battery",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop", "lockscreen"],
+  "variants": ["compact", "standard"],
+  "lockSafe": true,
+  "services": ["power"],
+  "capabilities": [],
+  "constraints": {
+    "compact": {"minWidth": 56, "minHeight": 24},
+    "standard": {"minWidth": 120, "minHeight": 48}
+  }
+}
