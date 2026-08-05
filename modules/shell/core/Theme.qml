@@ -50,7 +50,7 @@ Singleton {
     readonly property int animationMs: style.animation_ms === undefined ? 160 : style.animation_ms
 
     function parse(contents) {
-        if (!contents || contents.trim().length === 0)
+        if (typeof contents !== "string" || contents.trim().length === 0)
             return
 
         try {
@@ -65,14 +65,18 @@ Singleton {
         }
     }
 
+    function reloadTheme() {
+        root.parse(themeFile.text())
+    }
+
     FileView {
         id: themeFile
         path: root.path
         blockLoading: true
         watchChanges: true
-        onTextChanged: root.parse(text)
+        onTextChanged: root.reloadTheme()
         onFileChanged: reload()
     }
 
-    Component.onCompleted: root.parse(themeFile.text)
+    Component.onCompleted: root.reloadTheme()
 }
