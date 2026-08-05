@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-mapfile -t themes < <(theme --list)
+BIN_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+THEME_CMD="$BIN_DIR/theme"
+[[ -x "$THEME_CMD" ]] || THEME_CMD="$(command -v theme || true)"
+[[ -n "$THEME_CMD" ]] || {
+  echo 'theme-menu: theme command is not installed' >&2
+  exit 1
+}
+
+mapfile -t themes < <("$THEME_CMD" --list)
 [[ ${#themes[@]} -gt 0 ]] || {
   echo 'theme-menu: no themes are installed' >&2
   exit 1
@@ -23,4 +31,4 @@ else
   done
 fi
 
-[[ -n "$selection" ]] && exec theme "$selection"
+[[ -n "$selection" ]] && exec "$THEME_CMD" "$selection"
