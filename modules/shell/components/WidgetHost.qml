@@ -12,8 +12,9 @@ Item {
     property var settings: ({})
     property real density: 1.0
 
-    readonly property var definition: Core.WidgetRegistry.definition(widgetId)
-    readonly property bool supported: Core.WidgetRegistry.supports(widgetId, surfaceKind, locked)
+    readonly property var _registry: Core.WidgetRegistry.widgets
+    readonly property var definition: _registry ? Core.WidgetRegistry.definition(widgetId) : null
+    readonly property bool supported: _registry ? Core.WidgetRegistry.supports(widgetId, surfaceKind, locked) : false
     readonly property var requestedCapabilities: definition && definition.capabilities
         ? definition.capabilities : []
 
