@@ -10,11 +10,17 @@ Singleton {
     property var widgets: ({})
     property string error: ""
 
+    function contentsText(contents) {
+        const value = typeof contents === "function" ? contents() : contents
+        return value === null || value === undefined ? "" : String(value)
+    }
+
     function parse(contents) {
-        if (!contents || contents.trim().length === 0)
+        const source = contentsText(contents)
+        if (source.trim().length === 0)
             return
         try {
-            const parsed = JSON.parse(contents)
+            const parsed = JSON.parse(source)
             if (!Array.isArray(parsed.widgets))
                 throw new Error("registry requires a widgets array")
             const next = ({})
@@ -57,7 +63,7 @@ Singleton {
         path: Quickshell.shellRoot + "/generated/widgets.json"
         blockLoading: true
         watchChanges: true
-        onTextChanged: root.parse(text)
+        onTextChanged: root.parse(registryFile.text)
         onFileChanged: reload()
     }
 
