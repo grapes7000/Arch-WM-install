@@ -58,6 +58,15 @@ class StructureTests(unittest.TestCase):
         self.assertNotIn("item.context = widgetContext", content)
         self.assertNotIn("loader.setSource", content)
 
+    def test_widgets_have_safe_default_contexts(self) -> None:
+        widgets = sorted((ROOT / "modules/shell/widgets").glob("*/Widget.qml"))
+        self.assertTrue(widgets)
+        for path in widgets:
+            content = path.read_text(encoding="utf-8")
+            self.assertNotIn("required property var context", content, str(path))
+            self.assertIn("property var context:", content, str(path))
+            self.assertIn("allows: function() { return false }", content, str(path))
+
     def test_surface_geometry_is_bounded(self) -> None:
         bar = (
             ROOT / "modules/shell/surfaces/bar/BarSurface.qml"
