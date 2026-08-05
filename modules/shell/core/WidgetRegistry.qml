@@ -11,11 +11,9 @@ Singleton {
     property string error: ""
 
     readonly property string _shellDir: {
-        var url = Qt.resolvedUrl("..")
-        var s = url.toString()
-        if (s.startsWith("file://")) s = s.substring(7)
-        if (s.endsWith("/")) s = s.substring(0, s.length - 1)
-        return s
+        var base = Quickshell.env("XDG_CONFIG_HOME")
+        if (!base) base = Quickshell.env("HOME") + "/.config"
+        return base + "/quickshell/arch-wm"
     }
 
     function parse(contents) {
@@ -57,7 +55,7 @@ Singleton {
         const item = definition(widgetId)
         if (!item)
             return ""
-        return Qt.resolvedUrl("../widgets/" + widgetId + "/" + item.entry)
+        return "file://" + root._shellDir + "/widgets/" + widgetId + "/" + item.entry
     }
 
     FileView {
