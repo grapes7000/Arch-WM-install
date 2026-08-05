@@ -22,7 +22,11 @@ jobs:
           XDG_CONFIG_HOME: ${{ runner.temp }}/theme-config
         run: |
           python modules/theme-engine/bin/theme-catalog-sync
-          test "$(find "$XDG_CONFIG_HOME/theme-engine/themes" -maxdepth 1 -name '*.json' | wc -l)" -ge 36
+          test "$(find "$XDG_CONFIG_HOME/theme-engine/themes" -maxdepth 1 -name '*.json' | wc -l)" -ge 40
+          test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv.json"
+          test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv_brown.json"
+          test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv_pastel.json"
+          test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv_luxe.json"
           python modules/theme-engine/bin/theme --validate
       - name: Check shell scripts
         run: |
