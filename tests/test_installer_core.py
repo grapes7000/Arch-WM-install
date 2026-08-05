@@ -153,12 +153,12 @@ class ThemeCatalogTests(unittest.TestCase):
             "style": {"corner_radius": 8, "blur_on": False},
         }
 
-    def test_pinned_catalog_installs_36_themes_and_preserves_custom_files(self) -> None:
+    def test_pinned_catalog_installs_40_themes_and_preserves_custom_files(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
             source = root / "source/themes"
             source.mkdir(parents=True)
-            for index in range(36):
+            for index in range(40):
                 name = f"theme-{index:02d}"
                 (source / f"{name}.json").write_text(
                     json.dumps(self.theme_payload(name)) + "\n",
@@ -186,17 +186,17 @@ class ThemeCatalogTests(unittest.TestCase):
                 capture_output=True,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(len(list(installed.glob("theme-*.json"))), 36)
+            self.assertEqual(len(list(installed.glob("theme-*.json"))), 40)
             self.assertTrue(custom.is_file())
             lock = json.loads(
                 (config / "theme-engine/upstream-lock.json").read_text(encoding="utf-8")
             )
-            self.assertEqual(lock["theme_count"], 36)
+            self.assertEqual(lock["theme_count"], 40)
             self.assertEqual(
                 lock["commit"],
-                "3c6edb333406efce1920d762b7ed67b4168d4024",
+                "c609410fbd88ddc2a15c51ab142743c49ae861e0",
             )
-            self.assertEqual(len(lock["managed_files"]), 36)
+            self.assertEqual(len(lock["managed_files"]), 40)
 
     def test_catalog_rejects_incomplete_upstream(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -220,7 +220,7 @@ class ThemeCatalogTests(unittest.TestCase):
                 capture_output=True,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("expected at least 36", result.stderr)
+            self.assertIn("expected at least 40", result.stderr)
             self.assertFalse((root / "config/theme-engine/upstream-lock.json").exists())
 
 
