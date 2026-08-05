@@ -3,4 +3,5 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 export PYTHONPATH="$ROOT_DIR${PYTHONPATH:+:$PYTHONPATH}"
+export PATH="$HOME/.local/bin:$PATH"
 exec python -m installer install "$@"
