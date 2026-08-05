@@ -17,10 +17,28 @@ Singleton {
     })
 
     function parse(contents, expectedSurface) {
+        if (typeof contents !== "string" || contents.trim().length === 0)
+            throw new Error("empty " + expectedSurface + " layout")
         const parsed = JSON.parse(contents)
         if (parsed.surface !== expectedSurface || !parsed.regions)
             throw new Error("invalid " + expectedSurface + " layout")
         return parsed
+    }
+
+    function reloadBar() {
+        try {
+            root.bar = root.parse(barFile.text(), "bar")
+        } catch (error) {
+            console.warn("Bar layout rejected; keeping last known-good layout:", error)
+        }
+    }
+
+    function reloadDesktop() {
+        try {
+            root.desktop = root.parse(desktopFile.text(), "desktop")
+        } catch (error) {
+            console.warn("Desktop layout rejected; keeping last known-good layout:", error)
+        }
     }
 
     FileView {
@@ -28,13 +46,7 @@ Singleton {
         path: Quickshell.shellDir + "/layouts/bar.default.json"
         blockLoading: true
         watchChanges: true
-        onTextChanged: {
-            try {
-                root.bar = root.parse(text, "bar")
-            } catch (error) {
-                console.warn("Bar layout rejected; keeping last known-good layout:", error)
-            }
-        }
+        onTextChanged: root.reloadBar()
         onFileChanged: reload()
     }
 
@@ -43,18 +55,12 @@ Singleton {
         path: Quickshell.shellDir + "/layouts/desktop.default.json"
         blockLoading: true
         watchChanges: true
-        onTextChanged: {
-            try {
-                root.desktop = root.parse(text, "desktop")
-            } catch (error) {
-                console.warn("Desktop layout rejected; keeping last known-good layout:", error)
-            }
-        }
+        onTextChanged: root.reloadDesktop()
         onFileChanged: reload()
     }
 
     Component.onCompleted: {
-        try { root.bar = root.parse(barFile.text, "bar") } catch (error) {}
-        try { root.desktop = root.parse(desktopFile.text, "desktop") } catch (error) {}
+        root.reloadBar()
+        root.reloadDesktop()
     }
 }
