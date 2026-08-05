@@ -18,7 +18,7 @@ Implemented for this milestone:
 - staged Python installer with `minimal`, `desktop`, and `workstation` profiles
 - dry-run, resume, stage selection, doctor, tracked backups, rollback, and uninstall
 - current Hyprland Lua configuration with machine-local overrides
-- pinned installation of the complete 36-theme `grapes7000/themes` catalog
+- pinned installation of the complete 40-theme `grapes7000/themes` catalog
 - atomic universal theme generation for Quickshell, Hyprland, Kitty, Starship, and Neovim
 - optional generated targets for Waybar, Wofi, Rofi, Dunst, and Hyprlock
 - deterministic theme wallpapers with safe Hyprpaper live reload
@@ -74,7 +74,7 @@ Arch-WM-install/
 
 The installer pins `grapes7000/themes` to an exact reviewed commit and verifies the catalog before installing it. It does **not** execute the old upstream installer, install Oh My Zsh, prompt for broad package changes, or import Eww.
 
-The installed catalog contains all 36 upstream themes, including:
+The installed catalog contains all 40 upstream themes, including:
 
 - Catppuccin Mocha, Macchiato, Frappe, and Latte
 - Dracula and Dracula Light
@@ -85,6 +85,7 @@ The installed catalog contains all 36 upstream themes, including:
 - Rose Pine, Moon, and Dawn
 - Nord, One Dark, Material, Monokai, Solarized, Ayu, Oxocarbon
 - Hacker Pink, Y2K, Cyber Green, Cappuccino, iOS Glassy, and Vintage Mac
+- Winegruv, Winegruv Brown, Winegruv Pastel, and Winegruv Luxe
 
 Open the picker:
 
@@ -95,7 +96,7 @@ theme
 Apply a theme directly:
 
 ```bash
-theme catppuccin_mocha
+theme winegruv_luxe
 ```
 
 Useful commands:
@@ -107,7 +108,7 @@ theme current
 theme targets
 theme install
 theme new synthwave --from tokyonight --edit
-theme wallpaper y2k --set
+theme wallpaper winegruv --set
 wallgen --all
 ```
 
