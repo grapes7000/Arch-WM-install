@@ -3,7 +3,11 @@ set -Eeuo pipefail
 
 BIN_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-TARGETS="$CONFIG_HOME/theme-engine/targets.conf"
+THEME_ROOT="$CONFIG_HOME/theme-engine"
+THEME_DIR="$THEME_ROOT/themes"
+LOCK_FILE="$THEME_ROOT/upstream-lock.json"
+TARGETS="$THEME_ROOT/targets.conf"
+PINNED_COMMIT="c609410fbd88ddc2a15c51ab142743c49ae861e0"
 NONINTERACTIVE=0
 
 for argument in "$@"; do
@@ -32,7 +36,44 @@ done
   exit 1
 }
 
-"$BIN_DIR/theme-catalog-sync"
+# Prefer the pinned upstream checkout, but never make a fresh desktop install
+# depend on GitHub being reachable. The installer seeds the same pinned catalog
+# into THEME_DIR before invoking this command, so it is a valid offline fallback.
+if ! "$BIN_DIR/theme-catalog-sync"; then
+  echo "theme-install: upstream catalog fetch failed; validating bundled catalog" >&2
+  python - "$THEME_DIR" "$LOCK_FILE" "$PINNED_COMMIT" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+theme_dir = Path(sys.argv[1])
+lock_file = Path(sys.argv[2])
+commit = sys.argv[3]
+files = sorted(theme_dir.glob("*.json"))
+if len(files) < 40:
+    raise SystemExit(f"theme-install: bundled catalog has only {len(files)} themes")
+managed = []
+for path in files:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("name") != path.stem:
+        raise SystemExit(f"theme-install: invalid bundled theme: {path.name}")
+    if not isinstance(payload.get("roles"), dict) or not isinstance(payload.get("style"), dict):
+        raise SystemExit(f"theme-install: incomplete bundled theme: {path.name}")
+    managed.append(path.name)
+lock_file.parent.mkdir(parents=True, exist_ok=True)
+lock_file.write_text(json.dumps({
+    "schema_version": 1,
+    "repository": "grapes7000/themes",
+    "commit": commit,
+    "installed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+    "theme_count": len(managed),
+    "managed_files": managed,
+    "source": "bundled-fallback"
+}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+print(f"Using {len(managed)} bundled themes for offline installation")
+PY
+fi
 
 mkdir -p "$(dirname "$TARGETS")"
 if [[ ! -e "$TARGETS" ]]; then
