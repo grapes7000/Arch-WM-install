@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import "../core" as Core
 
-PopupWindow {
+PanelWindow {
     id: popup
 
     property bool menuOpen: false
@@ -11,10 +11,21 @@ PopupWindow {
     property string currentWidgetName: ""
 
     visible: menuOpen
-    anchor.window: popup.parent
-    anchor.edges: Edges.Bottom | Edges.Right
-    width: 320
-    height: contentCol.implicitHeight + Core.Theme.gap * 2
+    screen: Quickshell.screens[0]
+
+    anchors {
+        top: true
+        right: true
+    }
+    margins {
+        top: Core.Theme.barHeight + Core.Theme.gap * 2 + Core.Theme.gap
+        right: Core.Theme.gap
+    }
+
+    implicitWidth: 320
+    implicitHeight: contentCol.implicitHeight + Core.Theme.gap * 2
+    exclusionMode: ExclusionMode.Ignore
+    focusable: true
     color: "transparent"
 
     function toggle() {
@@ -23,13 +34,6 @@ PopupWindow {
             currentWidget = ""
         } else {
             menuOpen = true
-        }
-    }
-
-    onVisibleChanged: {
-        if (!visible) {
-            menuOpen = false
-            currentWidget = ""
         }
     }
 

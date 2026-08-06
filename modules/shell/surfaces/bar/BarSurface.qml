@@ -6,6 +6,12 @@ import "../../services" as Services
 import "../../components"
 
 Scope {
+    id: barScope
+
+    MenuPopup {
+        id: menuPopup
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -151,10 +157,6 @@ Scope {
                         }
                     }
                 }
-            }
-
-            MenuPopup {
-                id: menuPopup
             }
         }
     }
