@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Compatibility launcher for the Arch-WM theme command.
+
+The full Theme Studio UI is not bundled in this installer snapshot yet. Until
+it is, keep the public `theme` command functional by delegating to the stable
+`theme-legacy` generator installed beside this file.
+"""
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+
+def main() -> int:
+    legacy = Path(__file__).resolve().with_name("theme-legacy")
+    if not legacy.is_file():
+        print(f"theme: missing compatibility backend: {legacy}", file=sys.stderr)
+        return 1
+    os.execv(str(legacy), [str(legacy), *sys.argv[1:]])
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
