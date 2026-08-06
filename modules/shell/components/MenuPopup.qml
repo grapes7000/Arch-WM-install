@@ -16,35 +16,63 @@ PanelWindow {
 
     anchors {
         top: true
+        bottom: true
+        left: true
         right: true
     }
-    margins {
-        top: Core.Theme.barHeight + Core.Theme.gap * 2 + Core.Theme.gap
-        right: Core.Theme.gap
-    }
 
-    implicitWidth: 340
-    implicitHeight: mainCol.implicitHeight + 24
     exclusionMode: ExclusionMode.Ignore
     focusable: true
     color: "transparent"
 
+    function close() {
+        menuOpen = false
+        currentWidget = ""
+        currentWidgetName = ""
+    }
+
     function toggle() {
         if (menuOpen) {
-            menuOpen = false
-            currentWidget = ""
-            currentWidgetName = ""
+            close()
         } else {
             menuOpen = true
         }
     }
 
-    Rectangle {
+    MouseArea {
+        id: backdrop
         anchors.fill: parent
+        onClicked: popup.close()
+    }
+
+    Item {
+        id: escapeDismissal
+        anchors.fill: parent
+        focus: popup.menuOpen
+
+        Keys.onEscapePressed: popup.close()
+    }
+
+    Rectangle {
+        id: card
+        anchors {
+            top: parent.top
+            right: parent.right
+        }
+        anchors.topMargin: Core.Theme.barHeight + Core.Theme.gap * 3
+        anchors.rightMargin: Core.Theme.gap
+        width: 340
+        implicitHeight: mainCol.implicitHeight + 24
         color: Core.Theme.surface
         radius: Core.Theme.radius
         border.width: Core.Theme.borderWidth
         border.color: Core.Theme.accent2
+
+        MouseArea {
+            id: cardClickShield
+            anchors.fill: parent
+            onClicked: {}
+        }
 
         ColumnLayout {
             id: mainCol

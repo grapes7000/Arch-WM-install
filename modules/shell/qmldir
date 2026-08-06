@@ -2,6 +2,8 @@ module ArchWmShell
 singleton Theme 1.0 core/Theme.qml
 singleton WidgetRegistry 1.0 core/WidgetRegistry.qml
 singleton SurfaceRegistry 1.0 core/SurfaceRegistry.qml
+singleton ScreenResolver 1.0 core/ScreenResolver.qml
+singleton InteractiveShellController 1.0 core/InteractiveShellController.qml
 singleton TimeService 1.0 services/TimeService.qml
 singleton SystemStatsService 1.0 services/SystemStatsService.qml
 singleton ActiveWindowService 1.0 services/ActiveWindowService.qml
@@ -14,4 +16,7 @@ singleton NotificationService 1.0 services/NotificationService.qml
 singleton SessionService 1.0 services/SessionService.qml
 singleton WeatherService 1.0 services/WeatherService.qml
 singleton TailscaleService 1.0 services/TailscaleService.qml
+singleton LockStateService 1.0 services/LockStateService.qml
+singleton CavaService 1.0 services/CavaService.qml
+singleton LauncherStateService 1.0 services/LauncherStateService.qml
 WidgetContext 1.0 core/WidgetContext.qml

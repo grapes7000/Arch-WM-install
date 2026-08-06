@@ -12,11 +12,28 @@ from . import runtime
 THEME_UPSTREAM_COMMIT = "c609410fbd88ddc2a15c51ab142743c49ae861e0"
 THEME_COMMANDS = (
     "theme",
+    "theme-legacy",
+    "theme-studio",
     "theme-catalog-sync",
     "theme-install",
     "theme-new",
     "theme-menu",
     "wallgen",
+)
+
+# Theme Studio is composed of the entrypoint plus sibling Python modules. Keep
+# these installed beside the command so its imports work from ~/.local/bin.
+THEME_STUDIO_MODULES = (
+    "theme_runtime.py",
+    "theme_editor.py",
+    "theme_effects.py",
+    "theme_starship.py",
+    "theme_homepage.py",
+    "theme_schema.py",
+    "theme_components.py",
+    "theme_preview.py",
+    "theme_tui.py",
+    "theme_tui_widgets.py",
 )
 
 
@@ -76,17 +93,33 @@ def theme_catalog_valid(ctx: runtime.Context) -> bool:
 
 
 def theme_check(ctx: runtime.Context) -> bool:
-    return theme_catalog_valid(ctx) and all(
-        path.is_file()
-        for path in (
-            *(ctx.home / ".local/bin" / name for name in THEME_COMMANDS),
-            ctx.home / ".local/bin/term",
-            ctx.home / ".zshrc",
-            ctx.config / "zsh/aliases.zsh",
-            ctx.config / "kitty/kitty.conf",
-            ctx.config / "atuin/config.toml",
-            ctx.config / "theme-engine/generated/theme.json",
-        )
+    required_paths = (
+        *(ctx.home / ".local/bin" / name for name in THEME_COMMANDS),
+        *(ctx.home / ".local/bin" / name for name in THEME_STUDIO_MODULES),
+        ctx.home / ".local/bin/term",
+        ctx.home / ".zshrc",
+        ctx.config / "zsh/aliases.zsh",
+        ctx.config / "kitty/kitty.conf",
+        ctx.config / "atuin/config.toml",
+        ctx.config / "theme-engine/generated/theme.json",
+    )
+    if not theme_catalog_valid(ctx) or not all(path.is_file() for path in required_paths):
+        return False
+
+    # File presence alone is not enough: older installs contain a legacy
+    # `theme` dispatcher that opens theme-menu instead of Theme Studio. Compare
+    # the installed entrypoints/modules with the current source payload so a
+    # rerun upgrades an existing installation instead of incorrectly no-oping.
+    source_root = ctx.root / "modules/theme-engine/bin"
+    installed_root = ctx.home / ".local/bin"
+    payloads = {
+        "theme": "theme-studio",
+        "theme-legacy": "theme",
+        **{name: name for name in THEME_STUDIO_MODULES},
+    }
+    return all(
+        payload_version_matches(source_root / source_name, installed_root / target_name)
+        for target_name, source_name in payloads.items()
     )
 
 
@@ -94,8 +127,16 @@ def theme_apply(ctx: runtime.Context) -> None:
     assert ctx.state is not None
     theme = ctx.root / "modules/theme-engine"
     terminal = ctx.root / "modules/terminal"
+    # Keep the stable Arch-WM generator behind Theme Studio. Theme Studio
+    # delegates named-theme application and legacy commands to this binary.
+    ctx.install(theme / "bin/theme", ctx.home / ".local/bin/theme-legacy", executable=True)
+    ctx.install(theme / "bin/theme-studio", ctx.home / ".local/bin/theme", executable=True)
     for name in THEME_COMMANDS:
+        if name in {"theme", "theme-legacy", "theme-studio"}:
+            continue
         ctx.install(theme / "bin" / name, ctx.home / ".local/bin" / name, executable=True)
+    for name in THEME_STUDIO_MODULES:
+        ctx.install(theme / "bin" / name, ctx.home / ".local/bin" / name)
     ctx.install(terminal / "bin/term", ctx.home / ".local/bin/term", executable=True)
 
     theme_target = ctx.config / "theme-engine/themes"

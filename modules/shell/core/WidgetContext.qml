@@ -10,8 +10,20 @@ QtObject {
     property real availableHeight: 0
     property var capabilities: []
     property var settings: ({})
+    property var requestHandler: null
 
     function allows(capability) {
         return capabilities.indexOf(capability) !== -1
+    }
+
+    function request(capability, payload) {
+        return SurfaceRegistry.request(
+            surface,
+            capabilities,
+            locked,
+            requestHandler,
+            capability,
+            payload || ({})
+        )
     }
 }

@@ -30,7 +30,8 @@ Scope {
             focusable: false
             exclusionMode: ExclusionMode.Ignore
             color: "transparent"
-            visible: (Services.LayoutService.desktop.regions.top_right || []).length > 0
+            visible: !Services.LockStateService.locked
+                && (Services.LayoutService.desktop.regions.top_right || []).length > 0
 
             Rectangle {
                 anchors.fill: parent
@@ -55,6 +56,7 @@ Scope {
                             instanceId: modelData.instance
                             variant: modelData.variant || "standard"
                             settings: modelData.settings || ({})
+                            locked: Services.LockStateService.locked
                             Layout.fillWidth: true
                             Layout.preferredHeight: implicitHeight
                         }

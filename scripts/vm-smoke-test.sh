@@ -64,13 +64,18 @@ case "$MODE" in
     echo 'No Hyprland configuration errors.'
 
     heading 'Installed shell processes'
-    if pgrep -af 'qs.*arch-wm' >/dev/null; then
-      pgrep -af 'qs.*arch-wm'
-    else
-      echo 'Arch WM Quickshell process is not running.' >&2
-      echo 'Launch it manually with: qs -c arch-wm' >&2
+    qs --no-duplicate --config arch-wm
+    shell_instances="$(qs list --all)"
+    printf '%s\n' "$shell_instances"
+    config_path="$HOME/.config/quickshell/arch-wm/shell.qml"
+    matching_instances="$(
+      printf '%s\n' "$shell_instances" | grep -Fxc "  Config path: $config_path" || true
+    )"
+    if [[ "$matching_instances" -ne 1 ]]; then
+      echo "Expected exactly one Arch WM Quickshell instance for $config_path; found $matching_instances." >&2
       exit 1
     fi
+    echo 'Exactly one Arch WM Quickshell instance is running.'
 
     heading 'Theme outputs'
     for path in \

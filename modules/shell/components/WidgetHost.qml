@@ -10,6 +10,7 @@ Item {
     property string variant: "standard"
     property bool locked: false
     property var settings: ({})
+    property var requestHandler: null
     property real density: 1.0
     property string loadError: ""
     property var loadedItem: null
@@ -107,6 +108,7 @@ Item {
         availableHeight: root.height
         capabilities: Core.SurfaceRegistry.grant(root.surfaceKind, root.requestedCapabilities)
         settings: root.settings
+        requestHandler: root.requestHandler
     }
 
     Rectangle {
