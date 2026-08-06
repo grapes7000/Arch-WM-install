@@ -5,6 +5,7 @@ import "core" as Core
 import "services" as Services
 import "surfaces/bar"
 import "surfaces/desktop"
+import "surfaces/homepage"
 
 ShellRoot {
     Binding {
@@ -39,6 +40,7 @@ ShellRoot {
     }
 
     BarSurface {}
+    HomepageSurface {}
     DesktopSurface {}
     TaskDockSurface {}
 
