@@ -10,6 +10,7 @@ Singleton {
     property string title: ""
     property string artist: ""
     property string status: "Stopped"
+    property string artUrl: ""
     property bool canNext: false
     property bool canPrev: false
     property string error: ""
@@ -19,13 +20,15 @@ Singleton {
         title = ""
         artist = ""
         status = "Stopped"
+        artUrl = ""
         canNext = false
         canPrev = false
     }
 
     function parse(contents) {
         const fields = contents.trim().split("\t")
-        if (fields.length !== 5 || !["Playing", "Paused", "Stopped"].includes(fields[2])) {
+        if ((fields.length !== 5 && fields.length !== 6)
+                || !["Playing", "Paused", "Stopped"].includes(fields[2])) {
             clear()
             error = contents.trim() ? "Malformed player metadata" : "No active media player"
             return false
@@ -35,6 +38,7 @@ Singleton {
         status = fields[2]
         canNext = fields[3] === "true"
         canPrev = fields[4] === "true"
+        artUrl = fields.length === 6 ? fields[5] : ""
         error = ""
         return true
     }
@@ -51,7 +55,7 @@ Singleton {
     function refresh() {
         return run([
             "playerctl", "metadata", "--format",
-            "{{title}}\t{{artist}}\t{{status}}\t{{mpris:canGoNext}}\t{{mpris:canGoPrevious}}"
+            "{{title}}\t{{artist}}\t{{status}}\t{{mpris:canGoNext}}\t{{mpris:canGoPrevious}}\t{{mpris:artUrl}}"
         ], "poll")
     }
     function playPause() { return run(["playerctl", "play-pause"], "action") }
