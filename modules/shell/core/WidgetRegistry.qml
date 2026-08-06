@@ -87,18 +87,13 @@ Singleton {
         return Qt.resolvedUrl("../widgets/" + widgetId + "/" + item.entry)
     }
 
-    function readFile(fv) {
-        try { var r = fv.text(); if (typeof r === "string") return r } catch(e) {}
-        try { var r2 = fv.text; if (typeof r2 === "string") return r2 } catch(e) {}
-        return ""
-    }
-
     FileView {
         id: registryFile
         path: root.registryPath
         watchChanges: true
-        onTextChanged: root.parse(root.readFile(registryFile))
+        onTextChanged: root.parse(registryFile.text())
+        onFileChanged: registryFile.reload()
     }
 
-    Component.onCompleted: root.parse(root.readFile(registryFile))
+    Component.onCompleted: root.parse(registryFile.text())
 }
