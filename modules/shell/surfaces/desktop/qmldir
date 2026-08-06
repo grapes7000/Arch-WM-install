@@ -1,0 +1,4 @@
+DesktopSurface 1.0 DesktopSurface.qml
+DockModel 1.0 DockModel.qml
+TaskDockSurface 1.0 TaskDockSurface.qml
+TaskDockWindow 1.0 TaskDockWindow.qml

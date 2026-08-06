@@ -8,8 +8,22 @@ import "../../components"
 Scope {
     id: barScope
 
+    LauncherOverlay {}
+
+    function requestFromWidget(capability, payload, screen) {
+        return Core.InteractiveShellController.requestFromBar(capability, payload, screen)
+    }
+
     MenuPopup {
         id: menuPopup
+    }
+
+    Connections {
+        target: Services.LockStateService
+        function onLockedChanged() {
+            if (Services.LockStateService.locked)
+                menuPopup.close()
+        }
     }
 
     Variants {
@@ -36,6 +50,7 @@ Scope {
             exclusiveZone: Core.Theme.barHeight + Core.Theme.gap * 2
             focusable: false
             color: "transparent"
+            visible: !Services.LockStateService.locked
 
             Rectangle {
                 id: background
@@ -73,6 +88,10 @@ Scope {
                                     instanceId: modelData.instance
                                     variant: modelData.variant || "compact"
                                     settings: modelData.settings || ({})
+                                    locked: Services.LockStateService.locked
+                                    requestHandler: function(capability, payload) {
+                                        return barScope.requestFromWidget(capability, payload, root.screen)
+                                    }
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
@@ -100,6 +119,10 @@ Scope {
                                     instanceId: modelData.instance
                                     variant: modelData.variant || "compact"
                                     settings: modelData.settings || ({})
+                                    locked: Services.LockStateService.locked
+                                    requestHandler: function(capability, payload) {
+                                        return barScope.requestFromWidget(capability, payload, root.screen)
+                                    }
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
@@ -130,6 +153,10 @@ Scope {
                                     instanceId: modelData.instance
                                     variant: modelData.variant || "compact"
                                     settings: modelData.settings || ({})
+                                    locked: Services.LockStateService.locked
+                                    requestHandler: function(capability, payload) {
+                                        return barScope.requestFromWidget(capability, payload, root.screen)
+                                    }
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }

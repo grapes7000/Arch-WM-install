@@ -16,12 +16,25 @@ Singleton {
     property string mullvadLocation: ""
     property string ipAddress: ""
     property int peerCount: 0
+    property string error: ""
+
+    function clear(message) {
+        running = false
+        connected = false
+        tailnet = ""
+        exitNodeActive = false
+        exitNodeName = ""
+        isMullvad = false
+        mullvadLocation = ""
+        ipAddress = ""
+        peerCount = 0
+        error = message || ""
+    }
 
     function parse(contents) {
         if (!contents || contents.length === 0) {
-            root.running = false
-            root.connected = false
-            return
+            clear("Tailscale returned no status")
+            return false
         }
 
         try {
@@ -68,8 +81,11 @@ Singleton {
                     }
                 }
             }
+            error = ""
+            return true
         } catch (e) {
-            console.warn("TailscaleService parse error:", e)
+            clear("Malformed Tailscale status")
+            return false
         }
     }
 
@@ -77,6 +93,20 @@ Singleton {
         id: pollProc
         command: ["tailscale", "status", "--json"]
         stdout: StdioCollector { onStreamFinished: root.parse(text) }
+        onExited: (exitCode, exitStatus) => {
+            watchdog.stop()
+            if (exitCode !== 0) root.clear("Tailscale unavailable (exit " + exitCode + ")")
+        }
+    }
+
+    Timer {
+        id: watchdog
+        interval: 15000
+        onTriggered: {
+            if (!pollProc.running) return
+            pollProc.running = false
+            root.clear("Tailscale status timed out")
+        }
     }
 
     Timer {
@@ -84,6 +114,11 @@ Singleton {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: { if (!pollProc.running) pollProc.running = true }
+        onTriggered: {
+            if (!pollProc.running) {
+                pollProc.running = true
+                watchdog.restart()
+            }
+        }
     }
 }

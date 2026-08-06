@@ -9,59 +9,105 @@ Singleton {
 
     property int count: 0
     property bool dndEnabled: false
+    property var recent: []
+    property string error: ""
+    property string _operation: ""
 
-    function parse(contents) {
-        for (const line of contents.trim().split("\n")) {
-            const sep = line.indexOf("=")
-            if (sep <= 0) continue
-            const key = line.slice(0, sep)
-            const val = line.slice(sep + 1)
-            if (key === "count")
-                root.count = Math.max(0, Number(val))
-            else if (key === "dnd")
-                root.dndEnabled = val === "true"
+    function clearHistory() {
+        count = 0
+        recent = []
+    }
+
+    function parseHistory(contents) {
+        try {
+            const document = JSON.parse(contents)
+            const rows = []
+            function visit(value) {
+                if (Array.isArray(value)) {
+                    for (const child of value) visit(child)
+                } else if (value && typeof value === "object") {
+                    const summary = value.summary && value.summary.data !== undefined ? value.summary.data : value.summary
+                    const body = value.body && value.body.data !== undefined ? value.body.data : value.body
+                    const app = value.appname && value.appname.data !== undefined ? value.appname.data : value.appname
+                    if (summary !== undefined || body !== undefined) {
+                        rows.push({ appName: String(app || ""), summary: String(summary || ""), body: String(body || "") })
+                    } else for (const key of Object.keys(value)) visit(value[key])
+                }
+            }
+            visit(document.data !== undefined ? document.data : document)
+            recent = rows.slice(0, 5)
+            count = rows.length
+            error = ""
+            return true
+        } catch (exception) {
+            clearHistory()
+            error = "Malformed Dunst history"
+            return false
         }
     }
 
-    function dismiss() {
-        dismissProc.running = true
+    function parsePaused(contents) {
+        const value = contents.trim()
+        if (value !== "true" && value !== "false") {
+            dndEnabled = false
+            error = "Malformed Dunst pause state"
+            return false
+        }
+        dndEnabled = value === "true"
+        error = ""
+        return true
     }
 
-    function toggleDnd() {
-        dndProc.running = true
+    function run(command, operation) {
+        if (serviceProcess.running) return false
+        _operation = operation
+        serviceProcess.command = command
+        serviceProcess.running = true
+        watchdog.restart()
+        return true
     }
 
-    Process {
-        id: pollProc
-        command: [
-            "sh", "-c",
-            "if command -v swaync-client >/dev/null 2>&1; then "
-            + "  c=$(swaync-client -c 2>/dev/null || echo 0); "
-            + "  d=$(swaync-client -D 2>/dev/null | grep -q true && echo true || echo false); "
-            + "  printf 'count=%s\\ndnd=%s\\n' \"$c\" \"$d\"; "
-            + "elif command -v dunstctl >/dev/null 2>&1; then "
-            + "  c=$(dunstctl count waiting 2>/dev/null || echo 0); "
-            + "  d=$(dunstctl is-paused 2>/dev/null | grep -q true && echo true || echo false); "
-            + "  printf 'count=%s\\ndnd=%s\\n' \"$c\" \"$d\"; "
-            + "else printf 'count=0\\ndnd=false\\n'; fi"
-        ]
-        stdout: StdioCollector { onStreamFinished: root.parse(text) }
-    }
-
-    Process {
-        id: dismissProc
-        command: ["sh", "-c",
-            "command -v swaync-client >/dev/null 2>&1 && swaync-client -C || "
-            + "command -v dunstctl >/dev/null 2>&1 && dunstctl close-all"]
-        onExited: pollProc.running = true
-    }
+    function refresh() { return run(["dunstctl", "history"], "history") }
+    function dismiss() { return run(["dunstctl", "close-all"], "dismiss") }
+    function toggleDnd() { return run(["dunstctl", "set-paused", "toggle"], "toggle") }
 
     Process {
-        id: dndProc
-        command: ["sh", "-c",
-            "command -v swaync-client >/dev/null 2>&1 && swaync-client -d || "
-            + "command -v dunstctl >/dev/null 2>&1 && dunstctl set-paused toggle"]
-        onExited: pollProc.running = true
+        id: serviceProcess
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (root._operation === "history") root.parseHistory(text)
+                else if (root._operation === "paused") root.parsePaused(text)
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            watchdog.stop()
+            const operation = root._operation
+            root._operation = ""
+            command = []
+            if (exitCode !== 0) {
+                if (operation === "history") root.clearHistory()
+                if (operation === "paused") root.dndEnabled = false
+                root.error = operation + " failed (exit " + exitCode + ")"
+            } else if (operation === "history") {
+                Qt.callLater(() => root.run(["dunstctl", "is-paused"], "paused"))
+            } else if (operation === "dismiss" || operation === "toggle") {
+                Qt.callLater(root.refresh)
+            }
+        }
+    }
+
+    Timer {
+        id: watchdog
+        interval: 15000
+        onTriggered: {
+            if (!serviceProcess.running) return
+            serviceProcess.running = false
+            root.clearHistory()
+            root.dndEnabled = false
+            root.error = root._operation + " timed out"
+            root._operation = ""
+            serviceProcess.command = []
+        }
     }
 
     Timer {
@@ -69,6 +115,6 @@ Singleton {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: { if (!pollProc.running) pollProc.running = true }
+        onTriggered: root.refresh()
     }
 }

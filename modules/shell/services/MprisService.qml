@@ -12,46 +12,85 @@ Singleton {
     property string status: "Stopped"
     property bool canNext: false
     property bool canPrev: false
+    property string error: ""
+    property string _operation: ""
+
+    function clear() {
+        title = ""
+        artist = ""
+        status = "Stopped"
+        canNext = false
+        canPrev = false
+    }
 
     function parse(contents) {
-        for (const line of contents.trim().split("\n")) {
-            const sep = line.indexOf("=")
-            if (sep <= 0) continue
-            const key = line.slice(0, sep)
-            const val = line.slice(sep + 1)
-            if (key === "title") root.title = val
-            else if (key === "artist") root.artist = val
-            else if (key === "status") root.status = val
-            else if (key === "canNext") root.canNext = val === "true"
-            else if (key === "canPrev") root.canPrev = val === "true"
+        const fields = contents.trim().split("\t")
+        if (fields.length !== 5 || !["Playing", "Paused", "Stopped"].includes(fields[2])) {
+            clear()
+            error = contents.trim() ? "Malformed player metadata" : "No active media player"
+            return false
+        }
+        title = fields[0]
+        artist = fields[1]
+        status = fields[2]
+        canNext = fields[3] === "true"
+        canPrev = fields[4] === "true"
+        error = ""
+        return true
+    }
+
+    function run(command, operation) {
+        if (serviceProcess.running) return false
+        _operation = operation
+        serviceProcess.command = command
+        serviceProcess.running = true
+        watchdog.restart()
+        return true
+    }
+
+    function refresh() {
+        return run([
+            "playerctl", "metadata", "--format",
+            "{{title}}\t{{artist}}\t{{status}}\t{{mpris:canGoNext}}\t{{mpris:canGoPrevious}}"
+        ], "poll")
+    }
+    function playPause() { return run(["playerctl", "play-pause"], "action") }
+    function next() { return run(["playerctl", "next"], "action") }
+    function previous() { return run(["playerctl", "previous"], "action") }
+
+    Process {
+        id: serviceProcess
+        stdout: StdioCollector { onStreamFinished: { if (root._operation === "poll") root.parse(text) } }
+        onExited: (exitCode, exitStatus) => {
+            watchdog.stop()
+            const operation = root._operation
+            root._operation = ""
+            command = []
+            if (exitCode !== 0) {
+                root.clear()
+                root.error = operation === "poll" ? "No active media player" : "Media action failed (exit " + exitCode + ")"
+            } else if (operation === "action") Qt.callLater(root.refresh)
         }
     }
 
-    function playPause() { actionProc.command = ["playerctl", "play-pause"]; actionProc.running = true }
-    function next() { actionProc.command = ["playerctl", "next"]; actionProc.running = true }
-    function previous() { actionProc.command = ["playerctl", "previous"]; actionProc.running = true }
-
-    Process {
-        id: pollProc
-        command: [
-            "sh", "-c",
-            "t=$(playerctl metadata title 2>/dev/null || echo ''); "
-            + "a=$(playerctl metadata artist 2>/dev/null || echo ''); "
-            + "s=$(playerctl status 2>/dev/null || echo 'Stopped'); "
-            + "cn=$(playerctl metadata 2>/dev/null && echo true || echo false); "
-            + "printf 'title=%s\\nartist=%s\\nstatus=%s\\ncanNext=%s\\ncanPrev=%s\\n' "
-            + "\"$t\" \"$a\" \"$s\" \"$cn\" \"$cn\""
-        ]
-        stdout: StdioCollector { onStreamFinished: root.parse(text) }
+    Timer {
+        id: watchdog
+        interval: 15000
+        onTriggered: {
+            if (!serviceProcess.running) return
+            serviceProcess.running = false
+            root.clear()
+            root.error = root._operation + " timed out"
+            root._operation = ""
+            serviceProcess.command = []
+        }
     }
-
-    Process { id: actionProc; onExited: pollProc.running = true }
 
     Timer {
         interval: 3000
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: { if (!pollProc.running) pollProc.running = true }
+        onTriggered: root.refresh()
     }
 }

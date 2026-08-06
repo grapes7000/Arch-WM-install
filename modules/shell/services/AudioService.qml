@@ -9,51 +9,126 @@ Singleton {
 
     property int volume: 0
     property bool muted: false
+    property var sinks: []
+    property var sources: []
+    property var streams: []
+    property string error: ""
+    property string _operation: ""
+
+    function clear() {
+        volume = 0
+        muted = false
+        sinks = []
+        sources = []
+        streams = []
+    }
 
     function parse(contents) {
-        for (const line of contents.trim().split("\n")) {
-            const sep = line.indexOf("=")
-            if (sep <= 0) continue
-            const key = line.slice(0, sep)
-            const val = line.slice(sep + 1)
-            if (key === "volume")
-                root.volume = Math.max(0, Math.min(100, Math.round(Number(val))))
-            else if (key === "muted")
-                root.muted = val === "true"
+        let section = ""
+        let audioSection = false
+        const parsed = { sinks: [], sources: [], streams: [] }
+        for (const raw of contents.split("\n")) {
+            const heading = raw.trim()
+            if (heading === "Audio") {
+                audioSection = true
+                section = ""
+                continue
+            }
+            if (heading === "Video" || heading === "Settings") {
+                audioSection = false
+                section = ""
+                continue
+            }
+            const sectionMatch = audioSection ? heading.match(/(Sinks|Sources|Streams):$/) : null
+            if (sectionMatch) {
+                section = sectionMatch[1].toLowerCase()
+                continue
+            }
+            if (!section) continue
+            const match = raw.match(/^[^0-9*]*([*]?)\s*(\d+)\.\s+(.+?)\s+\[vol:\s*([0-9.]+)(?:\s+(MUTED))?\]\s*$/)
+            if (!match) continue
+            parsed[section].push({
+                id: Number(match[2]),
+                name: match[3].trim(),
+                volume: Math.max(0, Math.min(100, Math.round(Number(match[4]) * 100))),
+                muted: match[5] === "MUTED",
+                isDefault: match[1] === "*"
+            })
+        }
+        if (parsed.sinks.length === 0 && parsed.sources.length === 0 && parsed.streams.length === 0) {
+            clear()
+            error = "wpctl returned no audio devices"
+            return false
+        }
+        sinks = parsed.sinks
+        sources = parsed.sources
+        streams = parsed.streams
+        const defaultSink = parsed.sinks.find(row => row.isDefault) || parsed.sinks[0]
+        volume = defaultSink ? defaultSink.volume : 0
+        muted = defaultSink ? defaultSink.muted : false
+        error = ""
+        return true
+    }
+
+    function run(command, operation) {
+        if (serviceProcess.running) return false
+        _operation = operation
+        serviceProcess.command = command
+        serviceProcess.running = true
+        watchdog.restart()
+        return true
+    }
+
+    function refresh() { return run(["wpctl", "status", "-n"], "poll") }
+    function setVolume(percent) { return setSinkVolume("@DEFAULT_AUDIO_SINK@", percent) }
+    function setSinkVolume(id, percent) {
+        return run(["wpctl", "set-volume", String(id), Math.max(0, Math.min(100, percent)) + "%"], "action")
+    }
+    function setSourceVolume(id, percent) {
+        return run(["wpctl", "set-volume", String(id), Math.max(0, Math.min(100, percent)) + "%"], "action")
+    }
+    function setStreamVolume(id, percent) {
+        return run(["wpctl", "set-volume", String(id), Math.max(0, Math.min(100, percent)) + "%"], "action")
+    }
+    function toggleMute() { return toggleSinkMute("@DEFAULT_AUDIO_SINK@") }
+    function toggleSinkMute(id) { return run(["wpctl", "set-mute", String(id), "toggle"], "action") }
+    function toggleSourceMute(id) { return run(["wpctl", "set-mute", String(id), "toggle"], "action") }
+    function toggleStreamMute(id) { return run(["wpctl", "set-mute", String(id), "toggle"], "action") }
+    function setDefaultSink(id) { return run(["wpctl", "set-default", String(id)], "action") }
+    function setDefaultSource(id) { return run(["wpctl", "set-default", String(id)], "action") }
+
+    Process {
+        id: serviceProcess
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (root._operation === "poll") root.parse(text)
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            watchdog.stop()
+            const operation = root._operation
+            root._operation = ""
+            command = []
+            if (exitCode !== 0) {
+                root.clear()
+                root.error = operation + " failed (exit " + exitCode + ")"
+            } else if (operation === "action") {
+                Qt.callLater(root.refresh)
+            }
         }
     }
 
-    function setVolume(percent) {
-        volumeSetProc.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@",
-            Math.max(0, Math.min(100, percent)) + "%"]
-        volumeSetProc.running = true
-    }
-
-    function toggleMute() {
-        muteProc.running = true
-    }
-
-    Process {
-        id: pollProc
-        command: [
-            "sh", "-c",
-            "vol=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null); "
-            + "pct=$(echo \"$vol\" | awk '{printf \"%d\",$2*100}'); "
-            + "mut=$(echo \"$vol\" | grep -q MUTED && echo true || echo false); "
-            + "printf 'volume=%s\\nmuted=%s\\n' \"$pct\" \"$mut\""
-        ]
-        stdout: StdioCollector { onStreamFinished: root.parse(text) }
-    }
-
-    Process {
-        id: volumeSetProc
-        onExited: pollProc.running = true
-    }
-
-    Process {
-        id: muteProc
-        command: ["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"]
-        onExited: pollProc.running = true
+    Timer {
+        id: watchdog
+        interval: 15000
+        onTriggered: {
+            if (!serviceProcess.running) return
+            serviceProcess.running = false
+            root.clear()
+            root.error = root._operation + " timed out"
+            root._operation = ""
+            serviceProcess.command = []
+        }
     }
 
     Timer {
@@ -61,6 +136,6 @@ Singleton {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: { if (!pollProc.running) pollProc.running = true }
+        onTriggered: root.refresh()
     }
 }

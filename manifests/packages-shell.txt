@@ -4,3 +4,5 @@ qt6-declarative
 qt6-wayland
 qt6-svg
 qt6-multimedia
+dunst
+cava

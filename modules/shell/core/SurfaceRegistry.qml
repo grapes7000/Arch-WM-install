@@ -1,8 +1,8 @@
 pragma Singleton
 
-import Quickshell
+import QtQml
 
-Singleton {
+QtObject {
     readonly property var policies: ({
         bar: {
             capabilities: [
@@ -10,6 +10,7 @@ Singleton {
                 "audio.control",
                 "workspace.switch",
                 "launcher.open",
+                "drawer.open",
                 "session.lock",
                 "notification.dismiss"
             ]
@@ -37,5 +38,13 @@ Singleton {
     function grant(surface, requested) {
         const allowed = capabilities(surface)
         return (requested || []).filter(capability => allowed.indexOf(capability) !== -1)
+    }
+
+    function request(surface, granted, locked, handler, capability, payload) {
+        if (locked || grant(surface, granted).indexOf(capability) === -1)
+            return false
+        if (typeof handler !== "function")
+            return false
+        return handler(capability, payload) === true
     }
 }

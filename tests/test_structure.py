@@ -80,6 +80,41 @@ class StructureTests(unittest.TestCase):
         self.assertIn("anchors.fill: parent", desktop)
         self.assertIn("exclusionMode: ExclusionMode.Ignore", desktop)
 
+    def test_quickshell_autostart_prevents_duplicate_instances(self) -> None:
+        autostart = (
+            ROOT / "modules/hyprland/config/conf/autostart.lua"
+        ).read_text(encoding="utf-8")
+        version = (
+            ROOT / "modules/hyprland/config/.arch-wm-version"
+        ).read_text(encoding="utf-8").strip()
+        self.assertIn("qs --no-duplicate --config arch-wm", autostart)
+        self.assertNotIn("qs -c arch-wm", autostart)
+        self.assertEqual(version, "2026.08.04.3")
+
+    def test_menu_popup_dismisses_from_backdrop_and_escape(self) -> None:
+        popup = (
+            ROOT / "modules/shell/components/MenuPopup.qml"
+        ).read_text(encoding="utf-8")
+        version = (
+            ROOT / "modules/shell/.arch-wm-version"
+        ).read_text(encoding="utf-8").strip()
+        self.assertIn("function close()", popup)
+        self.assertRegex(popup, r"if \(menuOpen\) \{\s+close\(\)")
+        self.assertIn("bottom: true", popup)
+        self.assertIn("left: true", popup)
+        self.assertRegex(
+            popup,
+            r"id: backdrop\s+anchors\.fill: parent\s+onClicked: popup\.close\(\)",
+        )
+        self.assertRegex(
+            popup,
+            r"id: cardClickShield\s+anchors\.fill: parent\s+onClicked: \{\}",
+        )
+        self.assertIn("focus: popup.menuOpen", popup)
+        self.assertIn("Keys.onEscapePressed: popup.close()", popup)
+        self.assertIn("width: 340", popup)
+        self.assertEqual(version, "2026.08.06.5")
+
 
 if __name__ == "__main__":
     unittest.main()
