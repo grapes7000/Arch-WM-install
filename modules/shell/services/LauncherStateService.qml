@@ -132,6 +132,7 @@ Singleton {
     FileView {
         id: stateFile
         path: root.statePath
+        blockLoading: true
         watchChanges: true
         printErrors: false
         atomicWrites: true
