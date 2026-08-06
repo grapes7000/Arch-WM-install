@@ -14,6 +14,8 @@ Singleton {
     property string exitNodeName: ""
     property bool isMullvad: false
     property string mullvadLocation: ""
+    property string ipAddress: ""
+    property int peerCount: 0
 
     function parse(contents) {
         if (!contents || contents.length === 0) {
@@ -31,6 +33,14 @@ Singleton {
                 root.tailnet = data.CurrentTailnet.Name
             else
                 root.tailnet = ""
+
+            if (data.Self && data.Self.TailscaleIPs && data.Self.TailscaleIPs.length > 0)
+                root.ipAddress = data.Self.TailscaleIPs[0]
+            else
+                root.ipAddress = ""
+
+            const peers = data.Peer ? Object.keys(data.Peer) : []
+            root.peerCount = peers.length
 
             let exitId = ""
             if (data.ExitNodeStatus && data.ExitNodeStatus.ID)

@@ -12,200 +12,295 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 12
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 6
-
-            Text {
-                text: "Connection"
-                color: Core.Theme.accent
-                font.pixelSize: 11
-                font.bold: true
-                font.capitalization: Font.AllUppercase
-            }
-
-            RowLayout {
-                spacing: 10
-
-                Text {
-                    text: {
-                        if (!Services.NetworkService.connected) return "󰤭"
-                        if (Services.NetworkService.type === "ethernet") return "󰈀"
-                        const s = Services.NetworkService.strength
-                        if (s >= 75) return "󰤨"
-                        if (s >= 50) return "󰤥"
-                        if (s >= 25) return "󰤢"
-                        return "󰤟"
-                    }
-                    color: Services.NetworkService.connected
-                        ? Core.Theme.foreground : Core.Theme.muted
-                    font.pixelSize: 24
-                }
-
-                ColumnLayout {
-                    spacing: 2
-
-                    Text {
-                        text: Services.NetworkService.connected
-                            ? (Services.NetworkService.ssid || Services.NetworkService.type)
-                            : "Disconnected"
-                        color: Services.NetworkService.connected
-                            ? Core.Theme.foreground : Core.Theme.muted
-                        font.pixelSize: 13
-                        font.bold: true
-                    }
-
-                    Text {
-                        visible: Services.NetworkService.connected
-                            && Services.NetworkService.type === "wifi"
-                        text: "Signal: " + Services.NetworkService.strength + "%"
-                        color: Core.Theme.muted
-                        font.pixelSize: 11
-                    }
-                }
-            }
-
-            Rectangle {
-                visible: Services.NetworkService.connected
-                    && Services.NetworkService.type === "wifi"
-                Layout.fillWidth: true
-                height: 4
-                radius: 2
-                color: Qt.rgba(1, 1, 1, 0.1)
-
-                Rectangle {
-                    width: parent.width * Services.NetworkService.strength / 100
-                    height: parent.height
-                    radius: parent.radius
-                    color: {
-                        const s = Services.NetworkService.strength
-                        if (s >= 75) return Core.Theme.accent
-                        if (s >= 50) return Core.Theme.accent2
-                        return Core.Theme.urgent
-                    }
-                }
-            }
-        }
+        spacing: 10
 
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: Core.Theme.muted
-            opacity: 0.2
-        }
+            implicitHeight: wifiCol.implicitHeight + 24
+            radius: Math.max(6, Core.Theme.radius - 2)
+            color: Qt.rgba(1, 1, 1, 0.04)
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.06)
+            opacity: Services.NetworkService.connected ? 1.0 : 0.4
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 6
-
-            Text {
-                text: "Tailscale"
-                color: Core.Theme.accent
-                font.pixelSize: 11
-                font.bold: true
-                font.capitalization: Font.AllUppercase
-            }
-
-            RowLayout {
-                spacing: 10
-
-                Text {
-                    text: "󰖂"
-                    color: Services.TailscaleService.connected
-                        ? Core.Theme.accent : Core.Theme.muted
-                    font.pixelSize: 20
-                }
-
-                ColumnLayout {
-                    spacing: 2
-
-                    Text {
-                        text: Services.TailscaleService.connected
-                            ? "Connected" : (Services.TailscaleService.running
-                                ? "Not connected" : "Not running")
-                        color: Services.TailscaleService.connected
-                            ? Core.Theme.foreground : Core.Theme.muted
-                        font.pixelSize: 13
-                        font.bold: true
-                    }
-
-                    Text {
-                        visible: Services.TailscaleService.tailnet !== ""
-                        text: Services.TailscaleService.tailnet
-                        color: Core.Theme.muted
-                        font.pixelSize: 11
-                    }
-                }
-            }
-
-            RowLayout {
-                visible: Services.TailscaleService.connected
+            ColumnLayout {
+                id: wifiCol
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 12
                 spacing: 8
 
-                Text {
-                    text: "Exit Node"
-                    color: Core.Theme.muted
-                    font.pixelSize: 12
+                RowLayout {
+                    spacing: 12
+
+                    Text {
+                        text: {
+                            if (!Services.NetworkService.connected) return "󰤭"
+                            if (Services.NetworkService.type === "ethernet") return "󰈀"
+                            const s = Services.NetworkService.strength
+                            if (s >= 75) return "󰤨"
+                            if (s >= 50) return "󰤥"
+                            if (s >= 25) return "󰤢"
+                            return "󰤟"
+                        }
+                        color: Services.NetworkService.connected
+                            ? Core.Theme.accent : Core.Theme.muted
+                        font.pixelSize: 22
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            text: Services.NetworkService.connected
+                                ? (Services.NetworkService.ssid || Services.NetworkService.type)
+                                : "Disconnected"
+                            color: Services.NetworkService.connected
+                                ? Core.Theme.foreground : Core.Theme.muted
+                            font.pixelSize: 13
+                            font.bold: true
+                        }
+
+                        Text {
+                            visible: Services.NetworkService.connected
+                            text: {
+                                let info = Services.NetworkService.ipAddress || ""
+                                if (Services.NetworkService.security)
+                                    info += (info ? "  " : "") + Services.NetworkService.security
+                                return info || "Connected"
+                            }
+                            color: Core.Theme.muted
+                            font.pixelSize: 10
+                        }
+                    }
+
+                    Item {
+                        visible: Services.NetworkService.connected
+                            && Services.NetworkService.type === "wifi"
+                        width: 42
+                        height: 42
+
+                        Canvas {
+                            id: signalRing
+                            anchors.fill: parent
+                            property real percent: Services.NetworkService.strength / 100
+                            onPercentChanged: requestPaint()
+
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                var cx = width / 2
+                                var cy = height / 2
+                                var r = (Math.min(width, height) - 6) / 2
+                                ctx.clearRect(0, 0, width, height)
+
+                                ctx.beginPath()
+                                ctx.arc(cx, cy, r, 0, 2 * Math.PI)
+                                ctx.lineWidth = 4
+                                ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.06)
+                                ctx.stroke()
+
+                                if (percent > 0) {
+                                    ctx.beginPath()
+                                    var start = -Math.PI / 2
+                                    ctx.arc(cx, cy, r, start, start + 2 * Math.PI * percent)
+                                    ctx.lineWidth = 4
+                                    ctx.strokeStyle = Core.Theme.accent
+                                    ctx.lineCap = "round"
+                                    ctx.stroke()
+                                }
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: Services.NetworkService.strength + "%"
+                            color: Core.Theme.foreground
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
+                    }
                 }
 
-                Text {
-                    text: Services.TailscaleService.exitNodeActive
-                        ? Services.TailscaleService.exitNodeName : "None"
-                    color: Services.TailscaleService.exitNodeActive
-                        ? Core.Theme.accent : Core.Theme.muted
-                    font.pixelSize: 12
-                    font.bold: Services.TailscaleService.exitNodeActive
+                Rectangle {
+                    visible: Services.NetworkService.connected
+                    Layout.fillWidth: true
+                    implicitHeight: transferRow.implicitHeight + 8
+                    radius: 999
+                    color: Qt.rgba(1, 1, 1, 0.04)
+                    border.width: 1
+                    border.color: Qt.rgba(1, 1, 1, 0.06)
+
+                    RowLayout {
+                        id: transferRow
+                        anchors.centerIn: parent
+                        spacing: 20
+
+                        Text {
+                            text: "󰩟 " + Services.NetworkService.downloadRate
+                            color: Core.Theme.muted
+                            font.pixelSize: 10
+                        }
+
+                        Text {
+                            text: "󰩠 " + Services.NetworkService.uploadRate
+                            color: Core.Theme.muted
+                            font.pixelSize: 10
+                        }
+                    }
                 }
             }
         }
 
         Rectangle {
-            visible: Services.TailscaleService.isMullvad
             Layout.fillWidth: true
-            height: 1
-            color: Core.Theme.muted
-            opacity: 0.2
-        }
+            implicitHeight: mullvadCol.implicitHeight + 24
+            radius: Math.max(6, Core.Theme.radius - 2)
+            color: Services.TailscaleService.isMullvad
+                ? Qt.rgba(0.2, 0.8, 0.4, 0.06) : Qt.rgba(1, 1, 1, 0.04)
+            border.width: 1
+            border.color: Services.TailscaleService.isMullvad
+                ? Qt.rgba(0.2, 0.8, 0.4, 0.3) : Qt.rgba(1, 1, 1, 0.06)
+            opacity: Services.TailscaleService.isMullvad ? 1.0 : 0.5
 
-        ColumnLayout {
-            visible: Services.TailscaleService.isMullvad
-            Layout.fillWidth: true
-            spacing: 6
+            ColumnLayout {
+                id: mullvadCol
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 12
+                spacing: 8
 
-            Text {
-                text: "Mullvad VPN"
-                color: Core.Theme.accent
-                font.pixelSize: 11
-                font.bold: true
-                font.capitalization: Font.AllUppercase
-            }
-
-            RowLayout {
-                spacing: 10
-
-                Text {
-                    text: "󰌾"
-                    color: Core.Theme.accent
-                    font.pixelSize: 20
-                }
-
-                ColumnLayout {
-                    spacing: 2
+                RowLayout {
+                    spacing: 12
 
                     Text {
-                        text: "Active"
-                        color: Core.Theme.foreground
-                        font.pixelSize: 13
-                        font.bold: true
+                        text: "󰦝"
+                        color: Services.TailscaleService.isMullvad
+                            ? Qt.rgba(0.2, 0.8, 0.4, 1.0) : Core.Theme.muted
+                        font.pixelSize: 22
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            text: "Mullvad VPN"
+                            color: Core.Theme.foreground
+                            font.pixelSize: 13
+                            font.bold: true
+                        }
+
+                        Text {
+                            text: Services.TailscaleService.isMullvad
+                                ? "Via Tailscale exit node" : "Inactive"
+                            color: Core.Theme.muted
+                            font.pixelSize: 10
+                        }
+                    }
+
+                    Rectangle {
+                        width: pillText.implicitWidth + 20
+                        height: pillText.implicitHeight + 6
+                        radius: 999
+                        color: Services.TailscaleService.isMullvad
+                            ? Qt.rgba(0.2, 0.8, 0.4, 1.0) : Qt.rgba(1, 1, 1, 0.06)
+
+                        property bool pulseState: false
+
+                        Timer {
+                            running: Services.TailscaleService.isMullvad
+                            interval: 1500
+                            repeat: true
+                            onTriggered: parent.pulseState = !parent.pulseState
+                        }
+
+                        opacity: Services.TailscaleService.isMullvad
+                            ? (pulseState ? 1.0 : 0.6) : 1.0
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 750; easing.type: Easing.InOutQuad }
+                        }
+
+                        Text {
+                            id: pillText
+                            anchors.centerIn: parent
+                            text: Services.TailscaleService.isMullvad ? "CONNECTED" : "OFF"
+                            color: Services.TailscaleService.isMullvad
+                                ? Core.Theme.background : Core.Theme.muted
+                            font.pixelSize: 8
+                            font.bold: true
+                            font.letterSpacing: 0.5
+                        }
+                    }
+                }
+
+                Text {
+                    visible: Services.TailscaleService.isMullvad
+                        && Services.TailscaleService.mullvadLocation !== ""
+                    text: "Exit: " + Services.TailscaleService.mullvadLocation
+                    color: Core.Theme.muted
+                    font.pixelSize: 10
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: tsCol.implicitHeight + 24
+            radius: Math.max(6, Core.Theme.radius - 2)
+            color: Qt.rgba(1, 1, 1, 0.04)
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.06)
+            opacity: Services.TailscaleService.connected ? 1.0 : 0.4
+
+            ColumnLayout {
+                id: tsCol
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 12
+                spacing: 2
+
+                RowLayout {
+                    spacing: 12
+
+                    Text {
+                        text: "󰛳"
+                        color: Services.TailscaleService.connected
+                            ? Core.Theme.accent : Core.Theme.muted
+                        font.pixelSize: 22
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            text: "Tailscale"
+                            color: Core.Theme.foreground
+                            font.pixelSize: 13
+                            font.bold: true
+                        }
+
+                        Text {
+                            text: {
+                                if (!Services.TailscaleService.running) return "Not installed"
+                                if (!Services.TailscaleService.connected) return "Disconnected"
+                                return Services.TailscaleService.ipAddress || "Connected"
+                            }
+                            color: Core.Theme.muted
+                            font.pixelSize: 10
+                        }
                     }
 
                     Text {
-                        visible: Services.TailscaleService.mullvadLocation !== ""
-                        text: "Exit: " + Services.TailscaleService.mullvadLocation
+                        visible: Services.TailscaleService.connected
+                        text: Services.TailscaleService.peerCount + " peers"
                         color: Core.Theme.muted
-                        font.pixelSize: 11
+                        font.pixelSize: 10
                     }
                 }
             }
