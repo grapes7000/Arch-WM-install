@@ -18,6 +18,11 @@ REPOSITORY = "https://github.com/grapes7000/themes.git"
 CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "arch-wm-theme-studio"
 CHECKOUT = CACHE_ROOT / "themes"
 UNPACKED = CACHE_ROOT / "unpacked"
+CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+INSTALLER_THEME_DIR = CONFIG_HOME / "theme-engine" / "themes"
+STUDIO_THEME_DIR = CONFIG_HOME / "hypr" / "themes"
+INSTALLER_ACTIVE = CONFIG_HOME / "theme-engine" / "generated" / ".active"
+STUDIO_ACTIVE = CONFIG_HOME / "hypr" / "generated" / ".active"
 
 
 def legacy_command() -> Path:
@@ -63,15 +68,36 @@ def unpack_sources() -> None:
     )
 
 
+def sync_installer_catalog() -> None:
+    """Expose the installer catalog at the path expected by Theme Studio."""
+    if not INSTALLER_THEME_DIR.is_dir():
+        return
+
+    STUDIO_THEME_DIR.mkdir(parents=True, exist_ok=True)
+    for source in INSTALLER_THEME_DIR.glob("*.json"):
+        target = STUDIO_THEME_DIR / source.name
+        try:
+            if target.exists() and target.samefile(source):
+                continue
+        except OSError:
+            pass
+        shutil.copy2(source, target)
+
+    if INSTALLER_ACTIVE.is_file():
+        STUDIO_ACTIVE.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(INSTALLER_ACTIVE, STUDIO_ACTIVE)
+
+
 def launch_studio(args: list[str]) -> int:
     if shutil.which("git") is None:
         print("theme: git is required to install Theme Studio", file=sys.stderr)
         return 1
     try:
+        sync_installer_catalog()
         sync_checkout()
         unpack_sources()
-    except subprocess.CalledProcessError as exc:
-        print(f"theme: could not sync Theme Studio: {exc}", file=sys.stderr)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        print(f"theme: could not prepare Theme Studio: {exc}", file=sys.stderr)
         print("Falling back to the classic theme picker.", file=sys.stderr)
         return run_legacy([])
 
