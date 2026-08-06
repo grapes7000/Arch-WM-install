@@ -1,24 +1,95 @@
 #!/usr/bin/env python3
-"""Compatibility launcher for the Arch-WM theme command.
+"""Bootstrap the real Theme Studio from grapes7000/themes.
 
-The full Theme Studio UI is not bundled in this installer snapshot yet. Until
-it is, keep the public `theme` command functional by delegating to the stable
-`theme-legacy` generator installed beside this file.
+Named-theme and legacy CLI operations stay local and use the stable generator
+installed beside this command. Interactive Studio operations sync the actual
+Theme Studio source bundle from the themes repository, unpack it, and launch
+that implementation with its modules on PYTHONPATH.
 """
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+REPOSITORY = "https://github.com/grapes7000/themes.git"
+CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "arch-wm-theme-studio"
+CHECKOUT = CACHE_ROOT / "themes"
+UNPACKED = CACHE_ROOT / "unpacked"
+
+
+def legacy_command() -> Path:
+    return Path(__file__).resolve().with_name("theme-legacy")
+
+
+def run_legacy(args: list[str]) -> int:
+    legacy = legacy_command()
+    if not legacy.is_file():
+        print(f"theme: missing local generator: {legacy}", file=sys.stderr)
+        return 1
+    return subprocess.call([str(legacy), *args])
+
+
+def studio_requested(args: list[str]) -> bool:
+    return not args or args[0] in {"studio", "edit", "recover"}
+
+
+def sync_checkout() -> None:
+    CACHE_ROOT.mkdir(parents=True, exist_ok=True)
+    if (CHECKOUT / ".git").is_dir():
+        subprocess.run(
+            ["git", "-C", str(CHECKOUT), "fetch", "--depth", "1", "origin", "main"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(CHECKOUT), "reset", "--hard", "origin/main"],
+            check=True,
+        )
+    else:
+        shutil.rmtree(CHECKOUT, ignore_errors=True)
+        subprocess.run(
+            ["git", "clone", "--depth", "1", REPOSITORY, str(CHECKOUT)],
+            check=True,
+        )
+
+
+def unpack_sources() -> None:
+    shutil.rmtree(UNPACKED, ignore_errors=True)
+    subprocess.run(
+        ["bash", str(CHECKOUT / "tools/unpack-theme-studio.sh"), str(UNPACKED)],
+        check=True,
+    )
+
+
+def launch_studio(args: list[str]) -> int:
+    if shutil.which("git") is None:
+        print("theme: git is required to install Theme Studio", file=sys.stderr)
+        return 1
+    try:
+        sync_checkout()
+        unpack_sources()
+    except subprocess.CalledProcessError as exc:
+        print(f"theme: could not sync Theme Studio: {exc}", file=sys.stderr)
+        print("Falling back to the classic theme picker.", file=sys.stderr)
+        return run_legacy([])
+
+    environment = os.environ.copy()
+    python_paths = [str(CHECKOUT / "bin"), str(UNPACKED)]
+    if environment.get("PYTHONPATH"):
+        python_paths.append(environment["PYTHONPATH"])
+    environment["PYTHONPATH"] = os.pathsep.join(python_paths)
+
+    command = [sys.executable, str(CHECKOUT / "bin/theme-studio"), *args]
+    return subprocess.call(command, env=environment)
 
 
 def main() -> int:
-    legacy = Path(__file__).resolve().with_name("theme-legacy")
-    if not legacy.is_file():
-        print(f"theme: missing compatibility backend: {legacy}", file=sys.stderr)
-        return 1
-    os.execv(str(legacy), [str(legacy), *sys.argv[1:]])
-    return 1
+    args = sys.argv[1:]
+    if studio_requested(args):
+        return launch_studio(args)
+    return run_legacy(args)
 
 
 if __name__ == "__main__":
