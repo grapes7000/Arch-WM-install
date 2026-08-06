@@ -90,7 +90,6 @@ Singleton {
     FileView {
         id: registryFile
         path: root.registryPath
-        blockLoading: true
         watchChanges: true
         onTextChanged: root.parse(registryFile.text())
         onFileChanged: registryFile.reload()

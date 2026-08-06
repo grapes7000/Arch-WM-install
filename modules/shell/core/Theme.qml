@@ -71,7 +71,6 @@ Singleton {
     FileView {
         id: themeFile
         path: root.path
-        blockLoading: true
         watchChanges: true
         onTextChanged: root.parse(themeFile.text())
         onFileChanged: themeFile.reload()
