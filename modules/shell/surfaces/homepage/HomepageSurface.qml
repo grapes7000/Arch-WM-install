@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "../../core" as Core
 import "../../services" as Services
 
@@ -42,6 +43,20 @@ Scope {
 
             function select(page) {
                 selectedPage = selectedPage === page ? "home" : page
+            }
+
+            function launch(command) {
+                if (!command || launchProcess.running)
+                    return
+                launchProcess.command = ["sh", "-lc", command]
+                launchProcess.running = true
+            }
+
+            Process {
+                id: launchProcess
+                onExited: {
+                    command = []
+                }
             }
 
             Item {
@@ -306,7 +321,7 @@ Scope {
                                                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.muted; font.pixelSize: 9 }
                                             }
                                             HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
-                                            TapHandler { onTapped: if (modelData.command) Quickshell.execDetached(["sh", "-lc", modelData.command]) }
+                                            TapHandler { onTapped: root.launch(modelData.command) }
                                         }
                                     }
                                 }
