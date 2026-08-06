@@ -39,7 +39,8 @@
       "variants": ["compact", "standard", "expanded"],
       "lockSafe": false,
       "services": ["system-stats"],
-      "capabilities": []
+      "capabilities": [],
+      "panel": true
     },
     {
       "id": "battery",
@@ -59,7 +60,8 @@
       "variants": ["compact", "standard"],
       "lockSafe": true,
       "services": ["mpris"],
-      "capabilities": ["media.control"]
+      "capabilities": ["media.control"],
+      "panel": true
     },
     {
       "id": "volume",
@@ -110,7 +112,8 @@
       "variants": ["compact", "standard"],
       "lockSafe": true,
       "services": ["weather"],
-      "capabilities": []
+      "capabilities": [],
+      "panel": true
     }
   ]
 }

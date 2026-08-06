@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import "../core" as Core
+import "../services" as Services
 
 PanelWindow {
     id: popup
@@ -22,8 +23,8 @@ PanelWindow {
         right: Core.Theme.gap
     }
 
-    implicitWidth: 320
-    implicitHeight: contentCol.implicitHeight + Core.Theme.gap * 2
+    implicitWidth: 340
+    implicitHeight: mainCol.implicitHeight + 24
     exclusionMode: ExclusionMode.Ignore
     focusable: true
     color: "transparent"
@@ -32,6 +33,7 @@ PanelWindow {
         if (menuOpen) {
             menuOpen = false
             currentWidget = ""
+            currentWidgetName = ""
         } else {
             menuOpen = true
         }
@@ -45,21 +47,20 @@ PanelWindow {
         border.color: Core.Theme.accent2
 
         ColumnLayout {
-            id: contentCol
+            id: mainCol
             anchors.fill: parent
-            anchors.margins: Core.Theme.gap
-            spacing: Core.Theme.gap
+            anchors.margins: 12
+            spacing: 10
 
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
+                visible: popup.currentWidget !== ""
 
                 Text {
                     text: "←"
                     color: Core.Theme.foreground
                     font.pixelSize: 16
-                    visible: popup.currentWidget !== ""
-
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
@@ -71,27 +72,530 @@ PanelWindow {
                 }
 
                 Text {
-                    text: popup.currentWidget === "" ? "Widgets" : popup.currentWidgetName
+                    text: popup.currentWidgetName
                     color: Core.Theme.foreground
                     font.pixelSize: 14
                     font.bold: true
-                    Layout.fillWidth: true
                 }
             }
 
-            Rectangle {
+            Item {
                 Layout.fillWidth: true
-                height: 1
-                color: Core.Theme.muted
-                opacity: 0.3
-            }
-
-            MenuWidgetList {
-                Layout.fillWidth: true
+                Layout.preferredHeight: overviewCol.implicitHeight
                 visible: popup.currentWidget === ""
-                onWidgetSelected: function(widgetId, widgetName) {
-                    popup.currentWidget = widgetId
-                    popup.currentWidgetName = widgetName
+
+                ColumnLayout {
+                    id: overviewCol
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    spacing: 10
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                text: Services.TimeService.timeLong
+                                color: Core.Theme.foreground
+                                font.pixelSize: 28
+                                font.bold: true
+                            }
+
+                            Text {
+                                text: Services.TimeService.dateLong
+                                color: Core.Theme.muted
+                                font.pixelSize: 11
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        RowLayout {
+                            spacing: 12
+
+                            ColumnLayout {
+                                spacing: 0
+
+                                Text {
+                                    text: {
+                                        if (!Services.PowerService.available) return "󰁹"
+                                        if (Services.PowerService.charging) return "󰂄"
+                                        const p = Services.PowerService.percent
+                                        if (p >= 90) return "󰁹"
+                                        if (p >= 70) return "󰂁"
+                                        if (p >= 50) return "󰁾"
+                                        if (p >= 30) return "󰁼"
+                                        if (p >= 10) return "󰁺"
+                                        return "󰂃"
+                                    }
+                                    color: {
+                                        if (!Services.PowerService.available) return Core.Theme.muted
+                                        if (Services.PowerService.percent <= 15 && !Services.PowerService.charging)
+                                            return Core.Theme.urgent
+                                        return Core.Theme.foreground
+                                    }
+                                    font.pixelSize: 18
+                                    horizontalAlignment: Text.AlignHCenter
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                                Text {
+                                    text: Services.PowerService.available
+                                        ? Services.PowerService.percent + "%" : "--"
+                                    color: Core.Theme.muted
+                                    font.pixelSize: 10
+                                    horizontalAlignment: Text.AlignHCenter
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                            }
+
+                            ColumnLayout {
+                                spacing: 0
+
+                                Text {
+                                    text: {
+                                        if (Services.NotificationService.dndEnabled) return "󰂛"
+                                        if (Services.NotificationService.count > 0) return "󰂚"
+                                        return "󰂜"
+                                    }
+                                    color: Services.NotificationService.count > 0
+                                        ? Core.Theme.accent : Core.Theme.muted
+                                    font.pixelSize: 18
+                                    horizontalAlignment: Text.AlignHCenter
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                                Text {
+                                    text: Services.NotificationService.count > 0
+                                        ? Services.NotificationService.count : ""
+                                    color: Core.Theme.muted
+                                    font.pixelSize: 10
+                                    horizontalAlignment: Text.AlignHCenter
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 48
+                        radius: Math.max(6, Core.Theme.radius - 2)
+                        color: Qt.rgba(1, 1, 1, 0.04)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.06)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                popup.currentWidget = "system-stats"
+                                popup.currentWidgetName = "System"
+                            }
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            spacing: 16
+
+                            RowLayout {
+                                spacing: 4
+                                Text { text: "CPU"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text {
+                                    text: Services.SystemStatsService.cpuPercent + "%"
+                                    color: Services.SystemStatsService.cpuPercent >= 90
+                                        ? Core.Theme.urgent : Core.Theme.foreground
+                                    font.pixelSize: 12; font.bold: true
+                                }
+                            }
+
+                            RowLayout {
+                                spacing: 4
+                                Text { text: "RAM"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text {
+                                    text: Services.SystemStatsService.memoryPercent + "%"
+                                    color: Services.SystemStatsService.memoryPercent >= 90
+                                        ? Core.Theme.urgent : Core.Theme.foreground
+                                    font.pixelSize: 12; font.bold: true
+                                }
+                            }
+
+                            RowLayout {
+                                spacing: 4
+                                Text { text: "DISK"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text {
+                                    text: Services.SystemStatsService.diskPercent + "%"
+                                    color: Services.SystemStatsService.diskPercent >= 90
+                                        ? Core.Theme.urgent : Core.Theme.foreground
+                                    font.pixelSize: 12; font.bold: true
+                                }
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Text {
+                                text: "›"
+                                color: Core.Theme.muted
+                                font.pixelSize: 14
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: mediaCol.implicitHeight + 20
+                        radius: Math.max(6, Core.Theme.radius - 2)
+                        color: Qt.rgba(1, 1, 1, 0.04)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.06)
+                        visible: Services.MprisService.status !== "Stopped"
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                popup.currentWidget = "media"
+                                popup.currentWidgetName = "Now Playing"
+                            }
+                        }
+
+                        ColumnLayout {
+                            id: mediaCol
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 10
+                            spacing: 8
+
+                            Text {
+                                text: "NOW PLAYING"
+                                color: Core.Theme.accent
+                                font.pixelSize: 9
+                                font.bold: true
+                                font.letterSpacing: 1
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 10
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+
+                                    Text {
+                                        text: Services.MprisService.title || "Unknown"
+                                        color: Core.Theme.foreground
+                                        font.pixelSize: 13
+                                        font.bold: true
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Text {
+                                        text: Services.MprisService.artist || "Unknown Artist"
+                                        color: Core.Theme.muted
+                                        font.pixelSize: 11
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+                                }
+
+                                RowLayout {
+                                    spacing: 8
+
+                                    Text {
+                                        text: "󰒮"
+                                        color: Core.Theme.foreground
+                                        font.pixelSize: 16
+                                        visible: Services.MprisService.canPrev
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: Services.MprisService.previous()
+                                        }
+                                    }
+
+                                    Text {
+                                        text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
+                                        color: Core.Theme.accent
+                                        font.pixelSize: 20
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: Services.MprisService.playPause()
+                                        }
+                                    }
+
+                                    Text {
+                                        text: "󰒭"
+                                        color: Core.Theme.foreground
+                                        font.pixelSize: 16
+                                        visible: Services.MprisService.canNext
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: Services.MprisService.next()
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 24
+
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.topMargin: 4
+                                    spacing: 2
+
+                                    Repeater {
+                                        model: 32
+                                        Rectangle {
+                                            required property int index
+                                            width: (parent.width - 31 * 2) / 32
+                                            radius: 1
+                                            color: Core.Theme.accent
+                                            opacity: Services.MprisService.status === "Playing"
+                                                ? barAnim.value : 0.15
+                                            anchors.bottom: parent.bottom
+
+                                            property real seed: Math.random()
+
+                                            height: Services.MprisService.status === "Playing"
+                                                ? parent.height * barAnim.value
+                                                : parent.height * 0.1
+
+                                            NumberAnimation on height {
+                                                id: barHeightAnim
+                                                running: false
+                                            }
+
+                                            Timer {
+                                                id: barAnim
+                                                property real value: 0.15
+                                                interval: 80 + index * 7
+                                                running: Services.MprisService.status === "Playing" && popup.menuOpen
+                                                repeat: true
+                                                triggeredOnStart: true
+                                                onTriggered: {
+                                                    value = 0.15 + Math.random() * 0.85
+                                                }
+                                            }
+
+                                            Behavior on height {
+                                                NumberAnimation { duration: 90; easing.type: Easing.OutQuad }
+                                            }
+
+                                            Behavior on opacity {
+                                                NumberAnimation { duration: 150 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        visible: !Services.MprisService.status !== "Stopped"
+                            ? false : true
+                        implicitHeight: 0
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: weatherRow.implicitHeight + 20
+                        radius: Math.max(6, Core.Theme.radius - 2)
+                        color: Qt.rgba(1, 1, 1, 0.04)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.06)
+                        visible: Services.WeatherService.available
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                popup.currentWidget = "weather"
+                                popup.currentWidgetName = "Weather"
+                            }
+                        }
+
+                        RowLayout {
+                            id: weatherRow
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: 10
+                            spacing: 10
+
+                            Text {
+                                text: Services.WeatherService.icon || "🌡"
+                                font.pixelSize: 28
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+
+                                Text {
+                                    text: Services.WeatherService.temp
+                                    color: Core.Theme.foreground
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                }
+
+                                Text {
+                                    text: Services.WeatherService.condition
+                                    color: Core.Theme.muted
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                            }
+
+                            Text {
+                                text: "›"
+                                color: Core.Theme.muted
+                                font.pixelSize: 14
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: networkRow.implicitHeight + 20
+                        radius: Math.max(6, Core.Theme.radius - 2)
+                        color: Qt.rgba(1, 1, 1, 0.04)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.06)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                popup.currentWidget = "network"
+                                popup.currentWidgetName = "Network"
+                            }
+                        }
+
+                        RowLayout {
+                            id: networkRow
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: 10
+                            spacing: 10
+
+                            Text {
+                                text: {
+                                    if (!Services.NetworkService.connected) return "󰤭"
+                                    if (Services.NetworkService.type === "ethernet") return "󰈀"
+                                    const s = Services.NetworkService.strength
+                                    if (s >= 75) return "󰤨"
+                                    if (s >= 50) return "󰤥"
+                                    if (s >= 25) return "󰤢"
+                                    return "󰤟"
+                                }
+                                color: Services.NetworkService.connected
+                                    ? Core.Theme.foreground : Core.Theme.muted
+                                font.pixelSize: 20
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+
+                                Text {
+                                    text: Services.NetworkService.connected
+                                        ? (Services.NetworkService.ssid || Services.NetworkService.type)
+                                        : "Disconnected"
+                                    color: Services.NetworkService.connected
+                                        ? Core.Theme.foreground : Core.Theme.muted
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                }
+
+                                Text {
+                                    visible: Services.TailscaleService.connected
+                                    text: Services.TailscaleService.isMullvad
+                                        ? "Mullvad VPN active" : "Tailscale connected"
+                                    color: Core.Theme.accent
+                                    font.pixelSize: 10
+                                }
+                            }
+
+                            Text {
+                                text: "›"
+                                color: Core.Theme.muted
+                                font.pixelSize: 14
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: volRow.implicitHeight + 20
+                        radius: Math.max(6, Core.Theme.radius - 2)
+                        color: Qt.rgba(1, 1, 1, 0.04)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.06)
+
+                        RowLayout {
+                            id: volRow
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: 10
+                            spacing: 10
+
+                            Text {
+                                text: {
+                                    if (Services.AudioService.muted) return "󰝟"
+                                    const v = Services.AudioService.volume
+                                    if (v >= 66) return "󰕾"
+                                    if (v >= 33) return "󰖀"
+                                    return "󰕿"
+                                }
+                                color: Services.AudioService.muted
+                                    ? Core.Theme.muted : Core.Theme.foreground
+                                font.pixelSize: 20
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: Services.AudioService.toggleMute()
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: 4
+                                radius: 2
+                                color: Qt.rgba(1, 1, 1, 0.1)
+
+                                Rectangle {
+                                    width: parent.width * Services.AudioService.volume / 100
+                                    height: parent.height
+                                    radius: parent.radius
+                                    color: Services.AudioService.muted
+                                        ? Core.Theme.muted : Core.Theme.accent
+                                }
+                            }
+
+                            Text {
+                                text: Services.AudioService.volume + "%"
+                                color: Core.Theme.foreground
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+                        }
+                    }
                 }
             }
 
