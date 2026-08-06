@@ -128,9 +128,33 @@ Scope {
                                     Layout.preferredHeight: implicitHeight
                                 }
                             }
+
+                            Item {
+                                Layout.preferredWidth: menuTrigger.implicitWidth + 8
+                                Layout.fillHeight: true
+
+                                Text {
+                                    id: menuTrigger
+                                    anchors.centerIn: parent
+                                    text: "󰍜"
+                                    color: menuPopup.menuOpen
+                                        ? Core.Theme.accent : Core.Theme.foreground
+                                    font.pixelSize: 16
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: menuPopup.toggle()
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+            }
+
+            MenuPopup {
+                id: menuPopup
             }
         }
     }

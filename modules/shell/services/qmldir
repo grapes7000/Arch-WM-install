@@ -9,3 +9,4 @@ singleton PowerService 1.0 PowerService.qml
 singleton NotificationService 1.0 NotificationService.qml
 singleton SessionService 1.0 SessionService.qml
 singleton WeatherService 1.0 WeatherService.qml
+singleton TailscaleService 1.0 TailscaleService.qml

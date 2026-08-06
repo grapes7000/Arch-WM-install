@@ -13,4 +13,5 @@ singleton PowerService 1.0 services/PowerService.qml
 singleton NotificationService 1.0 services/NotificationService.qml
 singleton SessionService 1.0 services/SessionService.qml
 singleton WeatherService 1.0 services/WeatherService.qml
+singleton TailscaleService 1.0 services/TailscaleService.qml
 WidgetContext 1.0 core/WidgetContext.qml
