@@ -96,13 +96,13 @@ Scope {
                                 spacing: 5
 
                                 Text {
-                                    text: Qt.formatTime(new Date(), "hh:mm")
+                                    text: Services.TimeService.timeShort
                                     color: Core.Theme.foreground
                                     font.pixelSize: 42
                                     font.bold: true
                                 }
                                 Text {
-                                    text: Qt.formatDate(new Date(), "dddd, MMMM d")
+                                    text: Services.TimeService.dateLong
                                     color: Core.Theme.muted
                                     font.pixelSize: 13
                                 }
@@ -113,8 +113,6 @@ Scope {
                                     font.bold: true
                                 }
                             }
-
-                            Timer { interval: 1000; running: true; repeat: true; onTriggered: parent.update() }
                         }
 
                         RailCard {
