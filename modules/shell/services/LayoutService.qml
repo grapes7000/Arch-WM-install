@@ -51,6 +51,7 @@ Singleton {
     FileView {
         id: barFile
         path: root.shellDir + "/layouts/bar.default.json"
+        blockLoading: true
         watchChanges: true
         onTextChanged: {
             try {
@@ -65,6 +66,7 @@ Singleton {
     FileView {
         id: desktopFile
         path: root.shellDir + "/layouts/desktop.default.json"
+        blockLoading: true
         watchChanges: true
         onTextChanged: {
             try {
