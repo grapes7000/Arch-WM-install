@@ -108,7 +108,7 @@ Scope {
 
         Rectangle {
             anchors.fill: parent
-            color: Qt.rgba(Core.Theme.background.r, Core.Theme.background.g, Core.Theme.background.b, 0.82)
+            color: { var c = Qt.color(Core.Theme.background); return Qt.rgba(c.r, c.g, c.b, 0.82) }
             MouseArea { anchors.fill: parent; onClicked: root.close() }
 
             Rectangle {

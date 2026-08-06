@@ -34,6 +34,12 @@ Singleton {
 
     readonly property string shellDir: Quickshell.shellDir
 
+    function readFile(fv) {
+        try { var r = fv.text(); if (typeof r === "string") return r } catch(e) {}
+        try { var r2 = fv.text; if (typeof r2 === "string") return r2 } catch(e) {}
+        return ""
+    }
+
     function parse(contents, expectedSurface) {
         if (!contents || typeof contents !== "string" || contents.length === 0)
             throw new Error("empty " + expectedSurface + " layout")
@@ -54,7 +60,7 @@ Singleton {
         watchChanges: true
         onTextChanged: {
             try {
-                root.bar = root.parse(barFile.text(), "bar")
+                root.bar = root.parse(root.readFile(barFile), "bar")
             } catch (error) {
                 console.warn("Bar layout rejected; keeping last known-good layout:", error)
             }
@@ -67,7 +73,7 @@ Singleton {
         watchChanges: true
         onTextChanged: {
             try {
-                root.desktop = root.parse(desktopFile.text(), "desktop")
+                root.desktop = root.parse(root.readFile(desktopFile), "desktop")
             } catch (error) {
                 console.warn("Desktop layout rejected; keeping last known-good layout:", error)
             }
@@ -76,12 +82,12 @@ Singleton {
 
     Component.onCompleted: {
         try {
-            root.bar = root.parse(barFile.text(), "bar")
+            root.bar = root.parse(root.readFile(barFile), "bar")
         } catch (error) {
             console.warn("Using fallback bar layout:", error)
         }
         try {
-            root.desktop = root.parse(desktopFile.text(), "desktop")
+            root.desktop = root.parse(root.readFile(desktopFile), "desktop")
         } catch (error) {
             console.warn("Using fallback desktop layout:", error)
         }

@@ -9,9 +9,16 @@ Rectangle {
     property alias hoverHandler: hover
 
     radius: Core.Theme.radius + 4
-    color: Qt.alpha(Core.Theme.surface, active ? 0.84 : 0.68)
+    color: {
+        var c = Qt.color(Core.Theme.surface)
+        return Qt.rgba(c.r, c.g, c.b, active ? 0.84 : 0.68)
+    }
     border.width: active ? 2 : Core.Theme.borderWidth
-    border.color: active ? Core.Theme.accent : Qt.alpha(Core.Theme.accent2, 0.34)
+    border.color: {
+        if (active) return Core.Theme.accent
+        var c = Qt.color(Core.Theme.accent2)
+        return Qt.rgba(c.r, c.g, c.b, 0.34)
+    }
     scale: interactive && hover.hovered ? 1.015 : 1.0
 
     Behavior on scale {

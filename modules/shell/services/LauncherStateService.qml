@@ -129,15 +129,20 @@ Singleton {
         }
     }
 
+    function readFile(fv) {
+        try { var r = fv.text(); if (typeof r === "string") return r } catch(e) {}
+        try { var r2 = fv.text; if (typeof r2 === "string") return r2 } catch(e) {}
+        return ""
+    }
+
     FileView {
         id: stateFile
         path: root.statePath
         watchChanges: true
         printErrors: false
         atomicWrites: true
-        onLoaded: root.load(stateFile.text())
-        onTextChanged: root.load(stateFile.text())
-        onFileChanged: stateFile.reload()
+        onLoaded: root.load(root.readFile(stateFile))
+        onTextChanged: root.load(root.readFile(stateFile))
         onSaved: root.stateSaved()
         onSaveFailed: (error) => console.warn("Launcher state save failed: " + error)
     }
@@ -145,9 +150,9 @@ Singleton {
     Connections {
         target: DesktopEntries
         function onApplicationsChanged() {
-            root.load(stateFile.text())
+            root.load(root.readFile(stateFile))
         }
     }
 
-    Component.onCompleted: root.load(stateFile.text())
+    Component.onCompleted: root.load(root.readFile(stateFile))
 }
