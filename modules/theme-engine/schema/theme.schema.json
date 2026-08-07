@@ -49,6 +49,22 @@
         "font_family": {"type": "string", "minLength": 1}
       },
       "additionalProperties": true
+    },
+    "components": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "type": "object",
+          "properties": {
+            "engine": {"type": "string", "enum": ["dwindle", "master"], "default": "dwindle"},
+            "smart_split": {"type": "boolean", "default": false},
+            "smart_resizing": {"type": "boolean", "default": true},
+            "no_gaps_when_only": {"type": "boolean", "default": false}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

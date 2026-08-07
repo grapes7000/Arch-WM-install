@@ -1,4 +1,7 @@
 hl.config({
+    -- preserve_split is a Hyprland behavior preference, not a theme aesthetic,
+    -- so it's owned here rather than by the theme engine's generated
+    -- dwindle{}/master{} block (see theme_components.py render_hypr/render_hypr_lua).
     dwindle = {
         preserve_split = true,
     },

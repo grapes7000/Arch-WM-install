@@ -111,22 +111,18 @@ TEXTURE_PRESETS = {
 BORDER_PRESETS = {
     "minimal": {"components.windows.border_width": 1,
                 "components.windows.active_border.style": "solid",
-                "components.windows.inactive_border.opacity": 0.35,
-                "components.windows.glow": 0},
+                "components.windows.inactive_border.opacity": 0.35},
     "defined": {"components.windows.border_width": 2,
                 "components.windows.active_border.style": "gradient",
-                "components.windows.inactive_border.opacity": 0.66,
-                "components.windows.glow": 0},
+                "components.windows.inactive_border.opacity": 0.66},
     "gradient": {"components.windows.border_width": 2,
                  "components.windows.active_border.style": "gradient",
                  "components.windows.active_border.angle": 45,
-                 "components.windows.inactive_border.opacity": 0.55,
-                 "components.windows.glow": 0},
+                 "components.windows.inactive_border.opacity": 0.55},
     "glow": {"components.windows.border_width": 3,
              "components.windows.active_border.style": "gradient",
              "components.windows.active_border.angle": 45,
              "components.windows.inactive_border.opacity": 0.45,
-             "components.windows.glow": 18,
              "components.windows.shadow.enabled": True,
              "components.windows.shadow.opacity": 0.55},
 }
@@ -171,7 +167,12 @@ BASE_COMPONENTS: dict[str, Any] = {
         "inactive_border": {"color": "border_normal", "opacity": 0.66},
         "group_border": {"active": "accent", "inactive": "surface_1",
                          "locked": "warning", "text": "on_accent"},
-        "glow": 0,
+    },
+    "layout": {
+        "engine": "dwindle",
+        "smart_split": False,
+        "smart_resizing": True,
+        "no_gaps_when_only": False,
     },
     "notifications": {
         "width": 340, "origin": "top-right", "offset": "12x12", "padding": 12,
@@ -288,6 +289,8 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
                   help="Higher values sharpen the shadow falloff."),
         FieldSpec("components.windows.shadow.opacity", "Shadow opacity", "float", 0.0, 1.0, 0.01,
                   help="Shadow darkness."),
+        FieldSpec("components.windows.shadow.color", "Shadow role", "role",
+                  help="Palette role or hex color for the drop shadow."),
         FieldSpec("components.windows.active_border.color", "Active border role", "role",
                   help="Palette role for the focused window border."),
         FieldSpec("components.windows.active_border.color_2", "Gradient role", "role",
@@ -298,8 +301,16 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
                   help="Palette role for unfocused window borders."),
         FieldSpec("components.windows.inactive_border.opacity", "Inactive border opacity", "float", 0.0, 1.0, 0.01,
                   help="How visible unfocused borders are."),
-        FieldSpec("components.windows.glow", "Border glow", "int", 0, 40, 1,
-                  help="Outer glow around the focused border (experimental)."),
+    ),
+    "layout": (
+        FieldSpec("components.layout.engine", "Tiling engine", "choice", choices=("dwindle", "master"),
+                  help="Which Hyprland layout engine manages new windows."),
+        FieldSpec("components.layout.smart_split", "Smart split", "bool",
+                  help="Split direction follows window aspect ratio instead of a fixed rule."),
+        FieldSpec("components.layout.smart_resizing", "Smart resizing", "bool",
+                  help="Resizing a window adjusts the split ratio intelligently."),
+        FieldSpec("components.layout.no_gaps_when_only", "No gaps when only one window", "bool",
+                  help="Remove gaps/borders when a workspace has a single window."),
     ),
     "notifications": (
         FieldSpec("components.notifications.width", "Width", "int", 220, 900, 10),
@@ -378,7 +389,7 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
 }
 
 COMPONENT_LABELS = {
-    "windows": "Windows", "notifications": "Notifications", "terminal": "Terminal",
+    "windows": "Windows", "layout": "Layout", "notifications": "Notifications", "terminal": "Terminal",
     "prompt": "Prompt", "lock_screen": "Lock Screen", "homepage": "Homepage", "apps": "Apps",
 }
 
