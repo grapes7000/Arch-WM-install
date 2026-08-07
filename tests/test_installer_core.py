@@ -347,6 +347,7 @@ class ThemeStageCheckTests(unittest.TestCase):
                     *THEME_COMMANDS,
                     *THEME_STUDIO_MODULES,
                     "term",
+                    "arch-wm-help",
                 ):
                     (bin_dir / name).write_text("stale stub\n", encoding="utf-8")
                 for path in (
@@ -355,6 +356,7 @@ class ThemeStageCheckTests(unittest.TestCase):
                     config / "kitty/kitty.conf",
                     config / "atuin/config.toml",
                     config / "theme-engine/generated/theme.json",
+                    config / "arch-wm/help.txt",
                 ):
                     path.parent.mkdir(parents=True, exist_ok=True)
                     path.write_text("{}\n", encoding="utf-8")

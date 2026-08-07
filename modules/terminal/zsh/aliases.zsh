@@ -8,7 +8,13 @@ command -v bat >/dev/null && alias cat='bat --paging=never --style=plain'
 command -v dust >/dev/null && alias du='dust'
 command -v duf >/dev/null && alias df='duf'
 command -v bottom >/dev/null && alias top='btm'
-command -v tealdeer >/dev/null && alias help='tldr'
+# `help` shows the desktop quick reference (keybinds + file locations) when
+# the installer has generated it; otherwise fall back to tldr.
+if [[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/arch-wm/help.txt" ]]; then
+  alias help='arch-wm-help'
+elif command -v tealdeer >/dev/null; then
+  alias help='tldr'
+fi
 
 alias ..='cd ..'
 alias ...='cd ../..'

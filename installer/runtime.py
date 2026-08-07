@@ -550,6 +550,12 @@ def uninstall_command(ctx: Context) -> int:
     return 0
 
 
+def help_command(ctx: Context) -> int:
+    # Replaced by installer/entry.py with the full reference renderer.
+    ctx.emit("Arch WM Install help is rendered by the installer package.")
+    return 0
+
+
 def doctor_command(ctx: Context) -> int:
     checks = {
         "Arch Linux": Path("/etc/arch-release").exists(),
@@ -591,21 +597,25 @@ def parser() -> argparse.ArgumentParser:
 
     doctor = commands.add_parser("doctor")
     common(doctor)
+
+    commands.add_parser("help", help="print keybinds and important file locations")
     return result
 
 
 def make_options(args: argparse.Namespace) -> Options:
+    # The `help` subcommand exposes none of the common options; every field
+    # therefore falls back to its Options default when absent.
     return Options(
         command=args.command,
-        profile=args.profile,
-        theme=args.theme,
-        dry_run=args.dry_run,
-        noninteractive=args.noninteractive,
-        no_aur=args.no_aur,
+        profile=getattr(args, "profile", "desktop"),
+        theme=getattr(args, "theme", "y2k"),
+        dry_run=getattr(args, "dry_run", False),
+        noninteractive=getattr(args, "noninteractive", False),
+        no_aur=getattr(args, "no_aur", False),
         resume=getattr(args, "resume", False),
         from_stage=getattr(args, "from_stage", None),
         only_stage=getattr(args, "only_stage", None),
-        verbose=args.verbose,
+        verbose=getattr(args, "verbose", False),
         remove_packages=getattr(args, "remove_packages", False),
     )
 
@@ -619,6 +629,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return install_command(ctx)
         if options.command == "uninstall":
             return uninstall_command(ctx)
+        if options.command == "help":
+            return help_command(ctx)
         return doctor_command(ctx)
     except (InstallError, FileNotFoundError, json.JSONDecodeError) as error:
         print(f"error: {error}", file=sys.stderr)

@@ -25,7 +25,22 @@ Useful modes:
 ./install.sh --resume
 ./install.sh --no-aur
 ./install.sh --noninteractive
+./install.sh help
 ./uninstall.sh --restore latest
+```
+
+## On-system reference
+
+`help` (alias for `arch-wm-help`) prints the desktop quick reference: every
+keybind plus the important file locations (Hyprland config, shell sources,
+homepage background images, generated theme contract, logs, backups and
+more). The reference is regenerated from the installed keybinds on every
+installer run, so it never drifts from what is actually configured.
+
+```bash
+help                  # in the installed shell
+arch-wm-help          # same reference, any shell
+./install.sh help     # same reference, from a development checkout
 ```
 
 ## State model

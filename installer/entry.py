@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Sequence
 
 from . import runtime
+from .help import HELP_LAUNCHER, help_command, render_reference
 
 THEME_UPSTREAM_COMMIT = "c609410fbd88ddc2a15c51ab142743c49ae861e0"
 # Theme Studio is installed as `theme`; the previous generator is preserved as
@@ -122,11 +123,13 @@ def theme_check(ctx: runtime.Context) -> bool:
             *(ctx.home / ".local/bin" / name for name in THEME_COMMANDS),
             *(ctx.home / ".local/bin" / module for module in THEME_STUDIO_MODULES),
             ctx.home / ".local/bin/term",
+            ctx.home / ".local/bin/arch-wm-help",
             ctx.home / ".zshrc",
             ctx.config / "zsh/aliases.zsh",
             ctx.config / "kitty/kitty.conf",
             ctx.config / "atuin/config.toml",
             ctx.config / "theme-engine/generated/theme.json",
+            ctx.config / "arch-wm/help.txt",
         )
     )
 
@@ -167,6 +170,8 @@ def theme_apply(ctx: runtime.Context) -> None:
     ctx.install(terminal / "zsh/.zshrc", ctx.home / ".zshrc")
     ctx.install(terminal / "zsh/aliases.zsh", ctx.config / "zsh/aliases.zsh")
     ctx.install(terminal / "atuin/config.toml", ctx.config / "atuin/config.toml")
+    ctx.write(ctx.config / "arch-wm/help.txt", render_reference(ctx))
+    ctx.write(ctx.home / ".local/bin/arch-wm-help", HELP_LAUNCHER, mode=0o755)
 
     for path in (
         ctx.config / "theme-engine/upstream-lock.json",
@@ -219,6 +224,8 @@ def theme_verify(ctx: runtime.Context) -> bool:
             for path in (
                 ctx.config / "kitty/generated/theme.conf",
                 ctx.config / "theme-engine/generated/starship.toml",
+                ctx.config / "arch-wm/help.txt",
+                ctx.home / ".local/bin/arch-wm-help",
             )
         )
         and all(
@@ -314,6 +321,10 @@ def doctor_command(ctx: runtime.Context) -> int:
         ),
         "full theme catalog": theme_count >= 40 and theme_catalog_valid(ctx),
         "terminal profile": (ctx.config / "kitty/kitty.conf").is_file(),
+        "arch-wm help payload": (
+            (ctx.config / "arch-wm/help.txt").is_file()
+            and (ctx.home / ".local/bin/arch-wm-help").is_file()
+        ),
         "Hyprland payload current": hypr_check(ctx),
         "Hyprland theme": (ctx.config / "hypr/generated/theme.lua").is_file(),
         "shell payload current": shell_check(ctx),
@@ -350,6 +361,7 @@ def patch_runtime() -> None:
             patched.append(stage)
     runtime.STAGES = tuple(patched)
     runtime.doctor_command = doctor_command
+    runtime.help_command = help_command
 
 
 def main(argv: Sequence[str] | None = None) -> int:
