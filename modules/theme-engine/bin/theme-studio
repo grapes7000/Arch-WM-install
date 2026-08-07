@@ -14,6 +14,8 @@ import shutil
 import subprocess
 import sys
 
+from theme_schema import catalog_warnings
+
 REPOSITORY = "https://github.com/grapes7000/themes.git"
 CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "arch-wm-theme-studio"
 CHECKOUT = CACHE_ROOT / "themes"
@@ -88,6 +90,18 @@ def sync_installer_catalog() -> None:
         shutil.copy2(INSTALLER_ACTIVE, STUDIO_ACTIVE)
 
 
+def report_quality_warnings() -> None:
+    """Show advisory design warnings after leaving the interactive editor."""
+    results = catalog_warnings(STUDIO_THEME_DIR)
+    if not results:
+        return
+    print("\nTheme quality notes (advisory):")
+    for name, warnings in results:
+        for warning in warnings:
+            print(f"  WARN {name}: {warning}")
+    print("These do not block applying a theme; they flag combinations that often look flat or washed out.")
+
+
 def launch_studio(args: list[str]) -> int:
     if shutil.which("git") is None:
         print("theme: git is required to install Theme Studio", file=sys.stderr)
@@ -108,7 +122,9 @@ def launch_studio(args: list[str]) -> int:
     environment["PYTHONPATH"] = os.pathsep.join(python_paths)
 
     command = [sys.executable, str(CHECKOUT / "bin/theme-studio"), *args]
-    return subprocess.call(command, env=environment)
+    result = subprocess.call(command, env=environment)
+    report_quality_warnings()
+    return result
 
 
 def main() -> int:
