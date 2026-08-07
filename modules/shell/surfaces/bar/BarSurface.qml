@@ -44,18 +44,20 @@ Scope {
             screen: modelData
 
             anchors {
-                top: true
+                top: Core.Theme.barPosition === "top"
+                bottom: Core.Theme.barPosition === "bottom"
                 left: true
                 right: true
             }
             margins {
-                top: Core.Theme.windowGap
-                left: Core.Theme.windowGap
-                right: Core.Theme.windowGap
+                top: Core.Theme.barPosition === "top" ? Core.Theme.barOuterMargin : 0
+                bottom: Core.Theme.barPosition === "bottom" ? Core.Theme.barOuterMargin : 0
+                left: Core.Theme.barOuterMargin
+                right: Core.Theme.barOuterMargin
             }
 
             implicitHeight: Core.Theme.barHeight
-            exclusiveZone: Core.Theme.barHeight + Core.Theme.windowGap * 2
+            exclusiveZone: Core.Theme.barHeight + Core.Theme.barOuterMargin * 2
             focusable: false
             color: "transparent"
             visible: !Services.LockStateService.locked
@@ -63,16 +65,15 @@ Scope {
             Rectangle {
                 id: background
                 anchors.fill: parent
-                color: Core.Theme.surfaceBase
-                opacity: Core.Theme.surfaceOpacity
-                radius: Core.Theme.radius
-                border.width: Core.Theme.borderWidth
-                border.color: Core.Theme.accent2
+                color: Core.Theme.alphaColor(Core.Theme.barSurfaceColor, Core.Theme.barOpacity)
+                radius: Core.Theme.barRadius
+                border.width: Core.Theme.barOutlineWidth
+                border.color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, Core.Theme.barOutlineOpacity)
 
                 RowLayout {
                     anchors.fill: parent
                     anchors.margins: Core.Theme.barPadding
-                    spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
+                    spacing: Core.Theme.barWidgetSpacing
 
                     Item {
                         id: startCell
@@ -83,10 +84,9 @@ Scope {
                         RowLayout {
                             anchors {
                                 left: parent.left
-                                top: parent.top
-                                bottom: parent.bottom
+                                verticalCenter: parent.verticalCenter
                             }
-                            spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
+                            spacing: Core.Theme.barWidgetSpacing
 
                             Repeater {
                                 model: Services.LayoutService.bar.regions.start || []
@@ -102,7 +102,6 @@ Scope {
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
-                                    Layout.fillWidth: true
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
@@ -117,12 +116,8 @@ Scope {
                         clip: true
 
                         RowLayout {
-                            anchors {
-                                horizontalCenter: parent.horizontalCenter
-                                top: parent.top
-                                bottom: parent.bottom
-                            }
-                            spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
+                            anchors.centerIn: parent
+                            spacing: Core.Theme.barWidgetSpacing
 
                             Repeater {
                                 model: Services.LayoutService.bar.regions.center || []
@@ -138,7 +133,6 @@ Scope {
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
-                                    Layout.fillWidth: true
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
@@ -155,10 +149,9 @@ Scope {
                         RowLayout {
                             anchors {
                                 right: parent.right
-                                top: parent.top
-                                bottom: parent.bottom
+                                verticalCenter: parent.verticalCenter
                             }
-                            spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
+                            spacing: Core.Theme.barWidgetSpacing
 
                             Repeater {
                                 model: Services.LayoutService.bar.regions.end || []
@@ -174,38 +167,34 @@ Scope {
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
-                                    Layout.fillWidth: true
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
                             }
 
-                            PillBox {
-                                Layout.preferredWidth: menuTrigger.implicitWidth + 12
+                            Item {
+                                Layout.preferredWidth: menuTrigger.implicitWidth + 8
                                 Layout.fillHeight: true
-                                active: menuPopup.menuOpen
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        if (menuPopup.menuOpen
-                                                || Core.InteractiveShellController.prepareMenuOpen())
-                                            menuPopup.toggle()
-                                    }
-                                }
 
                                 Text {
-                                    font.family: Core.Theme.fontFamily
                                     id: menuTrigger
                                     anchors.centerIn: parent
+                                    font.family: Core.Theme.fontFamily
                                     text: "󰍜"
-                                    color: menuPopup.menuOpen
-                                        ? Core.Theme.accent : Core.Theme.foreground
-                                    font.pixelSize: 16
+                                    color: menuPopup.menuOpen ? Core.Theme.accent : Core.Theme.foreground
+                                    font.pixelSize: Core.Theme.barIconSize
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (menuPopup.menuOpen
+                                                    || Core.InteractiveShellController.prepareMenuOpen())
+                                                menuPopup.toggle()
+                                        }
+                                    }
                                 }
                             }
-
                         }
                     }
                 }
