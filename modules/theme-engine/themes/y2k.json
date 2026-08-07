@@ -55,5 +55,12 @@
     "animation_profile": "snappy",
     "workspace_animation": "slide",
     "motion_scale": 1.0
+  },
+  "components": {
+    "layout": {
+      "engine": "master",
+      "smart_resizing": true,
+      "no_gaps_when_only": true
+    }
   }
 }
