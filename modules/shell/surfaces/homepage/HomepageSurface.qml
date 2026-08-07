@@ -383,8 +383,17 @@ Scope {
                                 }
                             }
 
+                            Loader {
+                                id: networkPanelLoader
+                                visible: root.selectedPage === "network"
+                                active: visible
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: item ? item.implicitHeight : 0
+                                source: active ? Qt.resolvedUrl("../../widgets/network/Panel.qml") : ""
+                            }
+
                             GlassCard {
-                                visible: root.selectedPage !== "home"
+                                visible: root.selectedPage !== "home" && root.selectedPage !== "network"
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: root.compact ? 95 : 120
                                 Text {
@@ -395,8 +404,6 @@ Scope {
                                     font.pixelSize: 12
                                     text: root.selectedPage === "system"
                                         ? "CPU " + Services.SystemStatsService.cpuPercent + "% · RAM " + Services.SystemStatsService.memoryPercent + "% · Disk " + Services.SystemStatsService.diskPercent + "% · Uptime " + Services.SystemStatsService.uptime
-                                        : root.selectedPage === "network"
-                                        ? "Connected network: " + (Services.NetworkService.ssid || "Disconnected")
                                         : root.selectedPage === "audio"
                                         ? "Use the media controls and visualizer while audio is playing."
                                         : root.selectedPage === "calendar"
