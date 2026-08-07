@@ -86,6 +86,6 @@ Rectangle {
     SequentialAnimation {
         id: bounceAnim
         NumberAnimation { target: root; property: "bounce"; to: 1.06; duration: 90; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "bounce"; to: 1.0; duration: 220; easing.type: Easing.OutBack; easing.overshoot: 3 }
+        NumberAnimation { target: root; property: "bounce"; to: 1.0; duration: 130; easing.type: Easing.OutBack; easing.overshoot: 3 }
     }
 }

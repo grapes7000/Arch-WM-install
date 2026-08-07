@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
+import "../../components" as Components
 import "../../services" as Services
 
 Item {
@@ -32,6 +33,8 @@ Item {
             color: Core.Theme.muted
             font.pixelSize: 16
 
+            Components.PressBounce {}
+
             MouseArea {
                 anchors.fill: parent
                 onClicked: Services.MprisService.previous()
@@ -44,6 +47,8 @@ Item {
             text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
             color: Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 16 : 20
+
+            Components.PressBounce {}
 
             MouseArea {
                 anchors.fill: parent
@@ -58,6 +63,8 @@ Item {
             color: Core.Theme.muted
             font.pixelSize: 16
 
+            Components.PressBounce {}
+
             MouseArea {
                 anchors.fill: parent
                 onClicked: Services.MprisService.next()
@@ -66,6 +73,8 @@ Item {
 
         ColumnLayout {
             spacing: 0
+
+            Components.PressBounce {}
 
             MouseArea {
                 anchors.fill: parent
