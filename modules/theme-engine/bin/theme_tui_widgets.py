@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import curses
 from dataclasses import dataclass
+import re
 from typing import Any, Iterable
 
 
@@ -21,6 +22,7 @@ class Palette:
 
 _SWATCH_PAIRS: dict[int, int] = {}
 _NEXT_SWATCH_PAIR = 16
+_HEX_COLOR_RE = re.compile(r"#[0-9A-Fa-f]{6}")
 
 
 def init_palette() -> Palette:
@@ -55,6 +57,12 @@ def init_palette() -> Palette:
 
 
 def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int | None = None) -> None:
+    """Safely draw text and show literal hex colors using the terminal palette.
+
+    Any #RRGGBB substring is rendered in an xterm-256 approximation of itself.
+    Selected/highlighted rows keep their selection styling so navigation remains
+    obvious; the unselected rows and detail panel provide the color preview.
+    """
     try:
         h, w = win.getmaxyx()
         if y < 0 or y >= h or x < 0 or x >= w:
@@ -62,7 +70,27 @@ def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int |
         room = max(0, w - x - 1)
         if width is not None:
             room = min(room, max(0, width))
-        win.addnstr(y, x, str(text), room, attr)
+        rendered = str(text)[:room]
+        matches = list(_HEX_COLOR_RE.finditer(rendered))
+        if not matches or attr:
+            win.addnstr(y, x, rendered, room, attr)
+            return
+
+        cursor = 0
+        column = x
+        for match in matches:
+            prefix = rendered[cursor:match.start()]
+            if prefix:
+                win.addnstr(y, column, prefix, max(0, room - (column - x)), attr)
+                column += len(prefix)
+            value = match.group(0)
+            color_attr = color_swatch_attr(value)
+            win.addnstr(y, column, value, max(0, room - (column - x)), color_attr or attr)
+            column += len(value)
+            cursor = match.end()
+        suffix = rendered[cursor:]
+        if suffix and column - x < room:
+            win.addnstr(y, column, suffix, room - (column - x), attr)
     except curses.error:
         pass
 
