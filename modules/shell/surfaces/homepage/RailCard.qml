@@ -13,7 +13,7 @@ GlassCard {
     implicitHeight: 92
     interactive: true
 
-    TapHandler { onTapped: root.activated() }
+    onClicked: root.activated()
 
     RowLayout {
         anchors.fill: parent

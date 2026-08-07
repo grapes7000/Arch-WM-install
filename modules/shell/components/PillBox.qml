@@ -104,9 +104,16 @@ Rectangle {
         easing.type: Easing.OutQuad
     }
 
-    SequentialAnimation {
+    // Settles back to exactly 1.0 (regular size) rather than overshooting
+    // past it; the bounce comes from OutBack's own overshoot-and-settle
+    // curve, not from an inflated peak value.
+    NumberAnimation {
         id: bounceAnim
-        NumberAnimation { target: root; property: "pressPop"; to: 1.05; duration: 70; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "pressPop"; to: 1.0; duration: 110; easing.type: Easing.OutBack; easing.overshoot: 3 }
+        target: root
+        property: "pressPop"
+        to: 1.0
+        duration: 140
+        easing.type: Easing.OutBack
+        easing.overshoot: 2.2
     }
 }

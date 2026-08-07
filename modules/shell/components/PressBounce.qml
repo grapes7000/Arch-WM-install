@@ -1,33 +1,32 @@
 import QtQuick
 
-// Drop this inside any clickable Item to give it the shrink+dim-on-press,
-// snappy-overshoot-on-release feel, without drawing any background of its
-// own. Uses a non-blocking TapHandler so it never steals the click from an
-// existing MouseArea/TapHandler on the same item.
+// Drop this next to any clickable Item to give it the shrink+dim-on-press,
+// bouncy-settle-on-release feel. Deliberately does NOT own its own
+// MouseArea/TapHandler: a second pointer handler sitting alongside the
+// button's real one can grab-conflict with it in Qt6 and silently never
+// fire. Instead, bind `pressed` to the existing MouseArea/TapHandler's own
+// `pressed` property so there is exactly one thing tracking the press.
 Item {
     id: root
-    anchors.fill: parent
 
+    // Defaults to the immediate parent, which is right for icons wrapped
+    // directly in a Text/Item; pass an explicit target for anything else.
     property Item target: parent
+    property bool pressed: false
     property real pressScale: 0.94
-    property real overshootScale: 1.08
-    // Kept short and un-eased-in so the press reads as immediate (tracking
-    // real mouse-down timing) and the rebound fires right at mouse-up.
+    // Settles back to exactly 1.0 (the target's normal size) rather than
+    // overshooting past it — the bounce comes from the OutBack easing
+    // curve's own overshoot-and-settle character, not an inflated peak.
     property int pressDuration: 60
-    property int reboundPeakDuration: 70
-    property int reboundSettleDuration: 110
+    property int reboundDuration: 140
 
-    TapHandler {
-        id: tap
-        gesturePolicy: TapHandler.WithinBounds
-        onPressedChanged: {
-            if (pressed) {
-                bounceAnim.stop()
-                pressAnim.restart()
-            } else {
-                pressAnim.stop()
-                bounceAnim.restart()
-            }
+    onPressedChanged: {
+        if (pressed) {
+            reboundAnim.stop()
+            pressAnim.restart()
+        } else {
+            pressAnim.stop()
+            reboundAnim.restart()
         }
     }
 
@@ -40,22 +39,13 @@ Item {
         easing.type: Easing.OutQuad
     }
 
-    SequentialAnimation {
-        id: bounceAnim
-        NumberAnimation {
-            target: root.target
-            property: "scale"
-            to: root.overshootScale
-            duration: root.reboundPeakDuration
-            easing.type: Easing.OutQuad
-        }
-        NumberAnimation {
-            target: root.target
-            property: "scale"
-            to: 1.0
-            duration: root.reboundSettleDuration
-            easing.type: Easing.OutBack
-            easing.overshoot: 3
-        }
+    NumberAnimation {
+        id: reboundAnim
+        target: root.target
+        property: "scale"
+        to: 1.0
+        duration: root.reboundDuration
+        easing.type: Easing.OutBack
+        easing.overshoot: 2.2
     }
 }

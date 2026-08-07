@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 Item {
     id: root
@@ -184,10 +185,12 @@ Item {
             font.bold: active
         }
         MouseArea {
+            id: tabPillArea
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: tapped()
         }
+        Components.PressBounce { pressed: tabPillArea.pressed }
     }
 
     component StatChip: Rectangle {

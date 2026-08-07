@@ -98,6 +98,7 @@ PanelWindow {
                     color: Core.Theme.foreground
                     font.pixelSize: 16
                     MouseArea {
+                        id: backArea
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
@@ -105,6 +106,7 @@ PanelWindow {
                             popup.currentWidgetName = ""
                         }
                     }
+                    PressBounce { pressed: backArea.pressed }
                 }
 
                 Text {
@@ -231,6 +233,7 @@ PanelWindow {
                         border.color: Qt.rgba(1, 1, 1, 0.06)
 
                         MouseArea {
+                            id: systemStatsArea
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
@@ -238,6 +241,7 @@ PanelWindow {
                                 popup.currentWidgetName = "System"
                             }
                         }
+                        PressBounce { pressed: systemStatsArea.pressed }
 
                         RowLayout {
                             anchors.fill: parent
@@ -301,6 +305,7 @@ PanelWindow {
                         visible: Services.MprisService.status !== "Stopped"
 
                         MouseArea {
+                            id: mediaCardArea
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
@@ -308,6 +313,7 @@ PanelWindow {
                                 popup.currentWidgetName = "Now Playing"
                             }
                         }
+                        PressBounce { pressed: mediaCardArea.pressed }
 
                         ColumnLayout {
                             id: mediaCol
@@ -364,10 +370,12 @@ PanelWindow {
                                         font.pixelSize: 16
                                         visible: Services.MprisService.canPrev
                                         MouseArea {
+                                            id: mpPrevArea
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: Services.MprisService.previous()
                                         }
+                                        PressBounce { pressed: mpPrevArea.pressed }
                                     }
 
                                     Text {
@@ -376,10 +384,12 @@ PanelWindow {
                                         color: Core.Theme.accent
                                         font.pixelSize: 20
                                         MouseArea {
+                                            id: mpPlayPauseArea
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: Services.MprisService.playPause()
                                         }
+                                        PressBounce { pressed: mpPlayPauseArea.pressed }
                                     }
 
                                     Text {
@@ -389,10 +399,12 @@ PanelWindow {
                                         font.pixelSize: 16
                                         visible: Services.MprisService.canNext
                                         MouseArea {
+                                            id: mpNextArea
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: Services.MprisService.next()
                                         }
+                                        PressBounce { pressed: mpNextArea.pressed }
                                     }
                                 }
                             }
@@ -471,6 +483,7 @@ PanelWindow {
                         visible: Services.WeatherService.available
 
                         MouseArea {
+                            id: weatherCardArea
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
@@ -478,6 +491,7 @@ PanelWindow {
                                 popup.currentWidgetName = "Weather"
                             }
                         }
+                        PressBounce { pressed: weatherCardArea.pressed }
 
                         RowLayout {
                             id: weatherRow
@@ -533,6 +547,7 @@ PanelWindow {
                         border.color: Qt.rgba(1, 1, 1, 0.06)
 
                         MouseArea {
+                            id: networkCardArea
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
@@ -540,6 +555,7 @@ PanelWindow {
                                 popup.currentWidgetName = "Network"
                             }
                         }
+                        PressBounce { pressed: networkCardArea.pressed }
 
                         RowLayout {
                             id: networkRow
@@ -629,10 +645,12 @@ PanelWindow {
                                 font.pixelSize: 20
 
                                 MouseArea {
+                                    id: muteToggleArea
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: Services.AudioService.toggleMute()
                                 }
+                                PressBounce { pressed: muteToggleArea.pressed }
                             }
 
                             Rectangle {

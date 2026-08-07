@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 Scope {
     id: root
@@ -181,7 +182,8 @@ Scope {
                                 IconImage { Layout.preferredWidth: 16; Layout.preferredHeight: 16; source: Quickshell.iconPath(modelData.icon, "") }
                                 Text { font.family: Core.Theme.fontFamily; text: modelData.name; color: Core.Theme.foreground }
                             }
-                            MouseArea { anchors.fill: parent; onClicked: { root.category = modelData.name; root.selectedIndex = 0; searchField.forceActiveFocus() } }
+                            MouseArea { id: categoryArea; anchors.fill: parent; onClicked: { root.category = modelData.name; root.selectedIndex = 0; searchField.forceActiveFocus() } }
+                            Components.PressBounce { pressed: categoryArea.pressed }
                         }
                     }
                     ListView {
@@ -223,10 +225,12 @@ Scope {
                                     font.family: Core.Theme.fontFamily
                                     text: Services.LauncherStateService.isFavorite(modelData.id) ? "Unfavorite" : "Favorite"
                                     color: Core.Theme.accent
-                                    MouseArea { anchors.fill: parent; anchors.margins: -Core.Theme.gap; onClicked: Services.LauncherStateService.toggleFavorite(modelData.id) }
+                                    MouseArea { id: favoriteArea; anchors.fill: parent; anchors.margins: -Core.Theme.gap; onClicked: Services.LauncherStateService.toggleFavorite(modelData.id) }
+                                    Components.PressBounce { pressed: favoriteArea.pressed }
                                 }
                             }
-                            MouseArea { anchors.fill: parent; z: -1; hoverEnabled: true; onEntered: root.selectedIndex = index; onClicked: root.launch(modelData) }
+                            MouseArea { id: appLaunchArea; anchors.fill: parent; z: -1; hoverEnabled: true; onEntered: root.selectedIndex = index; onClicked: root.launch(modelData) }
+                            Components.PressBounce { pressed: appLaunchArea.pressed }
                         }
                         Text { font.family: Core.Theme.fontFamily; anchors.centerIn: parent; visible: appList.count === 0; text: "No matching applications"; color: Core.Theme.muted }
                     }
