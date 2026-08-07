@@ -89,7 +89,55 @@ class StructureTests(unittest.TestCase):
         ).read_text(encoding="utf-8").strip()
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
-        self.assertEqual(version, "2026.08.04.4")
+        self.assertIn("theme-sync.py", autostart)
+        self.assertEqual(version, "2026.08.07.2")
+
+    def test_universal_theme_contract_drives_shell_and_hyprland(self) -> None:
+        schema = json.loads(
+            (ROOT / "modules/theme-engine/schema/theme.schema.json").read_text()
+        )
+        style = schema["properties"]["style"]["properties"]
+        for token in (
+            "surface_opacity",
+            "animation_profile",
+            "workspace_animation",
+            "motion_scale",
+        ):
+            self.assertIn(token, style)
+
+        shell_theme = (
+            ROOT / "modules/shell/core/Theme.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("surfaceOpacity", shell_theme)
+        self.assertIn("animationProfile", shell_theme)
+        self.assertIn("motionScale", shell_theme)
+
+        hypr_sync = (
+            ROOT / "modules/hyprland/config/scripts/theme-sync.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("theme-engine/generated/theme.json", hypr_sync)
+        self.assertIn("animation_profile", hypr_sync)
+        self.assertIn("workspace_animation", hypr_sync)
+        self.assertIn("motion_scale", hypr_sync)
+
+    def test_special_workspaces_and_smart_rules_exist(self) -> None:
+        keybinds = (
+            ROOT / "modules/hyprland/config/conf/keybinds.lua"
+        ).read_text(encoding="utf-8")
+        for workspace in ("scratch", "music", "comms"):
+            self.assertIn(f'"{workspace}"', keybinds)
+        self.assertIn("toggle_special", keybinds)
+
+        rules = (
+            ROOT / "modules/hyprland/config/conf/windowrules.lua"
+        ).read_text(encoding="utf-8")
+        for rule_name in (
+            "arch-wm-settings-float",
+            "arch-wm-file-picker-float",
+            "arch-wm-auth-dialog-float",
+            "arch-wm-picture-in-picture-float",
+        ):
+            self.assertIn(rule_name, rules)
 
     def test_menu_popup_dismisses_from_backdrop_and_escape(self) -> None:
         popup = (
@@ -113,7 +161,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.07.1")
+        self.assertEqual(version, "2026.08.07.2")
 
 
 if __name__ == "__main__":
