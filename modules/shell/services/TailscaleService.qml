@@ -17,10 +17,18 @@ Singleton {
     property string ipAddress: ""
     property int peerCount: 0
     property string error: ""
+    property string statusText: ""
+    property bool statusLoading: false
     // Exit nodes that route out through Mullvad even though their
     // hostname doesn't literally contain "mullvad" (e.g. a homelab
     // box whose own uplink is a Mullvad WireGuard tunnel).
     readonly property var mullvadRoutedExitNodes: ["homelab"]
+
+    function refreshStatusText() {
+        if (statusProc.running) return
+        statusLoading = true
+        statusProc.running = true
+    }
 
     function clear(message) {
         running = false
@@ -105,6 +113,23 @@ Singleton {
         onExited: (exitCode, exitStatus) => {
             watchdog.stop()
             if (exitCode !== 0) root.clear("Tailscale unavailable (exit " + exitCode + ")")
+        }
+    }
+
+    Process {
+        id: statusProc
+        command: ["tailscale", "status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.statusText = text
+                root.statusLoading = false
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                root.statusText = "tailscale status failed (exit " + exitCode + ")"
+                root.statusLoading = false
+            }
         }
     }
 

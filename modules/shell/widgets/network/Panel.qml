@@ -9,6 +9,7 @@ Item {
     property string selectedSsid: ""
     property string passwordDraft: ""
     property bool networksExpanded: false
+    property bool tailscaleExpanded: false
 
     implicitHeight: layout.implicitHeight
 
@@ -447,22 +448,32 @@ Item {
                 ? Qt.rgba(0, 0, 0, 1.0) : Qt.rgba(1, 1, 1, 0.06)
             opacity: Services.TailscaleService.connected ? 1.0 : 0.4
 
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    panel.tailscaleExpanded = !panel.tailscaleExpanded
+                    if (panel.tailscaleExpanded) Services.TailscaleService.refreshStatusText()
+                }
+            }
+
             ColumnLayout {
                 id: tsCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.margins: 12
-                spacing: 2
+                spacing: 8
 
                 RowLayout {
                     spacing: 12
 
-                    Text {
-                        text: "󰛳"
-                        color: Services.TailscaleService.connected
-                            ? Core.Theme.accent : Core.Theme.muted
-                        font.pixelSize: 22
+                    Image {
+                        source: "../../assets/icons/tailscale.png"
+                        Layout.preferredWidth: 22
+                        Layout.preferredHeight: 22
+                        smooth: true
+                        opacity: Services.TailscaleService.connected ? 1.0 : 0.5
                     }
 
                     ColumnLayout {
@@ -509,6 +520,44 @@ Item {
                             font.pixelSize: 8
                             font.bold: true
                             font.letterSpacing: 0.5
+                        }
+                    }
+                }
+
+                Text {
+                    visible: Services.TailscaleService.connected
+                        && Services.TailscaleService.tailnet !== ""
+                    text: "Tailnet: " + Services.TailscaleService.tailnet
+                    color: Core.Theme.muted
+                    font.pixelSize: 10
+                }
+
+                Rectangle {
+                    visible: panel.tailscaleExpanded
+                    Layout.fillWidth: true
+                    implicitHeight: 140
+                    radius: Math.max(4, Core.Theme.radius - 4)
+                    color: Qt.rgba(0, 0, 0, 0.3)
+                    border.width: 1
+                    border.color: Qt.rgba(1, 1, 1, 0.08)
+                    clip: true
+
+                    Flickable {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        contentWidth: statusOutput.implicitWidth
+                        contentHeight: statusOutput.implicitHeight
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        Text {
+                            id: statusOutput
+                            text: Services.TailscaleService.statusLoading
+                                ? "Loading…" : (Services.TailscaleService.statusText || "No output")
+                            color: Core.Theme.foreground
+                            font.family: "monospace"
+                            font.pixelSize: 10
+                            wrapMode: Text.NoWrap
                         }
                     }
                 }
