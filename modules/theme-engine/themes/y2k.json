@@ -58,10 +58,9 @@
   },
   "components": {
     "layout": {
-      "engine": "dwindle",
-      "smart_split": false,
+      "engine": "master",
       "smart_resizing": true,
-      "no_gaps_when_only": false
+      "no_gaps_when_only": true
     }
   }
 }
