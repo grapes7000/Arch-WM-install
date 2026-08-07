@@ -20,7 +20,7 @@ Implemented for this milestone:
 - current Hyprland Lua configuration with machine-local overrides
 - pinned installation of the complete 40-theme `grapes7000/themes` catalog
 - atomic universal theme generation for Quickshell, Hyprland, Kitty, Starship, and Neovim
-- optional generated targets for Waybar, Wofi, Rofi, Dunst, and Hyprlock
+- optional generated targets for Dunst and Hyprlock
 - deterministic theme wallpapers with safe Hyprpaper live reload
 - a modern Kitty/Zsh terminal profile with an animated Kitty cursor trail
 - a manifest-backed portable widget registry

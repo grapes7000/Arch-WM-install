@@ -1,0 +1,11 @@
+Checkpoint validation (current repository tree)
+
+Result: PASS (all requested checks succeeded)
+
+- `python scripts/validate-layouts.py` — PASS (exit 0); all three layouts, 11 widget manifests, and generated registry validated.
+- `python -m unittest discover -s tests -v` — PASS (exit 0); 25 tests ran, all OK.
+- `find modules/shell -name '*.qml' -print0 | xargs -0 qmllint` — PASS (exit 0); no diagnostics.
+- `bash -n scripts/vm-smoke-test.sh` — PASS (exit 0); shell syntax valid.
+- `git diff --check` — PASS (exit 0); no whitespace errors.
+
+No live lock/session actions or user configuration mutations were performed.

@@ -1,0 +1,8 @@
+No running instances for "/home/lakota/Arch-wm-install/modules/shell/shell.qml"
+Dead instances:
+ - r857sdzbjt
+ - i677lfzbjt
+ - g387fgzbjt
+ - mga76izbjt
+ - erf72nzbjt
+ - 0fh7hozbjt

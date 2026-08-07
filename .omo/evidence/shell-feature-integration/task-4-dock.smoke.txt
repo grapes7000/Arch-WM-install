@@ -1,0 +1,17 @@
+SCENARIO: active-monitor dock IPC open/close with named per-screen layer
+HARNESS_SOURCE: /home/lakota/Arch-wm-install/.omo/evidence/shell-feature-integration/task-4-dock-smoke.qml
+ACTUAL_HARNESS_PATH: /home/lakota/Arch-wm-install/modules/shell/task-4-dock-smoke.qml
+INVOCATION: qs -p /home/lakota/Arch-wm-install/modules/shell/task-4-dock-smoke.qml ipc call dock open; hyprctl layers -j; qs -p /home/lakota/Arch-wm-install/modules/shell/task-4-dock-smoke.qml ipc call dock close; hyprctl layers -j
+target dock
+  function open(): bool
+  function close(): bool
+  function toggle(): bool
+OPEN_RESULT: true
+OPEN_DOCK_LAYER_COUNT: 1
+CLOSE_RESULT: true
+CLOSED_MASKED_LAYER_COUNT: 1
+CLOSED_VISUAL_OBSERVABLE: dock absent in task-4-dock.closed.png; layer remains only as narrow masked hover trigger
+PROCESS_STOPPED: true
+RUNTIME_HARNESS_REMOVED: true
+REMAINING_RUNTIME_HARNESS_INSTANCES: 0
+CANONICAL_EVIDENCE: /home/lakota/Arch-wm-install/.omo/evidence/shell-feature-integration/task-4-dock.json

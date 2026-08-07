@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Arch WM Fixture One
+Exec=/usr/bin/true
+Icon=application-x-executable
+Categories=Utility;

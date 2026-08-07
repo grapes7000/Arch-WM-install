@@ -7,7 +7,7 @@
   "variants": ["compact", "standard"],
   "lockSafe": false,
   "services": ["session"],
-  "capabilities": ["session.lock"],
+  "capabilities": ["session.lock", "drawer.open"],
   "constraints": {
     "compact": {"minWidth": 32, "minHeight": 24},
     "standard": {"minWidth": 180, "minHeight": 48}

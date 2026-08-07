@@ -1,0 +1,7 @@
+Instance odk4lnwbjt:
+  Process ID: 213036
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:35:45 (running for 0 hours, 1 minutes, 25 seconds)
+

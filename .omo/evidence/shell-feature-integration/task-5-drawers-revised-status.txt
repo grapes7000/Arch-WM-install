@@ -1,0 +1,29 @@
+ M modules/shell/generated/widgets.json
+ M modules/shell/surfaces/bar/BarSurface.qml
+ M modules/shell/widgets/clock/Widget.qml
+ M modules/shell/widgets/clock/manifest.json
+ M modules/shell/widgets/media/Widget.qml
+ M modules/shell/widgets/media/manifest.json
+ M modules/shell/widgets/network/Widget.qml
+ M modules/shell/widgets/network/manifest.json
+ M modules/shell/widgets/notifications/Widget.qml
+ M modules/shell/widgets/notifications/manifest.json
+ M modules/shell/widgets/session/Widget.qml
+ M modules/shell/widgets/session/manifest.json
+ M modules/shell/widgets/system-stats/Widget.qml
+ M modules/shell/widgets/system-stats/manifest.json
+ M modules/shell/widgets/volume/Widget.qml
+ M modules/shell/widgets/volume/manifest.json
+ M modules/shell/widgets/weather/Widget.qml
+ M modules/shell/widgets/weather/manifest.json
+?? modules/shell/surfaces/bar/AudioDrawer.qml
+?? modules/shell/surfaces/bar/CalendarDrawer.qml
+?? modules/shell/surfaces/bar/DrawerController.qml
+?? modules/shell/surfaces/bar/DrawerSurface.qml
+?? modules/shell/surfaces/bar/NetworkDrawer.qml
+?? modules/shell/surfaces/bar/NotificationsDrawer.qml
+?? modules/shell/surfaces/bar/SessionDrawer.qml
+?? modules/shell/surfaces/bar/SystemDrawer.qml
+?? modules/shell/surfaces/bar/WeatherDrawer.qml
+?? modules/shell/surfaces/bar/qmldir
+?? tests/qml/

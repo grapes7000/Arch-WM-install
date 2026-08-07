@@ -17,14 +17,19 @@ Item {
     implicitHeight: context.variant === "compact" ? compactText.implicitHeight
         : context.variant === "standard" ? 92 : 170
 
+<<<<<<< Updated upstream
     MouseArea {
         anchors.fill: parent
         enabled: context.allows("drawer.open")
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: context.request("drawer.open", { kind: "system-stats" })
     }
+=======
+    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "system", anchorItem: root }) }
+>>>>>>> Stashed changes
 
     Text {
+        font.family: Core.Theme.fontFamily
         id: compactText
         anchors.centerIn: parent
         visible: context.variant === "compact"
@@ -41,6 +46,7 @@ Item {
         spacing: 8
 
         Text {
+            font.family: Core.Theme.fontFamily
             Layout.fillWidth: true
             text: "SYSTEM"
             color: Core.Theme.accent
@@ -62,6 +68,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             Layout.fillWidth: true
             visible: context.variant === "expanded"
             text: "UPTIME  " + Services.SystemStatsService.uptime
@@ -78,6 +85,7 @@ Item {
         spacing: 8
 
         Text {
+            font.family: Core.Theme.fontFamily
             Layout.preferredWidth: 58
             text: row.label
             color: Core.Theme.muted
@@ -104,6 +112,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             Layout.preferredWidth: 38
             horizontalAlignment: Text.AlignRight
             text: row.value + "%"
@@ -112,3 +121,4 @@ Item {
         }
     }
 }
+

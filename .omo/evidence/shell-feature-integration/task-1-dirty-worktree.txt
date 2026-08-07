@@ -1,0 +1,6 @@
+ M modules/shell/.arch-wm-version
+ M modules/shell/components/MenuPopup.qml
+ M tests/test_structure.py
+?? .omo/plans/shell-feature-integration.md
+?? tests/qml/
+?? tests/test_shell_services.py

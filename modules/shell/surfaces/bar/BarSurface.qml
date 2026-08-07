@@ -9,15 +9,20 @@ Scope {
     id: barScope
 
     LauncherOverlay {}
+<<<<<<< Updated upstream
 
     function requestFromWidget(capability, payload, screen) {
         return Core.InteractiveShellController.requestFromBar(capability, payload, screen)
     }
+=======
+    DrawerSurface {}
+>>>>>>> Stashed changes
 
     MenuPopup {
         id: menuPopup
     }
 
+<<<<<<< Updated upstream
     QtObject {
         id: drawerAdapter
         function open(kind, anchorItem, screen) {
@@ -28,10 +33,17 @@ Scope {
             menuPopup.close()
             return true
         }
+=======
+    function close() {
+        if (menuPopup.menuOpen)
+            menuPopup.toggle()
+        return true
+>>>>>>> Stashed changes
     }
 
     Binding {
         target: Core.InteractiveShellController
+<<<<<<< Updated upstream
         property: "drawerController"
         value: drawerAdapter
         restoreMode: Binding.RestoreBindingOrValue
@@ -43,6 +55,17 @@ Scope {
             if (Services.LockStateService.locked)
                 menuPopup.close()
         }
+=======
+        property: "menuController"
+        value: barScope
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
+    function requestFromWidget(capability, payload, screen) {
+        if (capability === "drawer.open" && menuPopup.menuOpen)
+            menuPopup.toggle()
+        return Core.InteractiveShellController.requestFromBar(capability, payload, screen)
+>>>>>>> Stashed changes
     }
 
     Variants {
@@ -186,6 +209,7 @@ Scope {
                                 Layout.fillHeight: true
 
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     id: menuTrigger
                                     anchors.centerIn: parent
                                     text: "󰍜"
@@ -196,10 +220,15 @@ Scope {
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: menuPopup.toggle()
+                                        onClicked: {
+                                            if (menuPopup.menuOpen
+                                                    || Core.InteractiveShellController.prepareMenuOpen())
+                                                menuPopup.toggle()
+                                        }
                                     }
                                 }
                             }
+
                         }
                     }
                 }

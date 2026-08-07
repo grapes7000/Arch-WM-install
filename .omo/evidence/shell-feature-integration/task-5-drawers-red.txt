@@ -1,0 +1,48 @@
+Baseline: monolithic MenuPopup path
+modules/shell/surfaces/bar/BarSurface.qml:17:    MenuPopup {
+modules/shell/surfaces/bar/BarSurface.qml:18:        id: menuPopup
+modules/shell/surfaces/bar/BarSurface.qml:25:                menuPopup.close()
+modules/shell/surfaces/bar/BarSurface.qml:173:                                    color: menuPopup.menuOpen
+modules/shell/surfaces/bar/BarSurface.qml:180:                                        onClicked: menuPopup.toggle()
+modules/shell/components/MenuPopup.qml:11:    property string currentWidget: ""
+modules/shell/components/MenuPopup.qml:12:    property string currentWidgetName: ""
+modules/shell/components/MenuPopup.qml:15:    screen: Quickshell.screens[0]
+modules/shell/components/MenuPopup.qml:30:        currentWidget = ""
+modules/shell/components/MenuPopup.qml:31:        currentWidgetName = ""
+modules/shell/components/MenuPopup.qml:86:                visible: popup.currentWidget !== ""
+modules/shell/components/MenuPopup.qml:96:                            popup.currentWidget = ""
+modules/shell/components/MenuPopup.qml:97:                            popup.currentWidgetName = ""
+modules/shell/components/MenuPopup.qml:103:                    text: popup.currentWidgetName
+modules/shell/components/MenuPopup.qml:113:                visible: popup.currentWidget === ""
+modules/shell/components/MenuPopup.qml:222:                                popup.currentWidget = "system-stats"
+modules/shell/components/MenuPopup.qml:223:                                popup.currentWidgetName = "System"
+modules/shell/components/MenuPopup.qml:288:                                popup.currentWidget = "media"
+modules/shell/components/MenuPopup.qml:289:                                popup.currentWidgetName = "Now Playing"
+modules/shell/components/MenuPopup.qml:452:                                popup.currentWidget = "weather"
+modules/shell/components/MenuPopup.qml:453:                                popup.currentWidgetName = "Weather"
+modules/shell/components/MenuPopup.qml:510:                                popup.currentWidget = "network"
+modules/shell/components/MenuPopup.qml:511:                                popup.currentWidgetName = "Network"
+modules/shell/components/MenuPopup.qml:634:                active: popup.currentWidget !== ""
+modules/shell/components/MenuPopup.qml:637:                    ? Qt.resolvedUrl("../widgets/" + popup.currentWidget + "/Panel.qml")
+modules/shell/components/MenuPopup.qml:641:                        console.warn("Failed to load panel for", popup.currentWidget)
+
+Failing-first QML behavior harness
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+QWARN  : qmltestrunner::tst_drawers::compile() 
+  /home/lakota/Arch-wm-install/tests/qml/tst_drawers.qml produced 1 error(s):
+    /home/lakota/Arch-wm-install/tests/qml/tst_drawers.qml:9,5: DrawerController is not a type
+  Working directory: /home/lakota/Arch-wm-install
+  Import paths:
+    '/usr/lib/qt6/bin'
+    'qrc:/qt-project.org/imports'
+    'qrc:/qt/qml'
+    '/usr/lib/qt6/qml'
+  Plugin paths:
+    '.'
+
+FAIL!  : qmltestrunner::tst_drawers::compile() DrawerController is not a type
+   Loc: [/home/lakota/Arch-wm-install/tests/qml/tst_drawers.qml(9)]
+Totals: 0 passed, 1 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of qmltestrunner *********
+exit_code=1

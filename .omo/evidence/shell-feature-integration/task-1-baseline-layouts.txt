@@ -1,0 +1,4 @@
+valid: modules/shell/layouts/bar.default.json
+valid: modules/shell/layouts/desktop.default.json
+valid: modules/shell/layouts/lockscreen.default.json
+valid: 11 widget manifests and generated registry

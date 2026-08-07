@@ -1,0 +1,6 @@
+probe process check: no probe process remained
+command: pgrep -af -- /tmp/quickshell-font-probe.Nkreoj
+result: no probe process remained
+
+command: qs list --all
+result: only pre-existing /home/lakota/.config/quickshell/arch-wm/shell.qml remained; no /tmp/quickshell-font-probe.Nkreoj instance

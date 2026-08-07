@@ -1,0 +1,4 @@
+source hyprland: 2026.08.04.3
+installed hyprland: 2026.08.04.3
+source shell: 2026.08.06.5
+installed shell: 2026.08.06.5

@@ -40,6 +40,7 @@ Item {
                     spacing: 12
 
                     Text {
+                        font.family: Core.Theme.fontFamily
                         text: {
                             if (!Services.NetworkService.connected) return "󰤭"
                             if (Services.NetworkService.type === "ethernet") return "󰈀"
@@ -59,6 +60,7 @@ Item {
                         spacing: 2
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: Services.NetworkService.connected
                                 ? (Services.NetworkService.ssid || Services.NetworkService.type)
                                 : "Disconnected"
@@ -69,6 +71,7 @@ Item {
                         }
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             visible: Services.NetworkService.connected
                             text: {
                                 let info = Services.NetworkService.ipAddress || ""
@@ -119,6 +122,7 @@ Item {
                         }
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             anchors.centerIn: parent
                             text: Services.NetworkService.strength + "%"
                             color: Core.Theme.foreground
@@ -143,12 +147,14 @@ Item {
                         spacing: 20
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: "󰩟 " + Services.NetworkService.downloadRate
                             color: Core.Theme.muted
                             font.pixelSize: 10
                         }
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: "󰩠 " + Services.NetworkService.uploadRate
                             color: Core.Theme.muted
                             font.pixelSize: 10
@@ -366,6 +372,7 @@ Item {
                     spacing: 12
 
                     Text {
+                        font.family: Core.Theme.fontFamily
                         text: "󰦝"
                         color: Services.TailscaleService.isMullvad
                             ? Qt.rgba(0.2, 0.8, 0.4, 1.0) : Core.Theme.muted
@@ -377,6 +384,7 @@ Item {
                         spacing: 2
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: "Mullvad VPN"
                             color: Core.Theme.foreground
                             font.pixelSize: 13
@@ -384,6 +392,7 @@ Item {
                         }
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: Services.TailscaleService.isMullvad
                                 ? "Via Tailscale exit node" : "Inactive"
                             color: Core.Theme.muted
@@ -415,6 +424,7 @@ Item {
                         }
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             id: pillText
                             anchors.centerIn: parent
                             text: Services.TailscaleService.isMullvad ? "CONNECTED" : "OFF"
@@ -428,6 +438,7 @@ Item {
                 }
 
                 Text {
+                    font.family: Core.Theme.fontFamily
                     visible: Services.TailscaleService.isMullvad
                         && Services.TailscaleService.mullvadLocation !== ""
                     text: "Exit: " + Services.TailscaleService.mullvadLocation
@@ -468,12 +479,21 @@ Item {
                 RowLayout {
                     spacing: 12
 
+<<<<<<< Updated upstream
                     Image {
                         source: "../../assets/icons/tailscale.png"
                         Layout.preferredWidth: 22
                         Layout.preferredHeight: 22
                         smooth: true
                         opacity: Services.TailscaleService.connected ? 1.0 : 0.5
+=======
+                    Text {
+                        font.family: Core.Theme.fontFamily
+                        text: "󰛳"
+                        color: Services.TailscaleService.connected
+                            ? Core.Theme.accent : Core.Theme.muted
+                        font.pixelSize: 22
+>>>>>>> Stashed changes
                     }
 
                     ColumnLayout {
@@ -481,6 +501,7 @@ Item {
                         spacing: 2
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: "Tailscale"
                             color: Core.Theme.foreground
                             font.pixelSize: 13
@@ -488,6 +509,7 @@ Item {
                         }
 
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: {
                                 if (!Services.TailscaleService.running) return "Not installed"
                                 if (!Services.TailscaleService.connected) return "Disconnected"
@@ -499,6 +521,7 @@ Item {
                     }
 
                     Text {
+                        font.family: Core.Theme.fontFamily
                         visible: Services.TailscaleService.connected
                         text: Services.TailscaleService.peerCount + " peers"
                         color: Core.Theme.muted
@@ -565,3 +588,4 @@ Item {
         }
     }
 }
+

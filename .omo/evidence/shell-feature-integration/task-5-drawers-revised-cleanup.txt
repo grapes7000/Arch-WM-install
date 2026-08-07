@@ -1,0 +1,25 @@
+CLEANUP RECEIPT
+temp_root=/tmp/arch-wm-drawers.C3NEsi
+Killed ux8a772cjt
+No running instances for "/tmp/arch-wm-drawers.C3NEsi/modules/shell/shell.qml"
+Dead instances:
+ - j9n97n1cjt
+ - cxv9yw1cjt
+No running instances for "/tmp/arch-wm-drawers.C3NEsi/tests/qml/drawer_capability_shell.qml"
+Dead instances:
+ - 9ex91y1cjt
+ - ws1aj12cjt
+ - da3ap22cjt
+ - 2q4aw32cjt
+temp_trashed=true
+temp_exists=true
+remaining_processes=1
+CLEANUP REPAIR
+temp_root=/tmp/arch-wm-drawers.C3NEsi
+temp_removed=true
+qs_processes=2
+verified_qs_processes=0
+FRESH CLEANUP
+temp_removed=true
+verified_qs_processes=1
+verified_qs_processes_after_wait=0

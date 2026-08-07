@@ -1,0 +1,3 @@
+Scenario: baseline root has no native launcher overlay or launcher state service
+Invocation: test -f modules/shell/surfaces/bar/LauncherOverlay.qml && test -f modules/shell/services/LauncherStateService.qml
+Observable: expected FAIL (native launcher files absent)

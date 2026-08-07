@@ -1,0 +1,70 @@
+    property bool menuOpen: false
+    property string currentWidget: ""
+    property string currentWidgetName: ""
+
+    visible: menuOpen
+    screen: Quickshell.screens[0]
+
+    anchors {
+        top: true
+        bottom: true
+        left: true
+        right: true
+    }
+
+    exclusionMode: ExclusionMode.Ignore
+    focusable: true
+    color: "transparent"
+
+    function close() {
+        menuOpen = false
+        currentWidget = ""
+        currentWidgetName = ""
+    }
+
+    function toggle() {
+        if (menuOpen) {
+            close()
+        } else {
+            menuOpen = true
+        }
+    }
+
+    MouseArea {
+        id: backdrop
+        anchors.fill: parent
+        onClicked: popup.close()
+    }
+
+    Item {
+        id: escapeDismissal
+        anchors.fill: parent
+        focus: popup.menuOpen
+
+        Keys.onEscapePressed: popup.close()
+    }
+
+    Rectangle {
+        id: card
+        anchors {
+            top: parent.top
+            right: parent.right
+        }
+        anchors.topMargin: Core.Theme.barHeight + Core.Theme.gap * 3
+        anchors.rightMargin: Core.Theme.gap
+        width: 340
+        implicitHeight: mainCol.implicitHeight + 24
+        color: Core.Theme.surface
+        radius: Core.Theme.radius
+        border.width: Core.Theme.borderWidth
+        border.color: Core.Theme.accent2
+
+        MouseArea {
+            id: cardClickShield
+            anchors.fill: parent
+            onClicked: {}
+        }
+
+        ColumnLayout {
+            id: mainCol
+EXIT:0

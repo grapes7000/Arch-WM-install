@@ -1,0 +1,5 @@
+SCENARIO: DockModel groups local-monitor windows and rejects remote/stale rows
+INVOCATION: QT_QPA_PLATFORM=offscreen qmltestrunner -input tests/qml -import modules/shell
+EXIT_STATUS: 1
+BASELINE_DOCK_COMPONENTS:
+DesktopSurface.qml

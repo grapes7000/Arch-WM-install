@@ -7,7 +7,7 @@
   "variants": ["compact", "standard"],
   "lockSafe": false,
   "services": ["notifications"],
-  "capabilities": ["notification.dismiss"],
+  "capabilities": ["notification.dismiss", "drawer.open"],
   "constraints": {
     "compact": {"minWidth": 40, "minHeight": 24},
     "standard": {"minWidth": 100, "minHeight": 48}

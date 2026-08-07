@@ -120,6 +120,7 @@ Item {
         border.color: Core.Theme.urgent
 
         Text {
+            font.family: Core.Theme.fontFamily
             anchors.centerIn: parent
             text: "!"
             color: Core.Theme.urgent

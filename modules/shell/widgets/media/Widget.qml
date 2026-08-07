@@ -18,12 +18,15 @@ Item {
 
     visible: Services.MprisService.status !== "Stopped"
 
+    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "audio", anchorItem: root }) }
+
     RowLayout {
         id: content
         anchors.centerIn: parent
         spacing: context.variant === "compact" ? 4 : 8
 
         Text {
+            font.family: Core.Theme.fontFamily
             visible: context.variant !== "compact" && context.allows("media.control")
             text: Services.MprisService.canPrev ? "󰒮" : ""
             color: Core.Theme.muted
@@ -36,6 +39,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             visible: context.allows("media.control")
             text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
             color: Core.Theme.foreground
@@ -48,6 +52,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             visible: context.variant !== "compact" && context.allows("media.control")
             text: Services.MprisService.canNext ? "󰒭" : ""
             color: Core.Theme.muted
@@ -70,6 +75,7 @@ Item {
             }
 
             Text {
+                font.family: Core.Theme.fontFamily
                 Layout.maximumWidth: context.variant === "compact" ? 120 : 200
                 text: Services.MprisService.title
                 color: Core.Theme.foreground
@@ -79,6 +85,7 @@ Item {
             }
 
             Text {
+                font.family: Core.Theme.fontFamily
                 Layout.maximumWidth: context.variant === "compact" ? 120 : 200
                 visible: context.variant !== "compact"
                 text: Services.MprisService.artist
@@ -89,3 +96,4 @@ Item {
         }
     }
 }
+

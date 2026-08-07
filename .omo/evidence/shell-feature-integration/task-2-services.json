@@ -1,0 +1,43 @@
+{
+  "task": "Todo 2 - shared system services and managed dependencies",
+  "result": "pass",
+  "scenarios": [
+    {
+      "name": "focused service contracts",
+      "invocation": "python -m unittest tests.test_shell_services -v",
+      "observable": "8 tests passed, including production-parser execution against malformed seeded state; exit 0",
+      "artifact": ".omo/evidence/shell-feature-integration/task-2-services-tests.txt"
+    },
+    {
+      "name": "layout and registry validation",
+      "invocation": "python scripts/validate-layouts.py",
+      "observable": "three layouts and 11 widget manifests valid; exit 0",
+      "artifact": ".omo/evidence/shell-feature-integration/task-2-services-layouts.txt"
+    },
+    {
+      "name": "all shell QML lint",
+      "invocation": "find modules/shell -name '*.qml' -print0 | xargs -0 qmllint",
+      "observable": "exit 0",
+      "artifact": ".omo/evidence/shell-feature-integration/task-2-services-qmllint.txt"
+    },
+    {
+      "name": "read-only dependency sampling and Cava config",
+      "invocation": "bounded wpctl/nmcli/dunstctl/tailscale/cava read-only commands",
+      "observable": "redacted summaries confirm live wpctl, nmcli, and Tailscale state; Cava emitted 24 ASCII bars until timeout; unavailable Dunst returned a bounded failure",
+      "artifact": ".omo/evidence/shell-feature-integration/task-2-services-manual.txt"
+    }
+  ],
+  "adversarial": {
+    "dirty_worktree": "preserved unrelated changes, including another worker's LockStateService and qmldir export",
+    "malformed_input": "Node executes the production QML parser bodies with malformed input and asserts a false result plus nonempty error",
+    "stale_state": "the same behavioral test seeds nonempty prior rows/status and proves parser reset removes stale values",
+    "hung_command": "poll/action runners use 15-second watchdogs; nmcli also receives --wait 15; Dunst unavailability was bounded in manual QA",
+    "misleading_success_output": "parsers require valid shapes; network connect success is followed by a fresh active-state poll",
+    "not_applicable": "session actions and Wi-Fi connection were intentionally not invoked because manual QA prohibited changing connection or power/session state"
+  },
+  "security": {
+    "wifi_password": "passed only as a direct nmcli argv element, never through sh -c or logging, and Process.command is cleared on the next event-loop turn",
+    "vpn": "Tailscale and Mullvad state is display-only",
+    "evidence_redaction": "manual evidence omits SSIDs, addresses, hostnames, account/tailnet names, node IDs, and peer identifiers"
+  }
+}

@@ -1,0 +1,37 @@
+test_each_shared_service_owns_one_process (tests.test_shell_services.ShellServiceContractTests.test_each_shared_service_owns_one_process) ... FAIL
+test_service_contracts_are_exported (tests.test_shell_services.ShellServiceContractTests.test_service_contracts_are_exported) ... FAIL
+test_shell_packages_contain_single_dunst_and_cava (tests.test_shell_services.ShellServiceContractTests.test_shell_packages_contain_single_dunst_and_cava) ... FAIL
+test_wifi_password_is_not_interpolated_into_a_shell_command (tests.test_shell_services.ShellServiceContractTests.test_wifi_password_is_not_interpolated_into_a_shell_command) ... ok
+
+======================================================================
+FAIL: test_each_shared_service_owns_one_process (tests.test_shell_services.ShellServiceContractTests.test_each_shared_service_owns_one_process)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/lakota/Arch-wm-install/tests/test_shell_services.py", line 27, in test_each_shared_service_owns_one_process
+    self.assertEqual(len(processes), 1, name)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3 != 1 : Audio
+
+======================================================================
+FAIL: test_service_contracts_are_exported (tests.test_shell_services.ShellServiceContractTests.test_service_contracts_are_exported)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/lakota/Arch-wm-install/tests/test_shell_services.py", line 41, in test_service_contracts_are_exported
+    self.assertRegex(source, rf"\b{re.escape(member)}\b", f"{name}.{member}")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Regex didn't match: '\\bsinks\\b' not found in 'pragma Singleton\n\nimport QtQuick\nimport Quickshell\nimport Quickshell.Io\n\nSingleton {\n    id: root\n\n    property int volume: 0\n    property bool muted: false\n\n    function parse(contents) {\n        for (const line of contents.trim().split("\\n")) {\n            const sep = line.indexOf("=")\n            if (sep <= 0) continue\n            const key = line.slice(0, sep)\n            const val = line.slice(sep + 1)\n            if (key === "volume")\n                root.volume = Math.max(0, Math.min(100, Math.round(Number(val))))\n            else if (key === "muted")\n                root.muted = val === "true"\n        }\n    }\n\n    function setVolume(percent) {\n        volumeSetProc.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@",\n            Math.max(0, Math.min(100, percent)) + "%"]\n        volumeSetProc.running = true\n    }\n\n    function toggleMute() {\n        muteProc.running = true\n    }\n\n    Process {\n        id: pollProc\n        command: [\n            "sh", "-c",\n            "vol=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null); "\n            + "pct=$(echo \\"$vol\\" | awk \'{printf \\"%d\\",$2*100}\'); "\n            + "mut=$(echo \\"$vol\\" | grep -q MUTED && echo true || echo false); "\n            + "printf \'volume=%s\\\\nmuted=%s\\\\n\' \\"$pct\\" \\"$mut\\""\n        ]\n        stdout: StdioCollector { onStreamFinished: root.parse(text) }\n    }\n\n    Process {\n        id: volumeSetProc\n        onExited: pollProc.running = true\n    }\n\n    Process {\n        id: muteProc\n        command: ["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"]\n        onExited: pollProc.running = true\n    }\n\n    Timer {\n        interval: 3000\n        running: true\n        repeat: true\n        triggeredOnStart: true\n        onTriggered: { if (!pollProc.running) pollProc.running = true }\n    }\n}\n' : Audio.sinks
+
+======================================================================
+FAIL: test_shell_packages_contain_single_dunst_and_cava (tests.test_shell_services.ShellServiceContractTests.test_shell_packages_contain_single_dunst_and_cava)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/lakota/Arch-wm-install/tests/test_shell_services.py", line 52, in test_shell_packages_contain_single_dunst_and_cava
+    self.assertEqual(packages.count("dunst"), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 1
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+FAILED (failures=3)
+exit=1

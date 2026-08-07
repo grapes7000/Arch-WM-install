@@ -1,0 +1,46 @@
+{
+"eDP-1": {
+    "levels": {
+
+        "0": [
+                {
+                    "address": "0x559a93b8e1b0",
+                    "x": 0,
+                    "y": 0,
+                    "w": 1920,
+                    "h": 1200,
+                    "alpha": 1,
+                    "namespace": "hyprpaper",
+                    "pid": 1359
+                }
+        ],
+        "1": [
+                {
+                    "address": "0x559a9285b660",
+                    "x": 1572,
+                    "y": 68,
+                    "w": 340,
+                    "h": 286,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                }
+        ],
+        "2": [
+                {
+                    "address": "0x559a93a229c0",
+                    "x": 8,
+                    "y": 8,
+                    "w": 1904,
+                    "h": 44,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                }
+        ],
+        "3": [
+]
+    }
+}
+}
+

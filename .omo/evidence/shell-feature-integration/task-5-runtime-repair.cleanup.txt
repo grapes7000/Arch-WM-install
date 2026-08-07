@@ -1,0 +1,22 @@
+CLEANUP RECEIPT
+PROCESS_STOP: runtime_repair_capture killed via named qs config; PTY exit=0.
+DELETED_TEMP_ROOT=/tmp/arch-wm-runtime-fail.XFRNQc
+DELETED_TEMP_ROOT=/tmp/arch-wm-qml-tests.k2srTr
+DELETED_TEMP_ROOT=/tmp/arch-wm-runtime-repair.Vov43j
+DELETED_TEMP_ROOT=/tmp/arch-wm-runtime-repair.c4IwKM
+DELETED_TEMP_ROOT=/tmp/arch-wm-runtime-repair-final.LWivTG
+DELETED_TEMP_ROOT=/tmp/arch-wm-runtime-repair-green.aONTIK
+DELETED_TEMP_ROOT=/tmp/arch-wm-runtime-repair-capture.lvpLiP
+DELETED_TEMP_MARKER=/tmp/arch-wm-runtime-fail-root.txt
+DELETED_TEMP_MARKER=/tmp/arch-wm-qml-tests-root.txt
+DELETED_TEMP_MARKER=/tmp/arch-wm-runtime-repair-root.txt
+DELETED_TEMP_MARKER=/tmp/arch-wm-runtime-repair-final-root.txt
+DELETED_TEMP_MARKER=/tmp/arch-wm-runtime-repair-green-root.txt
+DELETED_TEMP_MARKER=/tmp/arch-wm-runtime-repair-capture-root.txt
+DELETED_TEMP_MARKER=/tmp/task-5-runtime-repair.json
+TEMP_PROCESS_REMAINS=true
+567482 /usr/bin/zsh -c cleanup_artifact=.omo/evidence/shell-feature-integration/task-5-runtime-repair.cleanup.txt {   printf 'CLEANUP RECEIPT\n'   printf 'PROCESS_STOP: runtime_repair_capture killed via named qs config; PTY exit=0.\n'   for cleanup_path in \     /tmp/arch-wm-runtime-fail.XFRNQc \     /tmp/arch-wm-qml-tests.k2srTr \     /tmp/arch-wm-runtime-repair.Vov43j \     /tmp/arch-wm-runtime-repair.c4IwKM \     /tmp/arch-wm-runtime-repair-final.LWivTG \     /tmp/arch-wm-runtime-repair-green.aONTIK \     /tmp/arch-wm-runtime-repair-capture.lvpLiP; do     case "$cleanup_path" in       /tmp/arch-wm-*) ;;       *) printf 'REFUSED_UNSAFE_TARGET=%s\n' "$cleanup_path"; exit 1 ;;     esac     if [ -d "$cleanup_path" ]; then       find "$cleanup_path" -depth -delete       printf 'DELETED_TEMP_ROOT=%s\n' "$cleanup_path"     else       printf 'TEMP_ROOT_ALREADY_ABSENT=%s\n' "$cleanup_path"     fi   done   for marker in \     /tmp/arch-wm-runtime-fail-root.txt \     /tmp/arch-wm-qml-tests-root.txt \     /tmp/arch-wm-runtime-repair-root.txt \     /tmp/arch-wm-runtime-repair-final-root.txt \     /tmp/arch-wm-runtime-repair-green-root.txt \     /tmp/arch-wm-runtime-repair-capture-root.txt \     /tmp/task-5-runtime-repair.json; do     if [ -f "$marker" ]; then       find "$marker" -delete       printf 'DELETED_TEMP_MARKER=%s\n' "$marker"     fi   done   if pgrep -af 'qs.*runtime_repair|quickshell.*runtime_repair' >/tmp/arch-wm-runtime-process-check.txt; then     printf 'TEMP_PROCESS_REMAINS=true\n'     sed -n '1,80p' /tmp/arch-wm-runtime-process-check.txt   else     printf 'TEMP_PROCESS_REMAINS=false\n'   fi   find /tmp/arch-wm-runtime-process-check.txt -delete } > "$cleanup_artifact" cat "$cleanup_artifact"
+CORRECTED_EXACT_PROCESS_CHECK=true (no temporary QS process remains; prior broad match was the checker shell itself)
+PROCESS_STOP: runtime_repair_popup killed via named qs config; PTY exit=0.
+DELETED_TEMP_ROOT=/tmp/arch-wm-runtime-repair-popup.zjmYBI
+DELETED_TEMP_POPUP_CAPTURE=/tmp/arch-wm-menu-popup-current.png

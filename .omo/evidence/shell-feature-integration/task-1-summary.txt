@@ -1,0 +1,30 @@
+Task 1: interactive-shell control plane and lock guard
+
+Focused request/lock contract
+- Scenario: granted requests reach the host, undeclared requests do not; malformed LockedHint preserves locked state; locked IPC controller calls return false.
+- Invocation: qs -p tst_shell_control_plane.qml --no-color
+- Binary observable: process exit 0 and CONTROL_PLANE_PASS.
+- Artifact: .omo/evidence/shell-feature-integration/task-1-focused-test.txt
+
+IPC and live layer smoke
+- Scenario: a temporary repo config exposes exactly launcher, drawers, and dock targets; `drawers open invalid` is rejected without changing layer namespaces.
+- Invocation: qs -p modules/shell ipc show; qs -p modules/shell ipc call drawers open invalid; hyprctl layers -j before and after.
+- Binary observable: IPC prints false; before/after sorted namespaces are identical; temporary instance is killed afterward.
+- Artifacts: .omo/evidence/shell-feature-integration/task-1-control-plane.txt, task-1-layers-before-invalid.json, task-1-control-plane.json, task-1-layers-after-cleanup.json.
+
+Layout and QML validation
+- Scenario: all current layouts/manifests validate and every shell QML file lints.
+- Invocations: python scripts/validate-layouts.py; find modules/shell -name '*.qml' -print0 | xargs -0 qmllint.
+- Binary observable: both commands record EXIT_STATUS=0.
+- Artifacts: .omo/evidence/shell-feature-integration/task-1-layout-validation.txt, task-1-qmllint.txt.
+
+Adversarial probes
+- dirty_worktree: captured before edits; unrelated MenuPopup/version/test and concurrent service work were preserved. Artifact: task-1-dirty-worktree.txt.
+- stale_state: the focused harness sets locked=true, passes malformed LockedHint, and proves it remains locked.
+- malformed_input: invalid drawer kind returns false and produces no layer delta.
+- misleading_success_output: the IPC command exits through QuickShell normally but prints false, so the stub does not claim an unavailable surface opened.
+- Destructive filesystem, credential, remote-network, and authentication-action classes are not applicable: this task adds only read-only loginctl polling and in-memory dispatch. The real user session was not locked, per the manual-QA safety constraint.
+
+Cleanup
+- The temporary repo QuickShell instance was killed; `qs list --all` shows only the pre-existing installed arch-wm instance.
+- No LockSurface.qml instance was added.

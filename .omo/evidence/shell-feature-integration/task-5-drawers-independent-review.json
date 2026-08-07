@@ -1,0 +1,124 @@
+{
+  "verdict": "needs-fix",
+  "reviewedAt": "2026-08-05",
+  "scope": "Todo 5 drawers preserving the original MenuPopup control center; current worktree, read-only production inspection plus one isolated temporary XDG QuickShell config",
+  "requiredBehavior": {
+    "menuPopupPreserved": {
+      "result": "confirmed-in-source",
+      "evidence": "modules/shell/components/MenuPopup.qml exists; modules/shell/surfaces/bar/BarSurface.qml:14-16 instantiates it; BarSurface.qml:165-179 retains the anonymous icon trigger and calls menuPopup.toggle()."
+    },
+    "drawerSurfaceCoexists": {
+      "result": "present-but-not-runnable",
+      "evidence": "BarSurface.qml:11-14 instantiates LauncherOverlay, DrawerSurface, and MenuPopup, but the isolated current-source config fails at BarSurface.qml:11 because LauncherOverlay.qml is absent."
+    },
+    "drawerCountsAudioNetworkClose": {
+      "result": "not-reproducible-current-source",
+      "expected": "1 -> 1 -> 0",
+      "observed": "No IPC endpoint or layer was created because the current shell failed to load.",
+      "evidencePointer": ".omo/evidence/shell-feature-integration/task-5-drawers-independent-runtime.log"
+    },
+    "controlCenterClosesDrawer": {
+      "result": "not-reproducible-current-source",
+      "sourceIntent": "BarSurface.qml:176-179 calls Core.InteractiveShellController.drawersClose() before menuPopup.toggle().",
+      "failure": "Core.InteractiveShellController.qml is absent and core/qmldir has no registration; the shell already fails earlier on missing LauncherOverlay.qml."
+    },
+    "invalidDrawerDeniedEvenWithCliZero": {
+      "result": "unit-confirmed-only",
+      "evidence": "qmltestrunner passes test_invalid_and_locked_open_are_rejected_without_stale_state; real IPC could not be reached. The prior worker artifact reports output=false with exit=0, but that claim is not reproducible from current source."
+    },
+    "lockClosesDrawers": {
+      "result": "unit-confirmed-only",
+      "evidence": "DrawerController.qml onLockedChanged closes state and the focused unit test passes; Services.LockStateService.qml and its qmldir registration are absent, so production lock wiring cannot load."
+    },
+    "noTempQuickShellSurvives": {
+      "result": "confirmed",
+      "evidence": "Cleanup command `find /tmp/arch-wm-gate-drawers.67dJzM -depth -delete; unlink /tmp/arch-wm-gate-drawers-active-path` returned success; TEMP_EXISTS=false; OWN_CONFIG_PROCESSES empty; QS_BINARY_PROCESSES empty."
+    }
+  },
+  "commands": [
+    {
+      "command": "QT_QPA_PLATFORM=offscreen timeout 30s /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_drawers.qml -o -,txt",
+      "exit": 0,
+      "result": "4 passed, 0 failed, including replacement/close and invalid/locked rejection."
+    },
+    {
+      "command": "timeout 30s python scripts/validate-layouts.py",
+      "exit": 0,
+      "result": "three layouts valid; 11 widget manifests and generated registry valid."
+    },
+    {
+      "command": "timeout 60s sh -c \"find modules/shell -name '*.qml' -print0 | xargs -0 qmllint\"",
+      "exit": 0,
+      "result": "No output. This was a false-confidence static pass: it did not instantiate BarSurface or diagnose the missing local QML types."
+    },
+    {
+      "command": "XDG_CONFIG_HOME=/tmp/arch-wm-gate-drawers.67dJzM/xdg timeout 20s qs -c gate_drawers --no-color -v",
+      "result": "Failed to load configuration: shell.qml:6 Type BarSurface unavailable; BarSurface.qml:11 Type LauncherOverlay unavailable; LauncherOverlay.qml file not found.",
+      "evidencePointer": ".omo/evidence/shell-feature-integration/task-5-drawers-independent-runtime.log"
+    },
+    {
+      "command": "XDG_CONFIG_HOME=/tmp/arch-wm-gate-drawers.67dJzM/xdg timeout 10s qs -c gate_drawers ipc call drawers open audio",
+      "exit": 255,
+      "result": "No running instances. Required literal IPC sequence could not begin because current source did not load. Therefore audio/network/close counts and the control-center command are not independently confirmed."
+    },
+    {
+      "command": "XDG_CONFIG_HOME=/tmp/arch-wm-gate-drawers.67dJzM/xdg timeout 10s qs -c gate_drawers kill",
+      "exit": 255,
+      "result": "No running instance (the failed launch had already exited). Follow-up process inspection found no qs/quickshell binary."
+    },
+    {
+      "command": "timeout 10s grim .omo/evidence/shell-feature-integration/task-5-drawers-independent-review.png",
+      "exit": 0,
+      "result": "3840x2400 PNG captured; sha256 80a2d941f80a967dbc8f19f2b381e4ff0f22bec48ac300b286792d497caf1378."
+    }
+  ],
+  "currentSourceEvidence": [
+    "modules/shell/shell.qml:6 instantiates BarSurface.",
+    "modules/shell/surfaces/bar/BarSurface.qml:11 instantiates missing LauncherOverlay; :12 instantiates DrawerSurface; :14 instantiates MenuPopup.",
+    "modules/shell/surfaces/bar/BarSurface.qml:21 and :177 reference Core.InteractiveShellController, but modules/shell/core/InteractiveShellController.qml is absent and modules/shell/core/qmldir:1-4 does not register it.",
+    "modules/shell/surfaces/bar/DrawerSurface.qml:23 references Services.LockStateService and :27 references Core.InteractiveShellController, but modules/shell/services/LockStateService.qml is absent and modules/shell/services/qmldir:1-12 does not register it.",
+    "modules/shell/components/MenuPopup.qml exists and remains the original control-center component."
+  ],
+  "blockers": [
+    {
+      "violatedCriterion": "drawer-audio-network-close-live",
+      "observation": "Current shell cannot load, so the required live drawer layer sequence 1 -> 1 -> 0 is unavailable.",
+      "evidencePointer": ".omo/evidence/shell-feature-integration/task-5-drawers-independent-runtime.log"
+    },
+    {
+      "violatedCriterion": "control-center-closes-drawer-live",
+      "observation": "The original MenuPopup is present, but its integrated BarSurface is unrunnable and the controller it calls is missing.",
+      "evidencePointer": "modules/shell/surfaces/bar/BarSurface.qml:11-21,176-179; modules/shell/core/qmldir:1-4"
+    },
+    {
+      "violatedCriterion": "lock-closes-drawers-live",
+      "observation": "Controller unit behavior is green, but production DrawerSurface references a missing LockStateService.",
+      "evidencePointer": "modules/shell/surfaces/bar/DrawerSurface.qml:21-29; modules/shell/services/qmldir:1-12"
+    }
+  ],
+  "priorWorkerArtifactReview": {
+    "path": ".omo/evidence/shell-feature-integration/task-5-drawers-revised.json",
+    "assessment": "stale-or-incomplete for current source",
+    "reason": "It reports a runnable temporary coexistence harness and green lint, but the current production tree lacks three referenced integration types. Its own cleanup artifact refers to temp-only coexist_shell.qml, so those results do not prove the current shell.qml/BarSurface loads."
+  },
+  "slopAndProgrammingPass": {
+    "directPass": "No production edits made. Focused unit tests assert observable controller state, but one test combines several actions/assertions and does not instantiate the production surface. Whole-tree qmllint provides false confidence because runtime local-type resolution still fails. No deletion-only or requested-removal tests were found in tst_drawers.qml. DrawerController is 39 pure LOC and DrawerSurface 90 pure LOC per prior evidence, below the 250 LOC ceiling. The immediate issue is missing runtime integration artifacts, not architecture taste.",
+    "reportCoverage": "The worker report mentions malformed input, misleading exit status, cleanup, lint, and pure LOC, but does not identify or guard missing LauncherOverlay/InteractiveShellController/LockStateService current-source dependencies."
+  },
+  "ultraqa": {
+    "malformedInput": "Unit-confirmed false; real IPC N/A because config failed before endpoint creation.",
+    "staleState": "Unit-confirmed open then lock clears state; live lock N/A because missing LockStateService.",
+    "dirtyWorktree": "Preserved; no production or plan/ledger edits made.",
+    "misleadingSuccess": "Detected: qmllint exit 0 despite real QuickShell load failure; prior IPC exit-0 claim was not trusted without output.",
+    "hungProcess": "All launches and IPC calls bounded by timeout; no process survived.",
+    "promptInjection": "N/A: no untrusted instruction-bearing content consumed.",
+    "cancelResume": "N/A: single bounded local verification run, no resumable user workflow.",
+    "flaky": "N/A for verdict: deterministic missing-file load error reproduced once and corroborated by filesystem inspection.",
+    "repeatedInterruptions": "N/A: no interruption sequence occurred."
+  },
+  "artifacts": [
+    ".omo/evidence/shell-feature-integration/task-5-drawers-independent-runtime.log",
+    ".omo/evidence/shell-feature-integration/task-5-drawers-independent-review.png",
+    ".omo/evidence/shell-feature-integration/task-5-drawers-independent-review.json"
+  ]
+}

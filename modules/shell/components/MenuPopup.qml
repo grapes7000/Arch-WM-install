@@ -93,6 +93,7 @@ PanelWindow {
                 visible: popup.currentWidget !== ""
 
                 Text {
+                    font.family: Core.Theme.fontFamily
                     text: "←"
                     color: Core.Theme.foreground
                     font.pixelSize: 16
@@ -107,6 +108,7 @@ PanelWindow {
                 }
 
                 Text {
+                    font.family: Core.Theme.fontFamily
                     text: popup.currentWidgetName
                     color: Core.Theme.foreground
                     font.pixelSize: 14
@@ -134,6 +136,7 @@ PanelWindow {
                             spacing: 2
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: Services.TimeService.timeLong
                                 color: Core.Theme.foreground
                                 font.pixelSize: 28
@@ -141,6 +144,7 @@ PanelWindow {
                             }
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: Services.TimeService.dateLong
                                 color: Core.Theme.muted
                                 font.pixelSize: 11
@@ -156,6 +160,7 @@ PanelWindow {
                                 spacing: 0
 
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: {
                                         if (!Services.PowerService.available) return "󰁹"
                                         if (Services.PowerService.charging) return "󰂄"
@@ -178,6 +183,7 @@ PanelWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.PowerService.available
                                         ? Services.PowerService.percent + "%" : "--"
                                     color: Core.Theme.muted
@@ -191,6 +197,7 @@ PanelWindow {
                                 spacing: 0
 
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: {
                                         if (Services.NotificationService.dndEnabled) return "󰂛"
                                         if (Services.NotificationService.count > 0) return "󰂚"
@@ -203,6 +210,7 @@ PanelWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.NotificationService.count > 0
                                         ? Services.NotificationService.count : ""
                                     color: Core.Theme.muted
@@ -238,8 +246,9 @@ PanelWindow {
 
                             RowLayout {
                                 spacing: 4
-                                Text { text: "CPU"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { font.family: Core.Theme.fontFamily; text: "CPU"; color: Core.Theme.muted; font.pixelSize: 10 }
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.SystemStatsService.cpuPercent + "%"
                                     color: Services.SystemStatsService.cpuPercent >= 90
                                         ? Core.Theme.urgent : Core.Theme.foreground
@@ -249,8 +258,9 @@ PanelWindow {
 
                             RowLayout {
                                 spacing: 4
-                                Text { text: "RAM"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { font.family: Core.Theme.fontFamily; text: "RAM"; color: Core.Theme.muted; font.pixelSize: 10 }
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.SystemStatsService.memoryPercent + "%"
                                     color: Services.SystemStatsService.memoryPercent >= 90
                                         ? Core.Theme.urgent : Core.Theme.foreground
@@ -260,8 +270,9 @@ PanelWindow {
 
                             RowLayout {
                                 spacing: 4
-                                Text { text: "DISK"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { font.family: Core.Theme.fontFamily; text: "DISK"; color: Core.Theme.muted; font.pixelSize: 10 }
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.SystemStatsService.diskPercent + "%"
                                     color: Services.SystemStatsService.diskPercent >= 90
                                         ? Core.Theme.urgent : Core.Theme.foreground
@@ -272,6 +283,7 @@ PanelWindow {
                             Item { Layout.fillWidth: true }
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: "›"
                                 color: Core.Theme.muted
                                 font.pixelSize: 14
@@ -306,6 +318,7 @@ PanelWindow {
                             spacing: 8
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: "NOW PLAYING"
                                 color: Core.Theme.accent
                                 font.pixelSize: 9
@@ -322,6 +335,7 @@ PanelWindow {
                                     spacing: 2
 
                                     Text {
+                                        font.family: Core.Theme.fontFamily
                                         text: Services.MprisService.title || "Unknown"
                                         color: Core.Theme.foreground
                                         font.pixelSize: 13
@@ -331,6 +345,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        font.family: Core.Theme.fontFamily
                                         text: Services.MprisService.artist || "Unknown Artist"
                                         color: Core.Theme.muted
                                         font.pixelSize: 11
@@ -343,6 +358,7 @@ PanelWindow {
                                     spacing: 8
 
                                     Text {
+                                        font.family: Core.Theme.fontFamily
                                         text: "󰒮"
                                         color: Core.Theme.foreground
                                         font.pixelSize: 16
@@ -355,6 +371,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        font.family: Core.Theme.fontFamily
                                         text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
                                         color: Core.Theme.accent
                                         font.pixelSize: 20
@@ -366,6 +383,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        font.family: Core.Theme.fontFamily
                                         text: "󰒭"
                                         color: Core.Theme.foreground
                                         font.pixelSize: 16
@@ -470,6 +488,7 @@ PanelWindow {
                             spacing: 10
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: Services.WeatherService.icon || "🌡"
                                 font.pixelSize: 28
                             }
@@ -479,6 +498,7 @@ PanelWindow {
                                 spacing: 2
 
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.WeatherService.temp
                                     color: Core.Theme.foreground
                                     font.pixelSize: 18
@@ -486,6 +506,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.WeatherService.condition
                                     color: Core.Theme.muted
                                     font.pixelSize: 11
@@ -495,6 +516,7 @@ PanelWindow {
                             }
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: "›"
                                 color: Core.Theme.muted
                                 font.pixelSize: 14
@@ -528,6 +550,7 @@ PanelWindow {
                             spacing: 10
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: {
                                     if (!Services.NetworkService.connected) return "󰤭"
                                     if (Services.NetworkService.type === "ethernet") return "󰈀"
@@ -547,6 +570,7 @@ PanelWindow {
                                 spacing: 2
 
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     text: Services.NetworkService.connected
                                         ? (Services.NetworkService.ssid || Services.NetworkService.type)
                                         : "Disconnected"
@@ -557,6 +581,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    font.family: Core.Theme.fontFamily
                                     visible: Services.TailscaleService.connected
                                     text: Services.TailscaleService.isMullvad
                                         ? "Mullvad VPN active" : "Tailscale connected"
@@ -566,6 +591,7 @@ PanelWindow {
                             }
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: "›"
                                 color: Core.Theme.muted
                                 font.pixelSize: 14
@@ -590,6 +616,7 @@ PanelWindow {
                             spacing: 10
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: {
                                     if (Services.AudioService.muted) return "󰝟"
                                     const v = Services.AudioService.volume
@@ -624,6 +651,7 @@ PanelWindow {
                             }
 
                             Text {
+                                font.family: Core.Theme.fontFamily
                                 text: Services.AudioService.volume + "%"
                                 color: Core.Theme.foreground
                                 font.pixelSize: 12
@@ -651,3 +679,4 @@ PanelWindow {
         }
     }
 }
+

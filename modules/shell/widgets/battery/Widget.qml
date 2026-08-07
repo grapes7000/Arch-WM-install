@@ -24,6 +24,7 @@ Item {
         spacing: 4
 
         Text {
+            font.family: Core.Theme.fontFamily
             text: {
                 const p = Services.PowerService.percent
                 if (Services.PowerService.charging) return "󰂄"
@@ -40,6 +41,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             text: Services.PowerService.percent + "%"
             color: Services.PowerService.percent <= 15 && !Services.PowerService.charging
                 ? Core.Theme.urgent : Core.Theme.foreground
@@ -48,6 +50,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             visible: context.variant !== "compact" && Services.PowerService.timeRemaining !== ""
             text: Services.PowerService.timeRemaining
             color: Core.Theme.muted
@@ -55,3 +58,4 @@ Item {
         }
     }
 }
+

@@ -1,0 +1,12 @@
+OPEN_NETWORK_REPLACES_AUDIO
+controller_output=true
+cli_exit=0
+[
+  "arch-wm-drawer-network"
+]
+.omo/evidence/shell-feature-integration/task-5-drawers-network.png: PNG image data, 3840 x 2400, 8-bit/color RGB, non-interlaced
+
+CLOSE
+controller_output=true
+cli_exit=0
+[]

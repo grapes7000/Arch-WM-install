@@ -1,0 +1,63 @@
+Shell feature integration Todo 1 — failing-first historical baseline
+=====================================================================
+
+Scenario: execute the immutable git HEAD shell config from an isolated archive,
+then query its IPC targets and assert that the required target set is exactly
+{launcher, drawers, dock}. No current worktree files or ~/.config files were
+modified.
+
+HEAD_SHA=a3d9884574f9291cdfe2bd6d96008fd0d084d5b6
+ARCHIVE_COMMAND=git archive HEAD modules/shell | tar -x -C <mktemp-dir>
+TEMP_BASENAME=tmp.ZQkfcdm7uf
+
+PRE_EXISTING_QS_LIST_BEGIN
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 9 minutes, 45 seconds)
+PRE_EXISTING_QS_LIST_END
+
+Historical launch (the extracted HEAD QML was executable and loaded):
+LAUNCH_INVOCATION=qs -p <TEMP_BASENAME>/modules/shell --no-color
+LAUNCH_KILL_VIA_TRAP_INVOCATION=qs -p <TEMP_BASENAME>/modules/shell kill
+LAUNCH_KILL_STATUS=0
+LAUNCH_EXIT_STATUS=0
+LAUNCH_OUTPUT_BEGIN
+  INFO: Launching config: "<TEMP_BASENAME>/modules/shell/shell.qml"
+  INFO: Shell ID: "c88c021268ddd6cc9d332c8612e5e4b3" Path ID "c88c021268ddd6cc9d332c8612e5e4b3"
+  INFO: Saving logs to "/run/user/1000/quickshell/by-id/pft76zzbjt/log.qslog"
+  INFO: Configuration Loaded
+  INFO: Exiting due to IPC request.
+LAUNCH_OUTPUT_END
+
+IPC query (same extracted config):
+IPC_SHOW_INVOCATION=qs -p <TEMP_BASENAME>/modules/shell ipc show
+IPC_SHOW_STATUS=0
+IPC_SHOW_OUTPUT_BEGIN
+
+IPC_SHOW_OUTPUT_END
+
+Failing assertion (the red signal; status is intentionally nonzero):
+TARGET_ASSERTION=exactly {launcher, drawers, dock}
+TARGET_ASSERTION_OUTPUT=expected=['dock', 'drawers', 'launcher'] actual=[]
+TARGET_ASSERTION_STATUS=1
+
+Cleanup and preservation checks:
+CLEANUP_TEMP_GONE=1
+FINAL_QS_LIST_BEGIN
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 9 minutes, 49 seconds)
+FINAL_QS_LIST_END
+PRE_EXISTING_INSTANCE_PRESERVED=1
+
+ULTRAQA_STALE_STATE=PASS unique mktemp basename used; cleanup kill was path-specific to <TEMP_BASENAME>/modules/shell
+ULTRAQA_DIRTY_WORKTREE=PASS git archive HEAD used, so current dirty edits were excluded
+ULTRAQA_MISLEADING_SUCCESS_OUTPUT=PASS ipc show returned status 0 but exact-target assertion returned 1 on empty targets
+ULTRAQA_REPEATED_INTERRUPTION=PASS EXIT/INT/TERM trap installed; cleanup only validated mktemp directory and path-specific qs kill
+ULTRAQA_NOT_APPLICABLE=network/auth/remote-state probes are not applicable to local historical QML endpoint absence

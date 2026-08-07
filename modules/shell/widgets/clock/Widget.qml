@@ -16,12 +16,15 @@ Item {
     implicitWidth: content.implicitWidth
     implicitHeight: content.implicitHeight
 
+    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "calendar", anchorItem: root }) }
+
     ColumnLayout {
         id: content
         anchors.centerIn: parent
         spacing: context.variant === "compact" ? 0 : 4
 
         Text {
+            font.family: Core.Theme.fontFamily
             Layout.alignment: Qt.AlignHCenter
             text: context.variant === "compact"
                 ? Services.TimeService.timeShort
@@ -33,6 +36,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             Layout.alignment: Qt.AlignHCenter
             visible: context.variant !== "compact"
             text: context.variant === "expanded"
@@ -42,3 +46,4 @@ Item {
         }
     }
 }
+

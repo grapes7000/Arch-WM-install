@@ -1,0 +1,8 @@
+Arch WM Install
+profile=desktop theme=y2k run=20260806T034017Z
+
+== 50-hyprland ==
+  already satisfied
+
+Install stages passed. Reboot or launch Hyprland from a TTY.
+exit=0

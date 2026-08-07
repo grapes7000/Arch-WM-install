@@ -1,0 +1,12 @@
+$ command -v wlrctl ydotool dotool xdotool swaymsg wev
+wlrctl: NOT_INSTALLED
+ydotool: NOT_INSTALLED
+dotool: NOT_INSTALLED
+xdotool: NOT_INSTALLED
+swaymsg: NOT_INSTALLED
+wev: NOT_INSTALLED
+$ command -v wtype
+/usr/bin/wtype
+$ wtype -k ESC
+wtype_exit=1
+mouse trigger: unavailable (no pointer automation binary)

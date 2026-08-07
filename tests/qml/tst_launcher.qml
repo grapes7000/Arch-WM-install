@@ -27,5 +27,8 @@ TestCase {
         compare(session.open(screen), false)
         compare(session.visible, false)
     }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 }

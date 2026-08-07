@@ -1,0 +1,40 @@
+FOCUSED QML TEST
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::DrawerBehavior::initTestCase()
+PASS   : qmltestrunner::DrawerBehavior::test_invalid_and_locked_open_are_rejected_without_stale_state()
+PASS   : qmltestrunner::DrawerBehavior::test_open_replaces_active_drawer_and_close_clears_state()
+PASS   : qmltestrunner::DrawerBehavior::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of qmltestrunner *********
+qml_test_exit=0
+
+LAYOUT VALIDATION
+valid: modules/shell/layouts/bar.default.json
+valid: modules/shell/layouts/desktop.default.json
+valid: modules/shell/layouts/lockscreen.default.json
+valid: 11 widget manifests and generated registry
+layout_validation_exit=0
+
+QML LINT
+qmllint_exit=0
+
+CONTROL CENTER PRESERVED
+menu_file_exit=0
+12:    DrawerSurface {}
+14:    MenuPopup {
+20:            menuPopup.toggle()
+162:                                Layout.preferredWidth: menuTrigger.implicitWidth + 8
+166:                                    id: menuTrigger
+178:                                            menuPopup.toggle()
+
+PURE LOC
+modules/shell/surfaces/bar/DrawerController.qml 39
+modules/shell/surfaces/bar/DrawerSurface.qml 90
+modules/shell/surfaces/bar/CalendarDrawer.qml 65
+modules/shell/surfaces/bar/AudioDrawer.qml 58
+modules/shell/surfaces/bar/NetworkDrawer.qml 81
+modules/shell/surfaces/bar/SystemDrawer.qml 41
+modules/shell/surfaces/bar/NotificationsDrawer.qml 34
+modules/shell/surfaces/bar/SessionDrawer.qml 40
+modules/shell/surfaces/bar/WeatherDrawer.qml 20

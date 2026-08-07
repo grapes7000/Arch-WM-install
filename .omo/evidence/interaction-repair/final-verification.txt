@@ -1,0 +1,2 @@
+All direct validation commands exited 0; all final artifacts are non-empty.
+EXIT:0

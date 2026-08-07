@@ -1,0 +1,12 @@
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::ShellControlPlane::initTestCase()
+FAIL!  : qmltestrunner::ShellControlPlane::test_request_requires_capability_and_host_acceptance() file:///home/lakota/Arch-wm-install/modules/shell/core/WidgetContext.qml: Type SurfaceRegistry unavailable
+file:///home/lakota/Arch-wm-install/modules/shell/core/SurfaceRegistry.qml:3:1: module "Quickshell" plugin "quickshell-coreplugin" not found
+
+   Actual   (): 3
+   Expected (): 1
+   Loc: [/home/lakota/Arch-wm-install/tests/qml/tst_shell_control_plane.qml(12)]
+PASS   : qmltestrunner::ShellControlPlane::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 3ms
+********* Finished testing of qmltestrunner *********

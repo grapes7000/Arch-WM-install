@@ -1,0 +1,7 @@
+command: QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_typography.qml -import modules/shell -v1
+exit_status: 1
+result: unavailable in this environment because qmltestrunner does not register the Quickshell core plugin
+
+FAIL!  : qmltestrunner::tst_typography::compile() Type InteractiveShellController unavailable
+  /home/lakota/Arch-wm-install/modules/shell/core/ScreenResolver.qml:4,1: module "Quickshell" plugin "quickshell-coreplugin" not found
+Totals: 0 passed, 1 failed, 0 skipped, 0 blacklisted, 1ms

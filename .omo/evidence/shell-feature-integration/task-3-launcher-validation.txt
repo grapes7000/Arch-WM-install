@@ -1,0 +1,13 @@
+Scenario: final focused launcher validation
+Invocation: qmllint changed QML; Qt6 qmltestrunner session test; validate-layouts.py
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::LauncherBehavior::initTestCase()
+PASS   : qmltestrunner::LauncherBehavior::test_session_open_close_and_lock_denial()
+PASS   : qmltestrunner::LauncherBehavior::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of qmltestrunner *********
+valid: modules/shell/layouts/bar.default.json
+valid: modules/shell/layouts/desktop.default.json
+valid: modules/shell/layouts/lockscreen.default.json
+valid: 11 widget manifests and generated registry

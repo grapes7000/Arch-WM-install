@@ -1,0 +1,49 @@
+{
+  "feature": "quickshell-font",
+  "canonicalQtFamily": "JetBrainsMono Nerd Font",
+  "sourceChanges": [
+    "modules/shell/core/Theme.qml: shared readonly fontFamily token uses the canonical installed Qt family",
+    "tests/qml/tst_typography.qml: focused token and representative Text bindings assert the canonical family",
+    "modules/shell/components/MenuPopup.qml and runtime-repair files: preserved; not modified by this font pass"
+  ],
+  "checks": [
+    {
+      "scenario": "QML syntax for the changed Theme token and typography contract",
+      "invocation": "qmllint modules/shell/core/Theme.qml tests/qml/tst_typography.qml",
+      "exitStatus": 0,
+      "observable": "no diagnostics"
+    },
+    {
+      "scenario": "all shell layouts and widget registry remain valid",
+      "invocation": "python scripts/validate-layouts.py",
+      "exitStatus": 0,
+      "observable": "valid: 3 layouts; valid: 11 widget manifests and generated registry"
+    },
+    {
+      "scenario": "real Qt6/QuickShell representative shell Text.font.family values under an isolated config root",
+      "invocation": "timeout --preserve-status 15s env XDG_CONFIG_HOME=/tmp/quickshell-font-probe.Nkreoj/xdg qs -p /tmp/quickshell-font-probe.Nkreoj/font-probe.qml --no-color",
+      "exitStatus": 143,
+      "observable": "bounded timeout after Qt.quit emitted without a qs receiver; FONT_TOKEN, bar, launcher, drawer, dock, menu-popup, and clock-widget all resolved to JetBrainsMono Nerd Font",
+      "artifact": ".omo/evidence/shell-feature-integration/quickshell-font-harness.log"
+    },
+    {
+      "scenario": "probe process and unrelated QuickShell instance cleanup",
+      "invocation": "pgrep -af -- /tmp/quickshell-font-probe.Nkreoj; qs list --all",
+      "observable": "no probe process remained; only the pre-existing arch-wm shell instance remained",
+      "artifact": ".omo/evidence/shell-feature-integration/quickshell-font-processes.txt"
+    },
+    {
+      "scenario": "focused qmltestrunner availability",
+      "invocation": "QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_typography.qml -import modules/shell -v1",
+      "exitStatus": 1,
+      "observable": "not runnable here because qmltestrunner does not register Quickshell's quickshell-coreplugin; the real qs probe above is the runtime contract check",
+      "artifact": ".omo/evidence/shell-feature-integration/qmltest-typography.txt"
+    }
+  ],
+  "cleanup": {
+    "temporaryHarness": "/tmp/quickshell-font-probe.Nkreoj/font-probe.qml",
+    "temporaryConfigRoot": "/tmp/quickshell-font-probe.Nkreoj",
+    "status": "both temporary harness and config root removed after capture; no probe process remains",
+    "processReceipt": ".omo/evidence/shell-feature-integration/quickshell-font-processes.txt"
+  }
+}

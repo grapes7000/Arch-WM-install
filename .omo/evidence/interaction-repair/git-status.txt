@@ -1,0 +1,7 @@
+ M modules/hyprland/config/.arch-wm-version
+ M modules/hyprland/config/conf/autostart.lua
+ M modules/shell/.arch-wm-version
+ M modules/shell/components/MenuPopup.qml
+ M scripts/vm-smoke-test.sh
+ M tests/test_structure.py
+?? .omo/

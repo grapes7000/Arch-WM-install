@@ -1,0 +1,6 @@
+Scenario: isolated native overlay IPC opens on active monitor and closes without launching an app
+Invocation: temp config qs; qs -p <temp> ipc call launcher open|close; hyprctl layers -j; grim
+true
+BINARY_OBSERVABLE: exactly one arch-wm-launcher layer open
+true
+BINARY_OBSERVABLE: launcher layer removed after close

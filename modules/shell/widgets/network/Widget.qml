@@ -16,12 +16,16 @@ Item {
     implicitWidth: content.implicitWidth
     implicitHeight: content.implicitHeight
 
+<<<<<<< Updated upstream
     MouseArea {
         anchors.fill: parent
         enabled: context.allows("drawer.open")
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: context.request("drawer.open", { kind: "network" })
     }
+=======
+    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "network", anchorItem: root }) }
+>>>>>>> Stashed changes
 
     RowLayout {
         id: content
@@ -29,6 +33,7 @@ Item {
         spacing: 4
 
         Text {
+            font.family: Core.Theme.fontFamily
             text: {
                 if (!Services.NetworkService.connected) return "󰤭"
                 if (Services.NetworkService.type === "ethernet") return "󰈀"
@@ -43,6 +48,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             visible: context.variant !== "compact"
             text: Services.NetworkService.connected
                 ? (Services.NetworkService.ssid || Services.NetworkService.type)
@@ -54,3 +60,4 @@ Item {
         }
     }
 }
+

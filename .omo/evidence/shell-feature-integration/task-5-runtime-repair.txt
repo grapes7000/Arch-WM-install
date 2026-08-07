@@ -1,0 +1,154 @@
+TASK 5 RUNTIME REPAIR
+
+FAILING-FIRST REAL CONFIG ROOT
+SCENARIO: current-source named config fails because BarSurface references a missing LauncherOverlay.
+INVOCATION: XDG_CONFIG_HOME=<temp> qs --no-color -c tempconfig
+BINARY_OBSERVABLE: exit 255 and LauncherOverlay.qml File not found.
+  INFO: Launching config: "/tmp/arch-wm-runtime-fail.XFRNQc/quickshell/tempconfig/shell.qml"
+  INFO: Shell ID: "c2c24b460d8fa17f7cb8e569da66db00" Path ID "c2c24b460d8fa17f7cb8e569da66db00"
+  INFO: Saving logs to "/run/user/1000/quickshell/by-id/bnpa0w2cjt/log.qslog"
+ ERROR: Failed to load configuration
+ ERROR:   caused by @shell.qml[6:5]: Type BarSurface unavailable
+ ERROR:   caused by @surfaces/bar/BarSurface.qml[11:5]: Type LauncherOverlay unavailable
+ ERROR:   caused by @surfaces/bar/LauncherOverlay.qml[-1:-1]: File not found
+
+FOCUSED QML TESTS
+INVOCATION: QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_drawers.qml -import modules/shell
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::DrawerBehavior::initTestCase()
+PASS   : qmltestrunner::DrawerBehavior::test_invalid_and_locked_open_are_rejected_without_stale_state()
+PASS   : qmltestrunner::DrawerBehavior::test_open_replaces_active_drawer_and_close_clears_state()
+PASS   : qmltestrunner::DrawerBehavior::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of qmltestrunner *********
+DRAWERS_TEST_STATUS=0
+INVOCATION: QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_launcher.qml -import modules/shell
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::LauncherBehavior::initTestCase()
+PASS   : qmltestrunner::LauncherBehavior::test_session_open_close_and_lock_denial()
+PASS   : qmltestrunner::LauncherBehavior::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of qmltestrunner *********
+LAUNCHER_TEST_STATUS=0
+
+LAYOUT VALIDATION
+INVOCATION: python scripts/validate-layouts.py
+valid: modules/shell/layouts/bar.default.json
+valid: modules/shell/layouts/desktop.default.json
+valid: modules/shell/layouts/lockscreen.default.json
+valid: 11 widget manifests and generated registry
+LAYOUT_STATUS=0
+
+WHOLE-TREE QMLLINT
+INVOCATION: qmllint -I modules/shell <all modules/shell/*.qml>
+QMLLINT_STATUS=0
+
+REAL NAMED-CONFIG IPC MANUAL QA
+INVOCATION: XDG_CONFIG_HOME=<temp> qs -c runtime_repair; qs -c runtime_repair ipc call drawers open audio; open network; close; control-test toggle
+CONFIG_SHOW_BEGIN
+target launcher
+  function toggle(): bool
+  function close(): bool
+  function open(): bool
+target drawers
+  function close(): bool
+  function open(kind: string): bool
+target control-test
+  function toggle(): bool
+CONFIG_SHOW_END
+AUDIO_OUTPUT=true AUDIO_EXIT=0 DRAWER_COUNT=1 NAMESPACE=["arch-wm-drawer-audio"]
+NETWORK_OUTPUT=true NETWORK_EXIT=0 DRAWER_COUNT=1 NAMESPACE=["arch-wm-drawer-network"]
+CLOSE_OUTPUT=true CLOSE_EXIT=0 DRAWER_COUNT=0
+REOPEN_OUTPUT=true DRAWER_COUNT=1
+MENU_OUTPUT=true MENU_EXIT=0 DRAWER_COUNT=0
+
+ULTRAQA
+MALFORMED_OUTPUT=false EXIT=0 BEFORE=0 AFTER=0
+STALE_STATE_OPEN=true COUNT=1 CLOSE=true COUNT=0
+HUNG_PROCESS_PROBE_EXIT=0 RESPONSIVE=true
+MISLEADING_EXIT_STATUS: invalid IPC exits 0 but semantic result is false; rejection is determined by body, not exit code.
+DIRTY_WORKTREE_BEGIN
+ M modules/shell/components/WidgetHost.qml
+ M modules/shell/core/SurfaceRegistry.qml
+ M modules/shell/core/Theme.qml
+ M modules/shell/core/WidgetContext.qml
+ M modules/shell/core/qmldir
+ M modules/shell/services/qmldir
+ M modules/shell/shell.qml
+ M modules/shell/surfaces/bar/BarSurface.qml
+?? modules/shell/core/InteractiveShellController.qml
+?? modules/shell/core/ScreenResolver.qml
+?? modules/shell/services/LauncherStateService.qml
+?? modules/shell/services/LockStateService.qml
+?? modules/shell/surfaces/bar/AudioDrawer.qml
+?? modules/shell/surfaces/bar/CalendarDrawer.qml
+?? modules/shell/surfaces/bar/DrawerController.qml
+?? modules/shell/surfaces/bar/DrawerSurface.qml
+?? modules/shell/surfaces/bar/LauncherOverlay.qml
+?? modules/shell/surfaces/bar/LauncherSession.qml
+?? modules/shell/surfaces/bar/NetworkDrawer.qml
+?? modules/shell/surfaces/bar/NotificationsDrawer.qml
+?? modules/shell/surfaces/bar/SessionDrawer.qml
+?? modules/shell/surfaces/bar/SystemDrawer.qml
+?? modules/shell/surfaces/bar/WeatherDrawer.qml
+?? modules/shell/surfaces/bar/qmldir
+?? tests/qml/
+DIRTY_WORKTREE_END
+OTHER_ULTRAQA_CLASSES=N/A (no network, rate-limit, paid-service, or flaky-test surface in this task)
+
+SCREENSHOT
+.omo/evidence/shell-feature-integration/task-5-runtime-repair.png: PNG image data, 3840 x 2400, 8-bit/color RGB, non-interlaced
+.omo/evidence/shell-feature-integration/task-5-runtime-repair.png PNG 3840x2400 3840x2400+0+0 8-bit sRGB 1.66269MiB 0.000u 0:00.000
+
+POST-REVIEW LOCK-CLOSE RED-GREEN
+LOCK_CLOSE_RED_OUTPUT=false
+LOCK_CLOSE_RED_EXIT=0
+EXPECTED_OUTPUT=true
+LOCK_CLOSE_GREEN_OUTPUT=true EXIT=0
+AUDIO=true/1 NETWORK=true/1 CLOSE=true/0 REOPEN=true/1 MENU=true/0
+
+FINAL FOCUSED TESTS
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::DrawerBehavior::initTestCase()
+PASS   : qmltestrunner::DrawerBehavior::test_invalid_and_locked_open_are_rejected_without_stale_state()
+PASS   : qmltestrunner::DrawerBehavior::test_open_replaces_active_drawer_and_close_clears_state()
+PASS   : qmltestrunner::DrawerBehavior::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of qmltestrunner *********
+DRAWERS_FINAL_STATUS=0
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::LauncherBehavior::initTestCase()
+PASS   : qmltestrunner::LauncherBehavior::test_session_open_close_and_lock_denial()
+PASS   : qmltestrunner::LauncherBehavior::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of qmltestrunner *********
+LAUNCHER_FINAL_STATUS=0
+
+FINAL LAYOUT VALIDATION
+valid: modules/shell/layouts/bar.default.json
+valid: modules/shell/layouts/desktop.default.json
+valid: modules/shell/layouts/lockscreen.default.json
+valid: 11 widget manifests and generated registry
+LAYOUT_FINAL_STATUS=0
+
+FINAL WHOLE-TREE QMLLINT
+QMLLINT_FINAL_STATUS=0
+
+FINAL LOCK-SURFACE CAPTURE
+SCENARIO: capture current source while the real session is locked.
+OBSERVABLE: no temporary bar, drawer, launcher, or MenuPopup is visible above Hyprlock; only lock time is visible.
+PNG: .omo/evidence/shell-feature-integration/task-5-runtime-repair.png (3840x2400 RGB)
+
+UNOBSTRUCTED CURRENT-SOURCE MENUPOPUP CAPTURE
+SCENARIO: open the preserved MenuPopup in a current-source named QS config and capture its live QQuickItem buffer via grabToImage while Hyprlock prevents a compositor-level view.
+INVOCATION: qs -c runtime_repair_popup ipc call control-capture capture
+BINARY_OBSERVABLE: handler=true; PNG=680x642 RGBA; no bar overlap or clipping.
+ARTIFACT: .omo/evidence/shell-feature-integration/task-5-runtime-repair.png
+
+INDEPENDENT REVIEW GATE
+Initial reviewers returned REVISE for lock leakage and occluded screenshot. Both were fixed.
+Fresh reviewers could not execute: account usage limit reached before inspection.

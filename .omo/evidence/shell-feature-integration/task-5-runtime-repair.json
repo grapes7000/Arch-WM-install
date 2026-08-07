@@ -1,0 +1,120 @@
+{
+  "task": "task-5-runtime-repair",
+  "result": "IMPLEMENTATION_PASS_INDEPENDENT_REVIEW_BLOCKED",
+  "failingFirst": {
+    "scenario": "real named Quickshell config rooted at a temporary XDG_CONFIG_HOME",
+    "invocation": "XDG_CONFIG_HOME=<temp> qs --no-color -c tempconfig",
+    "observable": "exit 255; LauncherOverlay.qml File not found",
+    "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.pre-fix.log"
+  },
+  "validation": [
+    {
+      "scenario": "drawer controller focused QML behavior",
+      "invocation": "QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_drawers.qml -import modules/shell",
+      "observable": "4 passed, 0 failed",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.txt"
+    },
+    {
+      "scenario": "launcher session focused QML behavior",
+      "invocation": "QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_launcher.qml -import modules/shell",
+      "observable": "3 passed, 0 failed",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.txt"
+    },
+    {
+      "scenario": "layout and widget manifests",
+      "invocation": "python scripts/validate-layouts.py",
+      "observable": "3 layouts and 11 manifests valid",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.txt"
+    },
+    {
+      "scenario": "whole shell QML static validation",
+      "invocation": "qmllint -I modules/shell <all modules/shell/*.qml>",
+      "observable": "exit 0",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.txt"
+    }
+  ],
+  "manualQa": {
+    "scenario": "real named Quickshell config; drawer IPC replacement and original MenuPopup control-center trigger harness",
+    "invocation": "qs -c runtime_repair ipc call drawers open audio; open network; close; open audio; qs -c runtime_repair ipc call control-test toggle",
+    "observable": {
+      "audio": {
+        "result": true,
+        "layerCount": 1,
+        "namespace": "arch-wm-drawer-audio"
+      },
+      "network": {
+        "result": true,
+        "layerCount": 1,
+        "namespace": "arch-wm-drawer-network"
+      },
+      "close": {
+        "result": true,
+        "layerCount": 0
+      },
+      "menu": {
+        "result": true,
+        "drawerLayerCount": 0
+      }
+    },
+    "screenshot": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.png",
+    "screenshotObservable": "unobstructed live-rendered MenuPopup buffer captured from the current-source temporary Quickshell config via Qt Quick grabToImage",
+    "screenshotDimensions": "680x642 RGBA"
+  },
+  "ultraQa": {
+    "malformedDrawer": "false body, exit 0, layer count 0->0",
+    "staleState": "audio layer 1 then close clears layer count to 0",
+    "dirtyWorktree": "captured; unrelated Theme and drawer work preserved",
+    "hungProcess": "bounded 5-second IPC show completed with exit 0",
+    "misleadingExitStatus": "invalid IPC exits 0 but false body is treated as semantic rejection",
+    "otherClasses": "N/A: no network, rate-limit, paid-service, or flaky-test surface"
+  },
+  "preservation": {
+    "modifiedByRuntimeRepair": false,
+    "concurrentFontEditsPreserved": true,
+    "currentSha256": "4394d428889105f1253d5d03be2e73a59c72ead78b25b354261e3c7f7571b404",
+    "anonymousGlyph": "󰍜"
+  },
+  "changedPathsStatus": [
+    " M modules/shell/components/WidgetHost.qml",
+    " M modules/shell/core/SurfaceRegistry.qml",
+    " M modules/shell/core/WidgetContext.qml",
+    " M modules/shell/core/qmldir",
+    " M modules/shell/services/qmldir",
+    " M modules/shell/shell.qml",
+    "?? modules/shell/core/InteractiveShellController.qml",
+    "?? modules/shell/core/ScreenResolver.qml",
+    "?? modules/shell/services/LauncherStateService.qml",
+    "?? modules/shell/services/LockStateService.qml",
+    "?? modules/shell/surfaces/bar/LauncherOverlay.qml",
+    "?? modules/shell/surfaces/bar/LauncherSession.qml",
+    "?? tests/qml/tst_launcher.qml"
+  ],
+  "cleanup": {
+    "processStopped": true,
+    "temporaryRootsDeleted": true,
+    "exactProcessCheck": true,
+    "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.cleanup.txt"
+  },
+  "lockSafety": {
+    "scenario": "open preserved MenuPopup in harness then call InteractiveShellController.closeAll",
+    "red": {
+      "result": false,
+      "exit": 0,
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.lock-red.txt"
+    },
+    "green": {
+      "result": true,
+      "exit": 0,
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-runtime-repair.lock-green.txt"
+    }
+  },
+  "visualQa": {
+    "initialReview": "REVISE: lock-close callback missing and prior capture occluded",
+    "fixesApplied": [
+      "registered MenuPopup close callback with InteractiveShellController",
+      "centralized overlay exclusivity",
+      "captured unobstructed current-source MenuPopup buffer"
+    ],
+    "freshIndependentReview": "BLOCKED: both mandatory reviewer agents failed before inspection because the account usage limit was reached"
+  }
+}

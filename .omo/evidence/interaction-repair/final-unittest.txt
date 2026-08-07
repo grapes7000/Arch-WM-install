@@ -1,0 +1,23 @@
+test_manifests_are_unique_and_comment_aware (test_installer_core.ManifestTests.test_manifests_are_unique_and_comment_aware) ... ok
+test_profiles_reference_existing_manifests (test_installer_core.ManifestTests.test_profiles_reference_existing_manifests) ... ok
+test_backup_restore_and_created_path_ownership (test_installer_core.StateTests.test_backup_restore_and_created_path_ownership) ... ok
+test_state_file_is_valid_json (test_installer_core.StateTests.test_state_file_is_valid_json) ... ok
+test_catalog_rejects_incomplete_upstream (test_installer_core.ThemeCatalogTests.test_catalog_rejects_incomplete_upstream) ... ok
+test_pinned_catalog_installs_40_themes_and_preserves_custom_files (test_installer_core.ThemeCatalogTests.test_pinned_catalog_installs_40_themes_and_preserves_custom_files) ... ok
+test_invalid_theme_does_not_replace_active_output (test_installer_core.ThemeTests.test_invalid_theme_does_not_replace_active_output) ... ok
+test_theme_generates_all_consumers_atomically (test_installer_core.ThemeTests.test_theme_generates_all_consumers_atomically) ... ok
+test_clock_supports_all_surfaces (test_structure.StructureTests.test_clock_supports_all_surfaces) ... ok
+test_fileview_text_is_called_as_a_method (test_structure.StructureTests.test_fileview_text_is_called_as_a_method) ... ok
+test_menu_popup_dismisses_from_backdrop_and_escape (test_structure.StructureTests.test_menu_popup_dismisses_from_backdrop_and_escape) ... ok
+test_no_eww_paths_in_managed_modules (test_structure.StructureTests.test_no_eww_paths_in_managed_modules) ... ok
+test_quickshell_autostart_prevents_duplicate_instances (test_structure.StructureTests.test_quickshell_autostart_prevents_duplicate_instances) ... ok
+test_required_docs_exist (test_structure.StructureTests.test_required_docs_exist) ... ok
+test_surface_geometry_is_bounded (test_structure.StructureTests.test_surface_geometry_is_bounded) ... ok
+test_widget_context_is_set_during_object_construction (test_structure.StructureTests.test_widget_context_is_set_during_object_construction) ... ok
+test_widgets_have_safe_default_contexts (test_structure.StructureTests.test_widgets_have_safe_default_contexts) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 2.201s
+
+OK
+EXIT:0

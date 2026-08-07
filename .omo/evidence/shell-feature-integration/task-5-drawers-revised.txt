@@ -1,0 +1,23 @@
+COEXISTENCE SCENARIO
+config=/tmp/arch-wm-drawers.C3NEsi/modules/shell/coexist_shell.qml
+
+OPEN_AUDIO
+output=true cli_exit=0
+
+OPEN_CONTROL_CENTER
+output=true cli_exit=0
+drawer_namespaces=["arch-wm-drawer-audio"]
+drawer_count=1
+.omo/evidence/shell-feature-integration/task-5-drawers-revised.png: PNG image data, 3840 x 2400, 8-bit/color RGB, non-interlaced
+
+INVALID_KIND
+output=false cli_exit=0
+
+REPLACE_NETWORK
+output=true cli_exit=0
+drawer_namespaces_after_replace=["arch-wm-drawer-network"]
+
+CLOSE_BOTH
+true
+true
+drawer_count_after_close=0

@@ -1,0 +1,56 @@
+2026-08-05T21:40:50-07:00
+--- qs list --all preflight ---
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 3 minutes, 5 seconds)
+
+--- hyprctl layers -j prelaunch baseline ---
+{
+"eDP-1": {
+    "levels": {
+
+        "0": [
+                {
+                    "address": "0x559a91d5efe0",
+                    "x": 0,
+                    "y": 0,
+                    "w": 1920,
+                    "h": 1200,
+                    "alpha": 1,
+                    "namespace": "hyprpaper",
+                    "pid": 1359
+                }
+        ],
+        "1": [
+                {
+                    "address": "0x559a9285b660",
+                    "x": 1572,
+                    "y": 68,
+                    "w": 340,
+                    "h": 286,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                }
+        ],
+        "2": [
+                {
+                    "address": "0x559a93a229c0",
+                    "x": 8,
+                    "y": 8,
+                    "w": 1904,
+                    "h": 44,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                }
+        ],
+        "3": [
+]
+    }
+}
+}
+

@@ -1,0 +1,11 @@
+target launcher
+  function toggle(): bool
+  function close(): bool
+  function open(): bool
+target drawers
+  function close(): bool
+  function open(kind: string): bool
+target dock
+  function toggle(): bool
+  function close(): bool
+  function open(): bool

@@ -18,6 +18,7 @@ Item {
             spacing: 16
 
             Text {
+                font.family: Core.Theme.fontFamily
                 text: Services.WeatherService.icon || "🌡"
                 font.pixelSize: 44
                 color: Core.Theme.foreground
@@ -27,6 +28,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 3
 
+<<<<<<< Updated upstream
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
@@ -58,6 +60,19 @@ Item {
 
                 Text {
                     text: Services.WeatherService.condition || "Unavailable"
+=======
+                Text {
+                    font.family: Core.Theme.fontFamily
+                    text: Services.WeatherService.temp
+                    color: Core.Theme.foreground
+                    font.pixelSize: 32
+                    font.bold: true
+                }
+
+                Text {
+                    font.family: Core.Theme.fontFamily
+                    text: Services.WeatherService.condition
+>>>>>>> Stashed changes
                     color: Core.Theme.muted
                     font.pixelSize: 12
                     elide: Text.ElideRight
@@ -88,6 +103,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             visible: !Services.WeatherService.available
             text: "Weather data unavailable"
             color: Core.Theme.muted
@@ -95,3 +111,4 @@ Item {
         }
     }
 }
+

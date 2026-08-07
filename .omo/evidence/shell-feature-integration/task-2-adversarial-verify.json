@@ -1,0 +1,54 @@
+{
+  "verdict": "confirmed",
+  "confidence": "high",
+  "evidencePaths": [
+    ".omo/evidence/shell-feature-integration/task-2-services-baseline.txt",
+    ".omo/evidence/shell-feature-integration/task-2-services-failing-first.txt",
+    ".omo/evidence/shell-feature-integration/task-2-services-tests.txt",
+    ".omo/evidence/shell-feature-integration/task-2-services-layouts.txt",
+    ".omo/evidence/shell-feature-integration/task-2-services-qmllint.txt",
+    ".omo/evidence/shell-feature-integration/task-2-services-manual.txt",
+    "tests/test_shell_services.py",
+    "modules/shell/services/"
+  ],
+  "reproCommands": [
+    "python -m unittest tests.test_shell_services -v",
+    "python -m unittest tests.test_shell_services -v",
+    "python scripts/validate-layouts.py",
+    "find modules/shell -name '*.qml' -print0 | xargs -0 qmllint",
+    "timeout 10 wpctl status -n >/dev/null",
+    "timeout 10 nmcli --terse --fields TYPE,STATE device status | sort | uniq -c | wc -l",
+    "timeout 10 nmcli --terse --fields IN-USE,SIGNAL,SECURITY device wifi list --rescan no | wc -l",
+    "timeout 5 dunstctl history >/dev/null",
+    "timeout 5 dunstctl is-paused >/dev/null",
+    "timeout 5 tailscale status --json 2>/dev/null | jq -r '[(.BackendState == \"Running\"), ((.Self.Online // false) == true)] | map(tostring) | join(\",\")'",
+    "timeout 5 cava -p modules/shell/services/cava.conf 2>/dev/null | awk -F';' 'NF>1 {print NF-1; exit}'"
+  ],
+  "observations": {
+    "baselineRed": "The baseline records the prior three-Process Audio implementation, missing expanded service contracts, and absent dunst/cava packages. The failing-first artifact fails those same missing contracts rather than an unrelated import or syntax error.",
+    "productionParserExecution": "tests/test_shell_services.py extracts named function bodies directly from each production QML source and executes them in Node vm context; it does not duplicate parser logic.",
+    "focusedTests": "Exactly 8 tests passed twice (0.167s and 0.169s).",
+    "layoutValidation": "Three layouts and 11 widget manifests/registry validated.",
+    "qmlLint": "All modules/shell QML linted with exit 0.",
+    "manualQa": "wpctl exited 0; nmcli returned four sanitized type/state classes and 34 cached rows; bounded dunstctl calls timed out with exit 124; sanitized Tailscale booleans were false,false; Cava emitted 24 fields.",
+    "oneProcess": "Audio, Network, SystemStats, Notification, Mpris, Session, Tailscale, and Cava each contain exactly one Process declaration.",
+    "security": "Network connect uses direct nmcli argv with --wait 15 and no sh -c or password logging. Tailscale/Mullvad is display-only. Evidence literal scan found no IPv4 literals, email addresses, or credential assignments.",
+    "slopOverfitReview": "No deletion-only/removal-verification tests or unnecessary production extraction were found. Some tests are structural contract checks, but the malformed/stale-state test executes production parser bodies and the structural assertions directly encode the stated one-Process, package-count, timeout, export, and confirmation criteria. No criterion-blocking maintenance burden or false-confidence finding was found."
+  },
+  "adversarial": {
+    "malformed_input": "pass: production parser bodies reject malformed input and set an error",
+    "stale_state": "pass: seeded stale projections are cleared",
+    "dirty_worktree": "pass: unrelated dirty files were observed and not modified",
+    "hung_or_long_commands": "pass: service watchdogs are bounded; manual commands used foreground timeouts",
+    "misleading_success_output": "pass: parsers require expected shapes and action paths repoll observable state",
+    "flaky_tests": "pass: the exact 8-test suite passed twice",
+    "prompt_injection": "not applicable: no prompt or untrusted instruction-processing surface is in scope",
+    "cancel_resume": "not applicable: no resumable workflow exists in these singleton service contracts",
+    "repeated_interruptions": "not applicable: no interruption trigger was found; watchdog/restart behavior covers bounded process interruption"
+  },
+  "cleanupReceipt": {
+    "verifierOwnedProcessesRemaining": false,
+    "stateMutations": false,
+    "details": "All verifier commands were foreground and timeout-bounded. No Wi-Fi connect/scan, DND/VPN toggle, or session/power action was invoked. No verifier-owned cava, nmcli, dunstctl, or timeout process remained. Live dunstctl processes were traced to a pre-existing Quickshell-owned legacy poller and were not killed."
+  }
+}

@@ -16,12 +16,15 @@ Item {
     implicitWidth: content.implicitWidth
     implicitHeight: content.implicitHeight
 
+    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "audio", anchorItem: root }) }
+
     RowLayout {
         id: content
         anchors.centerIn: parent
         spacing: 4
 
         Text {
+            font.family: Core.Theme.fontFamily
             text: {
                 if (Services.AudioService.muted) return "󰝟"
                 const v = Services.AudioService.volume
@@ -40,6 +43,7 @@ Item {
         }
 
         Text {
+            font.family: Core.Theme.fontFamily
             text: Services.AudioService.volume + "%"
             color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 12 : 14
@@ -47,3 +51,4 @@ Item {
         }
     }
 }
+

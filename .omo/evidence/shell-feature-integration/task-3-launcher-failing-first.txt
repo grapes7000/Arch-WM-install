@@ -1,0 +1,34 @@
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+QWARN  : qmltestrunner::tst_dockmodel::compile() 
+  /home/lakota/Arch-wm-install/tests/qml/tst_dockmodel.qml produced 1 error(s):
+    /home/lakota/Arch-wm-install/tests/qml/tst_dockmodel.qml:11,9: DockModel is not a type
+  Working directory: /home/lakota/Arch-wm-install
+  Import paths:
+    '/home/lakota/Arch-wm-install/modules/shell'
+    '/usr/lib/qt6/bin'
+    'qrc:/qt-project.org/imports'
+    'qrc:/qt/qml'
+    '/usr/lib/qt6/qml'
+  Plugin paths:
+    '.'
+
+FAIL!  : qmltestrunner::tst_dockmodel::compile() DockModel is not a type
+   Loc: [/home/lakota/Arch-wm-install/tests/qml/tst_dockmodel.qml(11)]
+QWARN  : qmltestrunner::tst_launcher::compile() 
+  /home/lakota/Arch-wm-install/tests/qml/tst_launcher.qml produced 1 error(s):
+    /home/lakota/Arch-wm-install/tests/qml/tst_launcher.qml:9,5: LauncherSession is not a type
+  Working directory: /home/lakota/Arch-wm-install
+  Import paths:
+    '/home/lakota/Arch-wm-install/modules/shell'
+    '/usr/lib/qt6/bin'
+    'qrc:/qt-project.org/imports'
+    'qrc:/qt/qml'
+    '/usr/lib/qt6/qml'
+  Plugin paths:
+    '.'
+
+FAIL!  : qmltestrunner::tst_launcher::compile() LauncherSession is not a type
+   Loc: [/home/lakota/Arch-wm-install/tests/qml/tst_launcher.qml(9)]
+Totals: 0 passed, 2 failed, 0 skipped, 0 blacklisted, 5ms
+********* Finished testing of qmltestrunner *********

@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "scenario": "active-monitor dock IPC open/close with named per-screen layer",
+  "harness": {
+    "source": ".omo/evidence/shell-feature-integration/task-4-dock-smoke.qml",
+    "runtimePath": "modules/shell/task-4-dock-smoke.qml",
+    "runtimeTemporary": true,
+    "sha256": "229c834f9abb2f14a254bbe13261bc26f73d8cf7bd174836e5b739ab9d3f0967"
+  },
+  "invocation": "qs -p /home/lakota/Arch-wm-install/modules/shell/task-4-dock-smoke.qml ipc call dock open; hyprctl layers -j; qs -p /home/lakota/Arch-wm-install/modules/shell/task-4-dock-smoke.qml ipc call dock close; hyprctl layers -j",
+  "observables": {
+    "openIpc": true,
+    "closeIpc": true,
+    "openDockLayerCount": 1,
+    "closedMaskedLayerCount": 1,
+    "closedBehavior": "layer remains as the narrow masked hover trigger while dock visuals are absent"
+  },
+  "layers": {
+    "open": {
+      "artifact": "task-4-dock.open-layers.json",
+      "sha256": "eee0754a8df5413bb1774bb6a28712019f184e11344722ccc834f58e38a37308",
+      "snapshot": {
+        "eDP-1": {
+          "levels": {
+            "0": [
+              {
+                "address": "0x559a939823a0",
+                "x": 0,
+                "y": 0,
+                "w": 1920,
+                "h": 1200,
+                "alpha": 1,
+                "namespace": "hyprpaper",
+                "pid": 1359
+              }
+            ],
+            "1": [
+              {
+                "address": "0x559a9285b660",
+                "x": 1576,
+                "y": 56,
+                "w": 340,
+                "h": 274,
+                "alpha": 1,
+                "namespace": "quickshell",
+                "pid": 217390
+              }
+            ],
+            "2": [
+              {
+                "address": "0x559a93a229c0",
+                "x": 4,
+                "y": 4,
+                "w": 1912,
+                "h": 44,
+                "alpha": 1,
+                "namespace": "quickshell",
+                "pid": 217390
+              }
+            ],
+            "3": [
+              {
+                "address": "0x559a928da2f0",
+                "x": 0,
+                "y": 1024,
+                "w": 1920,
+                "h": 176,
+                "alpha": 1,
+                "namespace": "arch-wm-task-dock",
+                "pid": 399557
+              }
+            ]
+          }
+        }
+      }
+    },
+    "closed": {
+      "artifact": "task-4-dock.closed-layers.json",
+      "sha256": "eee0754a8df5413bb1774bb6a28712019f184e11344722ccc834f58e38a37308",
+      "snapshot": {
+        "eDP-1": {
+          "levels": {
+            "0": [
+              {
+                "address": "0x559a939823a0",
+                "x": 0,
+                "y": 0,
+                "w": 1920,
+                "h": 1200,
+                "alpha": 1,
+                "namespace": "hyprpaper",
+                "pid": 1359
+              }
+            ],
+            "1": [
+              {
+                "address": "0x559a9285b660",
+                "x": 1576,
+                "y": 56,
+                "w": 340,
+                "h": 274,
+                "alpha": 1,
+                "namespace": "quickshell",
+                "pid": 217390
+              }
+            ],
+            "2": [
+              {
+                "address": "0x559a93a229c0",
+                "x": 4,
+                "y": 4,
+                "w": 1912,
+                "h": 44,
+                "alpha": 1,
+                "namespace": "quickshell",
+                "pid": 217390
+              }
+            ],
+            "3": [
+              {
+                "address": "0x559a928da2f0",
+                "x": 0,
+                "y": 1024,
+                "w": 1920,
+                "h": 176,
+                "alpha": 1,
+                "namespace": "arch-wm-task-dock",
+                "pid": 399557
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "screenshots": {
+    "open": {
+      "artifact": "task-4-dock.png",
+      "sha256": "a2941eee041a77eb8fdee2ec58f258cc6f057ebefff9ebbe613052f9fe7e6b37"
+    },
+    "closed": {
+      "artifact": "task-4-dock.closed.png",
+      "sha256": "95aba3b29ab9df8368176854cb2f70e3c0e80f92f00b2738d455ab45a6b22f0f"
+    }
+  },
+  "cleanup": {
+    "processStopped": true,
+    "runtimeHarnessRemoved": true,
+    "remainingRuntimeHarnessInstances": 0
+  }
+}

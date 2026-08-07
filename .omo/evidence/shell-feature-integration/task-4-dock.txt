@@ -1,0 +1,18 @@
+SCENARIO: dock behavioral model, QML diagnostics, and layout regression
+INVOCATION: Qt6 qmltestrunner DockModel; qmllint dock/shell; validate-layouts.py
+********* Start testing of qmltestrunner *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 16.1.1 20260430), cachyos unknown
+PASS   : qmltestrunner::DockModel::initTestCase()
+PASS   : qmltestrunner::DockModel::test_filters_and_groups_windows_by_monitor()
+PASS   : qmltestrunner::DockModel::test_malformed_identity_uses_address_and_stale_rows_are_removed()
+PASS   : qmltestrunner::DockModel::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of qmltestrunner *********
+valid: modules/shell/layouts/bar.default.json
+valid: modules/shell/layouts/desktop.default.json
+valid: modules/shell/layouts/lockscreen.default.json
+valid: 11 widget manifests and generated registry
+QML_TEST_EXIT: 0
+QMLLINT_EXIT: 0
+LAYOUT_VALIDATION_EXIT: 0
+TEMP_PROCESS_COUNT:

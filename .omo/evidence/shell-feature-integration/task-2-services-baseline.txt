@@ -1,0 +1,67 @@
+BASELINE service file process counts and contracts
+2026-08-05T21:22:26-07:00
+Audio Process=10:    property int volume: 0
+11:    property bool muted: false
+13:    function parse(contents) {
+26:    function setVolume(percent) {
+32:    function toggleMute() {
+Network Process=10:    property bool connected: false
+11:    property string ssid: ""
+12:    property string type: ""
+13:    property int strength: 0
+14:    property string ipAddress: ""
+15:    property string security: ""
+16:    property string downloadRate: "Idle"
+17:    property string uploadRate: "Idle"
+19:    property real _prevRx: 0
+20:    property real _prevTx: 0
+21:    property bool _hasPrev: false
+23:    function parse(contents) {
+SystemStats Process=10:    property int cpuPercent: 0
+11:    property int memoryPercent: 0
+12:    property int diskPercent: 0
+13:    property string uptime: "--"
+14:    property string error: ""
+16:    function parse(contents) {
+Notification Process=10:    property int count: 0
+11:    property bool dndEnabled: false
+13:    function parse(contents) {
+26:    function dismiss() {
+30:    function toggleDnd() {
+Mpris Process=10:    property string title: ""
+11:    property string artist: ""
+12:    property string status: "Stopped"
+13:    property bool canNext: false
+14:    property bool canPrev: false
+16:    function parse(contents) {
+30:    function playPause() { actionProc.command = ["playerctl", "play-pause"]; actionProc.running = true }
+31:    function next() { actionProc.command = ["playerctl", "next"]; actionProc.running = true }
+32:    function previous() { actionProc.command = ["playerctl", "previous"]; actionProc.running = true }
+Session Process=10:    function lock() { actionProc.command = ["loginctl", "lock-session"]; actionProc.running = true }
+11:    function logout() { actionProc.command = ["hyprctl", "dispatch", "exit"]; actionProc.running = true }
+12:    function suspend() { actionProc.command = ["systemctl", "suspend"]; actionProc.running = true }
+13:    function reboot() { actionProc.command = ["systemctl", "reboot"]; actionProc.running = true }
+14:    function poweroff() { actionProc.command = ["systemctl", "poweroff"]; actionProc.running = true }
+Tailscale Process=10:    property bool running: false
+11:    property bool connected: false
+12:    property string tailnet: ""
+13:    property bool exitNodeActive: false
+14:    property string exitNodeName: ""
+15:    property bool isMullvad: false
+16:    property string mullvadLocation: ""
+17:    property string ipAddress: ""
+18:    property int peerCount: 0
+20:    function parse(contents) {
+BASELINE package manifest
+# Final package names must be verified against current Arch/AUR repositories
+quickshell
+qt6-declarative
+qt6-wayland
+qt6-svg
+qt6-multimedia
+BASELINE available CLIs
+/usr/bin/wpctl
+/usr/bin/nmcli
+/usr/bin/dunstctl
+/usr/bin/tailscale
+/usr/bin/cava

@@ -88,9 +88,6 @@ wallpaper
 nvim
 
 # Optional compatibility targets retained from grapes7000/themes.
-# waybar
-# wofi
-# rofi
 # dunst
 # hyprlock
 # gtk

@@ -1,0 +1,4 @@
+surface=bar output=false cli_exit=0
+surface=desktop output=false cli_exit=0
+surface=lockscreen output=false cli_exit=0
+surface=bar_locked output=false cli_exit=0

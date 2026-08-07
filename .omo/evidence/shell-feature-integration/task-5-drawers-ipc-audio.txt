@@ -1,0 +1,25 @@
+TEMP_CONFIG=/tmp/arch-wm-drawers.C3NEsi/modules/shell
+
+IPC_SHOW
+target dock
+  function open(): bool
+  function toggle(): bool
+  function close(): bool
+target launcher
+  function open(): bool
+  function toggle(): bool
+  function close(): bool
+target drawers
+  function open(kind: string): bool
+  function close(): bool
+
+BASELINE_DRAWER_LAYERS
+[]
+
+OPEN_AUDIO
+true
+cli_exit=0
+[
+  "arch-wm-drawer-audio"
+]
+.omo/evidence/shell-feature-integration/task-5-drawers-audio.png: PNG image data, 3840 x 2400, 8-bit/color RGB, non-interlaced

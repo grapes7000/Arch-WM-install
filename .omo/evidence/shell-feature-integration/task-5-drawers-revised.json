@@ -1,0 +1,58 @@
+{
+  "task": "Todo 5 revised: drawers coexist with the original control center",
+  "result": "pass",
+  "scenarios": [
+    {
+      "name": "drawer state replacement and lock denial",
+      "invocation": "QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_drawers.qml -o -,txt",
+      "observable": "4 passed, 0 failed; invalid and locked opens leave no stale state; audio is replaced by network; close clears state",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-drawers-revised-validation.txt"
+    },
+    {
+      "name": "exclusive live drawer layers",
+      "invocation": "qs -p <temp>/modules/shell ipc call drawers open audio; open network; close",
+      "observable": "controller output true; namespaces arch-wm-drawer-audio -> arch-wm-drawer-network -> none; counts 1 -> 1 -> 0",
+      "artifacts": [
+        ".omo/evidence/shell-feature-integration/task-5-drawers-ipc-audio.txt",
+        ".omo/evidence/shell-feature-integration/task-5-drawers-ipc-network-close.txt",
+        ".omo/evidence/shell-feature-integration/task-5-drawers-layers-audio.json",
+        ".omo/evidence/shell-feature-integration/task-5-drawers-layers-network.json",
+        ".omo/evidence/shell-feature-integration/task-5-drawers-layers-closed.json"
+      ]
+    },
+    {
+      "name": "control-center coexistence",
+      "invocation": "open audio through drawers-revised IPC, then invoke the existing MenuPopup toggle through control-test harness",
+      "observable": "audio drawer count 1; control-center toggle true; drawer count becomes 0; original MenuPopup visibly renders",
+      "artifacts": [
+        ".omo/evidence/shell-feature-integration/task-5-drawers-revised-control.txt",
+        ".omo/evidence/shell-feature-integration/task-5-drawers-revised-control-layers.json",
+        ".omo/evidence/shell-feature-integration/task-5-drawers-revised-control.png"
+      ],
+      "screenshot_sha256": "40e6746940698adb3e57b976ce3d28ded44897df7f0b02e35aef453f5ffd66bc"
+    },
+    {
+      "name": "malformed kind and misleading CLI status",
+      "invocation": "qs -p <temp>/modules/shell/coexist_shell.qml ipc call drawers-revised open malformed",
+      "observable": "controller output false while CLI exit is 0; assertions consume the boolean output, not exit status",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-drawers-revised.txt"
+    },
+    {
+      "name": "registry and QML validation",
+      "invocation": "python scripts/validate-layouts.py; qmllint <changed QML>",
+      "observable": "11 manifests/registry valid; qmllint exit 0",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-drawers-revised-validation.txt"
+    },
+    {
+      "name": "temporary-shell cleanup",
+      "invocation": "qs -p <temp>/modules/shell/coexist_shell.qml kill; delete validated /tmp/arch-wm-drawers.* root",
+      "observable": "temp_removed=true; verified_qs_processes=0",
+      "artifact": ".omo/evidence/shell-feature-integration/task-5-drawers-revised-cleanup.txt"
+    }
+  ],
+  "non_applicable": [
+    "Network credentials were not entered; secret persistence/logging was not exercised.",
+    "No destructive session action was invoked.",
+    "No installed user shell or configuration path was modified."
+  ]
+}

@@ -1,0 +1,14 @@
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 3 minutes, 21 seconds)
+
+Instance 0fh7hozbjt:
+  Process ID: 349164
+  Shell ID: 2fd7183594ca33bc3134f6c51ab9ece7
+  Config path: /home/lakota/Arch-wm-install/modules/shell/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 21:41:05 (running for 0 hours, 0 minutes, 1 seconds)
+

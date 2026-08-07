@@ -1,0 +1,7 @@
+    hl.exec_cmd("command -v qs >/dev/null 2>&1 && qs --no-duplicate --config arch-wm")
+    qs --no-duplicate --config arch-wm
+    shell_instances="$(qs list --all)"
+      printf '%s\n' "$shell_instances" | grep -Fxc "  Config path: $config_path" || true
+hyprland=2026.08.04.3
+shell=2026.08.06.5
+EXIT:0

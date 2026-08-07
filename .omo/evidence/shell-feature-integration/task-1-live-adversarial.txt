@@ -1,0 +1,158 @@
+=== Task 1 live adversarial QA ===
+timestamp=2026-08-05T21:43:20-07:00
+--- dirty_worktree snapshot ---
+ M installer/entry.py
+ M manifests/packages-shell.txt
+ M modules/hyprland/config/.arch-wm-version
+ M modules/hyprland/config/conf/autostart.lua
+ M modules/shell/.arch-wm-version
+ M modules/shell/components/MenuPopup.qml
+ M modules/shell/components/WidgetHost.qml
+ M modules/shell/core/SurfaceRegistry.qml
+ M modules/shell/core/WidgetContext.qml
+ M modules/shell/core/qmldir
+ M modules/shell/qmldir
+ M modules/shell/services/AudioService.qml
+ M modules/shell/services/MprisService.qml
+ M modules/shell/services/NetworkService.qml
+ M modules/shell/services/NotificationService.qml
+ M modules/shell/services/SessionService.qml
+ M modules/shell/services/SystemStatsService.qml
+ M modules/shell/services/TailscaleService.qml
+ M modules/shell/services/qmldir
+ M modules/shell/shell.qml
+ M modules/shell/surfaces/bar/BarSurface.qml
+ M modules/shell/surfaces/desktop/DesktopSurface.qml
+ M scripts/vm-smoke-test.sh
+ M tests/test_structure.py
+?? .omo/
+?? modules/shell/core/InteractiveShellController.qml
+?? modules/shell/core/ScreenResolver.qml
+?? modules/shell/services/CavaService.qml
+?? modules/shell/services/LockStateService.qml
+?? modules/shell/services/cava.conf
+?? modules/theme-engine/bin/theme-studio
+?? modules/theme-engine/bin/theme_components.py
+?? modules/theme-engine/bin/theme_editor.py
+?? modules/theme-engine/bin/theme_effects.py
+?? modules/theme-engine/bin/theme_homepage.py
+?? modules/theme-engine/bin/theme_preview.py
+?? modules/theme-engine/bin/theme_runtime.py
+?? modules/theme-engine/bin/theme_schema.py
+?? modules/theme-engine/bin/theme_starship.py
+?? modules/theme-engine/bin/theme_tui.py
+?? modules/theme-engine/bin/theme_tui_widgets.py
+?? modules/theme-engine/bin/theme_waybar.py
+?? modules/theme-engine/docs/
+?? tests/test_shell_services.py
+?? tst_shell_control_plane.qml
+--- stale_state preflight (qs list --all) ---
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 5 minutes, 36 seconds)
+
+pre_temp_instances=
+--- pre-launch hyprctl layers -j baseline ---
+[{"namespace":"hyprpaper","pid":1359},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":217390}]
+--- launch exact invocation ---
+qs -p modules/shell --no-color
+temp_shell_pid=355381
+temp_instance_ready_attempt=2
+--- temp qs log ---
+  INFO: Launching config: "/home/lakota/Arch-wm-install/modules/shell/shell.qml"
+  INFO: Shell ID: "2fd7183594ca33bc3134f6c51ab9ece7" Path ID "2fd7183594ca33bc3134f6c51ab9ece7"
+  INFO: Saving logs to "/run/user/1000/quickshell/by-id/p7m78szbjt/log.qslog"
+  INFO: Configuration Loaded
+--- qs list --all while temp running ---
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 5 minutes, 37 seconds)
+
+Instance p7m78szbjt:
+  Process ID: 355381
+  Shell ID: 2fd7183594ca33bc3134f6c51ab9ece7
+  Config path: /home/lakota/Arch-wm-install/modules/shell/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 21:43:20 (running for 0 hours, 0 minutes, 1 seconds)
+
+--- exact IPC show invocation ---
+qs -p modules/shell ipc show
+target dock
+  function close(): bool
+  function open(): bool
+  function toggle(): bool
+target launcher
+  function close(): bool
+  function open(): bool
+  function toggle(): bool
+target drawers
+  function close(): bool
+  function open(kind: string): bool
+ipc_show_exit=0
+--- layers immediately before invalid IPC ---
+[{"namespace":"hyprpaper","pid":1359},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":355381},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":355381}]
+--- exact malformed_input invocation ---
+qs -p modules/shell ipc call drawers open invalid
+false
+invalid_ipc_exit=0
+--- layers immediately after invalid IPC ---
+[{"namespace":"hyprpaper","pid":1359},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":355381},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":355381}]
+sorted_namespace_diff_exit=0
+show_rc=0 invalid_rc=0 layer_namespaces_equal=true
+--- second malformed target probe ---
+qs -p modules/shell ipc call drawers open INVALID_KIND
+false
+uppercase_invalid_exit=0
+scenario_commands_complete=true
+
+--- cleanup begin (prior_rc=0) ---
+qs -p modules/shell kill
+Killed p7m78szbjt
+teardown_kill_exit=0
+qs list --all (final)
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 5 minutes, 37 seconds)
+
+Instance p7m78szbjt:
+  Process ID: 355381
+  Shell ID: 2fd7183594ca33bc3134f6c51ab9ece7
+  Config path: /home/lakota/Arch-wm-install/modules/shell/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 21:43:20 (running for 0 hours, 0 minutes, 1 seconds)
+
+hyprctl layers -j (final)
+[{"namespace":"hyprpaper","pid":1359},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":355381},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":355381}]
+final_temp_instances=1
+cleanup_complete=true
+
+--- post-cleanup convergence check ---
+qs list --all polled until no modules/shell instance
+Instance mqn4wqwbjt:
+  Process ID: 217390
+  Shell ID: 3d6823fc8cf0bb965ab3683e2e584db8
+  Config path: /home/lakota/.config/quickshell/arch-wm/shell.qml
+  Display connection: wayland/wayland-1
+  Launch time: 2026-08-05 20:37:44 (running for 1 hours, 5 minutes, 45 seconds)
+
+final_temp_instances=0
+hyprctl layers -j (converged)
+[{"namespace":"hyprpaper","pid":1359},{"namespace":"quickshell","pid":217390},{"namespace":"quickshell","pid":217390}]
+cleanup_receipt=qs_kill_then_poll_no_temp_instance
+
+--- ultraqa trigger reasoning ---
+prompt_injection=not_applicable; no untrusted prompt/content is consumed by terminal IPC or QML path; local source only
+cancel_resume=not_applicable; scenario has no resume/cancel API; EXIT/INT/TERM trap exercised teardown path
+hung_long_commands=not_applicable; startup readiness completed in 2 polls and each IPC returned synchronously; no timeout/hang observed
+flaky_tests=not_applicable; direct live IPC and exact before/after layer captures in one session; no test retry used
+repeated_interruptions=covered; qs kill plus convergence poll yielded zero temporary instances and final layers restored
+dirty_worktree=recorded in task-1-live-adversarial-dirty-worktree.txt; no product files changed by QA

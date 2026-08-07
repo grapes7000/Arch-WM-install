@@ -10,15 +10,41 @@ from typing import Sequence
 from . import runtime
 
 THEME_UPSTREAM_COMMIT = "c609410fbd88ddc2a15c51ab142743c49ae861e0"
+# Theme Studio is installed as `theme`; the previous generator is preserved as
+# `theme-legacy` so every legacy subcommand still passes through unchanged.
+# Plain helper commands below are installed under their own names.
 THEME_COMMANDS = (
+<<<<<<< Updated upstream
     "theme",
     "theme-legacy",
     "theme-studio",
+=======
+>>>>>>> Stashed changes
     "theme-catalog-sync",
     "theme-install",
     "theme-new",
     "theme-menu",
     "wallgen",
+)
+# (source, installed-name) pairs for the two entry points that keep the legacy
+# CLI stable while Theme Studio owns the `theme` command.
+THEME_ENTRY_POINTS = (
+    ("theme-studio", "theme"),
+    ("theme", "theme-legacy"),
+)
+# Python modules installed beside the `theme` entry point so Studio's imports
+# resolve from ~/.local/bin exactly as they do in the development checkout.
+THEME_STUDIO_MODULES = (
+    "theme_runtime.py",
+    "theme_schema.py",
+    "theme_editor.py",
+    "theme_preview.py",
+    "theme_components.py",
+    "theme_tui.py",
+    "theme_tui_widgets.py",
+    "theme_effects.py",
+    "theme_starship.py",
+    "theme_homepage.py",
 )
 
 # Theme Studio is composed of the entrypoint plus sibling Python modules. Keep
@@ -92,7 +118,23 @@ def theme_catalog_valid(ctx: runtime.Context) -> bool:
     return lock.get("commit") == THEME_UPSTREAM_COMMIT and int(lock.get("theme_count", 0)) >= 40
 
 
+def theme_payload_current(ctx: runtime.Context) -> bool:
+    # Content check, not just existence: stale stub payloads on older installs
+    # satisfy is_file() checks but must still trigger a re-apply. The version
+    # marker alone could drift if a payload change ships without a bump, so also
+    # byte-compare the installed `theme` entry point against the source Studio
+    # entry point; any real payload change flips the check to "apply needed".
+    return payload_version_matches(
+        ctx.root / "modules/theme-engine/.arch-wm-version",
+        ctx.config / "theme-engine/.arch-wm-version",
+    ) and payload_version_matches(
+        ctx.root / "modules/theme-engine/bin/theme-studio",
+        ctx.home / ".local/bin/theme",
+    )
+
+
 def theme_check(ctx: runtime.Context) -> bool:
+<<<<<<< Updated upstream
     required_paths = (
         *(ctx.home / ".local/bin" / name for name in THEME_COMMANDS),
         *(ctx.home / ".local/bin" / name for name in THEME_STUDIO_MODULES),
@@ -120,6 +162,21 @@ def theme_check(ctx: runtime.Context) -> bool:
     return all(
         payload_version_matches(source_root / source_name, installed_root / target_name)
         for target_name, source_name in payloads.items()
+=======
+    return theme_payload_current(ctx) and theme_catalog_valid(ctx) and all(
+        path.is_file()
+        for path in (
+            *(ctx.home / ".local/bin" / name for _, name in THEME_ENTRY_POINTS),
+            *(ctx.home / ".local/bin" / name for name in THEME_COMMANDS),
+            *(ctx.home / ".local/bin" / module for module in THEME_STUDIO_MODULES),
+            ctx.home / ".local/bin/term",
+            ctx.home / ".zshrc",
+            ctx.config / "zsh/aliases.zsh",
+            ctx.config / "kitty/kitty.conf",
+            ctx.config / "atuin/config.toml",
+            ctx.config / "theme-engine/generated/theme.json",
+        )
+>>>>>>> Stashed changes
     )
 
 
@@ -127,17 +184,37 @@ def theme_apply(ctx: runtime.Context) -> None:
     assert ctx.state is not None
     theme = ctx.root / "modules/theme-engine"
     terminal = ctx.root / "modules/terminal"
+<<<<<<< Updated upstream
     # Keep the stable Arch-WM generator behind Theme Studio. Theme Studio
     # delegates named-theme application and legacy commands to this binary.
     ctx.install(theme / "bin/theme", ctx.home / ".local/bin/theme-legacy", executable=True)
     ctx.install(theme / "bin/theme-studio", ctx.home / ".local/bin/theme", executable=True)
+=======
+    # Theme Studio owns the `theme` command; the previous generator is kept as
+    # `theme-legacy` so Studio's runtime bridge and all legacy subcommands work.
+    for source_name, installed_name in THEME_ENTRY_POINTS:
+        ctx.install(
+            theme / "bin" / source_name,
+            ctx.home / ".local/bin" / installed_name,
+            executable=True,
+        )
+>>>>>>> Stashed changes
     for name in THEME_COMMANDS:
         if name in {"theme", "theme-legacy", "theme-studio"}:
             continue
         ctx.install(theme / "bin" / name, ctx.home / ".local/bin" / name, executable=True)
+<<<<<<< Updated upstream
     for name in THEME_STUDIO_MODULES:
         ctx.install(theme / "bin" / name, ctx.home / ".local/bin" / name)
+=======
+    for module in THEME_STUDIO_MODULES:
+        ctx.install(theme / "bin" / module, ctx.home / ".local/bin" / module)
+>>>>>>> Stashed changes
     ctx.install(terminal / "bin/term", ctx.home / ".local/bin/term", executable=True)
+    ctx.install(
+        theme / ".arch-wm-version",
+        ctx.config / "theme-engine/.arch-wm-version",
+    )
 
     theme_target = ctx.config / "theme-engine/themes"
     if theme_target.exists():
@@ -195,13 +272,21 @@ def theme_verify(ctx: runtime.Context) -> bool:
     except (OSError, json.JSONDecodeError):
         return False
     return (
-        current.get("name") == ctx.options.theme
+        theme_payload_current(ctx)
+        and current.get("name") == ctx.options.theme
         and theme_catalog_valid(ctx)
         and all(
             path.is_file()
             for path in (
                 ctx.config / "kitty/generated/theme.conf",
                 ctx.config / "theme-engine/generated/starship.toml",
+            )
+        )
+        and all(
+            path.is_file()
+            for path in (
+                *(ctx.home / ".local/bin" / name for _, name in THEME_ENTRY_POINTS),
+                *(ctx.home / ".local/bin" / module for module in THEME_STUDIO_MODULES),
             )
         )
     )
@@ -282,6 +367,12 @@ def doctor_command(ctx: runtime.Context) -> int:
         "Hyprland": ctx.has("Hyprland"),
         "Quickshell": ctx.has("qs"),
         "theme": (ctx.home / ".local/bin/theme").is_file(),
+        "theme studio payload": (
+            theme_payload_current(ctx)
+            and all((ctx.home / ".local/bin" / name).is_file() for _, name in THEME_ENTRY_POINTS)
+            and all((ctx.home / ".local/bin" / module).is_file()
+                    for module in THEME_STUDIO_MODULES)
+        ),
         "full theme catalog": theme_count >= 40 and theme_catalog_valid(ctx),
         "terminal profile": (ctx.config / "kitty/kitty.conf").is_file(),
         "Hyprland payload current": hypr_check(ctx),

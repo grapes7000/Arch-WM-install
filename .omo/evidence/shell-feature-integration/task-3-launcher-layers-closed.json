@@ -1,0 +1,74 @@
+{
+"eDP-1": {
+    "levels": {
+
+        "0": [
+                {
+                    "address": "0x559a91d73a00",
+                    "x": 0,
+                    "y": 0,
+                    "w": 1920,
+                    "h": 1200,
+                    "alpha": 1,
+                    "namespace": "hyprpaper",
+                    "pid": 1359
+                }
+        ],
+        "1": [
+                {
+                    "address": "0x559a9285b660",
+                    "x": 1576,
+                    "y": 56,
+                    "w": 340,
+                    "h": 274,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                },                {
+                    "address": "0x559a91d55560",
+                    "x": 1572,
+                    "y": 72,
+                    "w": 340,
+                    "h": 286,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 395458
+                }
+        ],
+        "2": [
+                {
+                    "address": "0x559a93a229c0",
+                    "x": 4,
+                    "y": 4,
+                    "w": 1912,
+                    "h": 44,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                },                {
+                    "address": "0x559a91d55870",
+                    "x": 8,
+                    "y": 64,
+                    "w": 1904,
+                    "h": 48,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 395458
+                }
+        ],
+        "3": [
+                {
+                    "address": "0x559a93c06460",
+                    "x": 0,
+                    "y": 1008,
+                    "w": 1920,
+                    "h": 192,
+                    "alpha": 1,
+                    "namespace": "arch-wm-task-dock",
+                    "pid": 395458
+                }
+        ]
+    }
+}
+}
+

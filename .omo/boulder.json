@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "active_work_id": "shell-feature-integration-019fd4f3",
+  "works": {
+    "shell-feature-integration-019fd4f3": {
+      "work_id": "shell-feature-integration-019fd4f3",
+      "active_plan": ".omo/plans/shell-feature-integration.md",
+      "plan_name": "shell-feature-integration",
+      "session_ids": ["codex:019fd4f3-b64f-7300-b274-7d6623b4a115"],
+      "status": "active",
+      "worktree_path": null
+    }
+  }
+}

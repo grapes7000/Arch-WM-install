@@ -1,0 +1,6 @@
+  INFO: Launching config: "/home/lakota/Arch-wm-install/tst_shell_control_plane.qml"
+  INFO: Shell ID: "288b228f7f779224ec15c5a4de154a56" Path ID "288b228f7f779224ec15c5a4de154a56"
+  INFO: Saving logs to "/run/user/1000/quickshell/by-id/f9a72izbjt/log.qslog"
+  INFO: Configuration Loaded
+  INFO qml: CONTROL_PLANE_PASS
+EXIT_STATUS=0

@@ -29,7 +29,7 @@
       "variants": ["compact", "standard", "expanded"],
       "lockSafe": true,
       "services": ["time"],
-      "capabilities": []
+      "capabilities": ["drawer.open"]
     },
     {
       "id": "system-stats",
@@ -71,7 +71,7 @@
       "variants": ["compact", "standard"],
       "lockSafe": false,
       "services": ["audio"],
-      "capabilities": ["audio.control"]
+      "capabilities": ["audio.control", "drawer.open"]
     },
     {
       "id": "network",
@@ -92,7 +92,7 @@
       "variants": ["compact", "standard"],
       "lockSafe": false,
       "services": ["notifications"],
-      "capabilities": ["notification.dismiss"]
+      "capabilities": ["notification.dismiss", "drawer.open"]
     },
     {
       "id": "session",
@@ -102,7 +102,7 @@
       "variants": ["compact", "standard"],
       "lockSafe": false,
       "services": ["session"],
-      "capabilities": ["session.lock"]
+      "capabilities": ["session.lock", "drawer.open"]
     },
     {
       "id": "weather",

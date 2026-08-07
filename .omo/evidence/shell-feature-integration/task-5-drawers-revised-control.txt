@@ -1,0 +1,8 @@
+FRESH_CURRENT_SOURCE_COEXISTENCE
+source_mtime=2026-08-05 22:40:51.300380988 -0700
+audio=true exit=0
+audio_count=1
+control=true exit=0
+drawer_count_after_control=0
+capture_mtime=2026-08-05 22:41:28.930580882 -0700
+.omo/evidence/shell-feature-integration/task-5-drawers-revised-control.png: PNG image data, 3840 x 2400, 8-bit/color RGB, non-interlaced

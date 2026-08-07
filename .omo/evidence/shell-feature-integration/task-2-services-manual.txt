@@ -1,0 +1,21 @@
+Todo 2 safe read-only dependency QA (redacted summary)
+
+Scenario: wpctl status -n
+Observable: exit 0. Device names and process metadata are omitted.
+
+Scenario: nmcli --terse --escape yes --fields DEVICE,TYPE,STATE,CONNECTION device status
+Observable: exit 0; sanitized type/state counts were Wi-Fi connected=1, tunnel connected=2, loopback connected=1, and Wi-Fi P2P disconnected=1. Device names, SSIDs, and connection names are omitted.
+
+Scenario: nmcli --terse --escape yes --fields IN-USE,SSID,SIGNAL,SECURITY device wifi list --rescan no
+Observable: exit 0; 54 cached access-point rows included active, signal, and security fields. SSIDs are omitted. No scan or connection mutation occurred.
+
+Scenario: timeout 5 dunstctl history; timeout 5 dunstctl is-paused
+Observable: both commands timed out with exit 124 because no Dunst daemon owned the notification bus. This exercised the bounded unavailable-service path.
+
+Scenario: timeout 5 tailscale status --json
+Observable: pipeline exits 0/0; valid JSON reported backend-running=false and self-online=false. Tailnet, account, host, node, address, and peer identifiers are omitted. No VPN action occurred.
+
+Scenario: timeout 3 cava -p modules/shell/services/cava.conf
+Observable: repeated rows contained exactly 24 semicolon-delimited normalized-source values; exit 124 indicates the intentionally bounded timeout while Cava remained live. No persistent process remained.
+
+Cleanup receipt: all commands were foreground and timeout-bounded; no Wi-Fi, VPN, notification, session, or power state was changed; no QA process remained.

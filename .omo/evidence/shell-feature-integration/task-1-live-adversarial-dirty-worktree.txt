@@ -1,0 +1,45 @@
+ M installer/entry.py
+ M manifests/packages-shell.txt
+ M modules/hyprland/config/.arch-wm-version
+ M modules/hyprland/config/conf/autostart.lua
+ M modules/shell/.arch-wm-version
+ M modules/shell/components/MenuPopup.qml
+ M modules/shell/components/WidgetHost.qml
+ M modules/shell/core/SurfaceRegistry.qml
+ M modules/shell/core/WidgetContext.qml
+ M modules/shell/core/qmldir
+ M modules/shell/qmldir
+ M modules/shell/services/AudioService.qml
+ M modules/shell/services/MprisService.qml
+ M modules/shell/services/NetworkService.qml
+ M modules/shell/services/NotificationService.qml
+ M modules/shell/services/SessionService.qml
+ M modules/shell/services/SystemStatsService.qml
+ M modules/shell/services/TailscaleService.qml
+ M modules/shell/services/qmldir
+ M modules/shell/shell.qml
+ M modules/shell/surfaces/bar/BarSurface.qml
+ M modules/shell/surfaces/desktop/DesktopSurface.qml
+ M scripts/vm-smoke-test.sh
+ M tests/test_structure.py
+?? .omo/
+?? modules/shell/core/InteractiveShellController.qml
+?? modules/shell/core/ScreenResolver.qml
+?? modules/shell/services/CavaService.qml
+?? modules/shell/services/LockStateService.qml
+?? modules/shell/services/cava.conf
+?? modules/theme-engine/bin/theme-studio
+?? modules/theme-engine/bin/theme_components.py
+?? modules/theme-engine/bin/theme_editor.py
+?? modules/theme-engine/bin/theme_effects.py
+?? modules/theme-engine/bin/theme_homepage.py
+?? modules/theme-engine/bin/theme_preview.py
+?? modules/theme-engine/bin/theme_runtime.py
+?? modules/theme-engine/bin/theme_schema.py
+?? modules/theme-engine/bin/theme_starship.py
+?? modules/theme-engine/bin/theme_tui.py
+?? modules/theme-engine/bin/theme_tui_widgets.py
+?? modules/theme-engine/bin/theme_waybar.py
+?? modules/theme-engine/docs/
+?? tests/test_shell_services.py
+?? tst_shell_control_plane.qml

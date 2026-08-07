@@ -1,0 +1,2 @@
+FAIL: expected launcher, drawers, and dock IPC targets; actual output follows:
+

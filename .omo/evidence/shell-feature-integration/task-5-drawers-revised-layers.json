@@ -1,0 +1,65 @@
+{
+"eDP-1": {
+    "levels": {
+
+        "0": [
+                {
+                    "address": "0x559a93bc0040",
+                    "x": 0,
+                    "y": 0,
+                    "w": 1920,
+                    "h": 1200,
+                    "alpha": 1,
+                    "namespace": "hyprpaper",
+                    "pid": 1359
+                }
+        ],
+        "1": [
+                {
+                    "address": "0x559a9285b660",
+                    "x": 1572,
+                    "y": 68,
+                    "w": 340,
+                    "h": 286,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                }
+        ],
+        "2": [
+                {
+                    "address": "0x559a93a229c0",
+                    "x": 8,
+                    "y": 8,
+                    "w": 1904,
+                    "h": 44,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 217390
+                },                {
+                    "address": "0x559a94683740",
+                    "x": 0,
+                    "y": 0,
+                    "w": 1920,
+                    "h": 1200,
+                    "alpha": 1,
+                    "namespace": "quickshell",
+                    "pid": 475026
+                }
+        ],
+        "3": [
+                {
+                    "address": "0x559a92839c40",
+                    "x": 0,
+                    "y": 0,
+                    "w": 1920,
+                    "h": 1200,
+                    "alpha": 1,
+                    "namespace": "arch-wm-drawer-audio",
+                    "pid": 475026
+                }
+        ]
+    }
+}
+}
+

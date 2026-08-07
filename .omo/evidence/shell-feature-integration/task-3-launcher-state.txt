@@ -1,0 +1,4 @@
+Scenario: corrupt retained state falls back empty; keyboard search+Enter runs only /usr/bin/true fixture and atomically replaces state
+Invocation: isolated qs launcher open; wtype fixture name; Enter; json assertion
+true
+BINARY_OBSERVABLE: corrupt state replaced by schema v1 with one unique fixture recent

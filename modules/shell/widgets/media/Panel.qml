@@ -18,6 +18,7 @@ Item {
             spacing: 4
 
             Text {
+                font.family: Core.Theme.fontFamily
                 text: Services.MprisService.title || "Nothing Playing"
                 color: Core.Theme.foreground
                 font.pixelSize: 16
@@ -27,6 +28,7 @@ Item {
             }
 
             Text {
+                font.family: Core.Theme.fontFamily
                 text: Services.MprisService.artist || "--"
                 color: Core.Theme.muted
                 font.pixelSize: 12
@@ -92,6 +94,7 @@ Item {
             spacing: 24
 
             Text {
+                font.family: Core.Theme.fontFamily
                 text: "󰒮"
                 color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted
                 font.pixelSize: 22
@@ -109,6 +112,7 @@ Item {
                 color: Core.Theme.accent
 
                 Text {
+                    font.family: Core.Theme.fontFamily
                     anchors.centerIn: parent
                     text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
                     color: Core.Theme.surface
@@ -123,6 +127,7 @@ Item {
             }
 
             Text {
+                font.family: Core.Theme.fontFamily
                 text: "󰒭"
                 color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted
                 font.pixelSize: 22
@@ -140,6 +145,7 @@ Item {
             spacing: 8
 
             Text {
+                font.family: Core.Theme.fontFamily
                 text: Services.AudioService.muted ? "󰝟" : "󰕾"
                 color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
                 font.pixelSize: 16
@@ -166,6 +172,7 @@ Item {
             }
 
             Text {
+                font.family: Core.Theme.fontFamily
                 text: Services.AudioService.volume + "%"
                 color: Core.Theme.muted
                 font.pixelSize: 11
@@ -173,3 +180,4 @@ Item {
         }
     }
 }
+

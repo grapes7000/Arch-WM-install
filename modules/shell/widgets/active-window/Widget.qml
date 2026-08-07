@@ -16,6 +16,7 @@ Item {
     implicitHeight: title.implicitHeight
 
     Text {
+        font.family: Core.Theme.fontFamily
         id: title
         anchors.fill: parent
         verticalAlignment: Text.AlignVCenter
@@ -27,3 +28,4 @@ Item {
         maximumLineCount: 1
     }
 }
+

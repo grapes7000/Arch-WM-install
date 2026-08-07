@@ -1,0 +1,16 @@
+target launcher
+  function open(): bool
+  function close(): bool
+  function toggle(): bool
+target dock
+  function open(): bool
+  function close(): bool
+  function toggle(): bool
+target drawers
+  function open(kind: string): bool
+  function close(): bool
+false
+INVALID_CALL_EXIT_STATUS=0
+LAYERS_BEFORE=["hyprpaper","quickshell","quickshell","quickshell","quickshell"]
+LAYERS_AFTER=["hyprpaper","quickshell","quickshell","quickshell","quickshell"]
+Killed mga76izbjt
