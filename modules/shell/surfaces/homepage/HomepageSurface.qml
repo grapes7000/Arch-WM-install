@@ -6,6 +6,7 @@ import Quickshell.Io
 import Quickshell.Widgets
 import "../../core" as Core
 import "../../services" as Services
+import "../../widgets/weather" as WeatherWidgets
 
 Scope {
     Variants {
@@ -444,7 +445,7 @@ Scope {
 
                     GlassCard {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 185 : 230
+                        Layout.preferredHeight: root.compact ? 150 : 200
                         ColumnLayout {
                             anchors.fill: parent
                             anchors.margins: 15
@@ -464,7 +465,7 @@ Scope {
 
                     GlassCard {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 120 : 150
+                        Layout.preferredHeight: root.compact ? 90 : 125
                         ColumnLayout {
                             anchors.fill: parent
                             anchors.margins: 14
@@ -495,7 +496,7 @@ Scope {
 
                     GlassCard {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 165 : 205
+                        Layout.preferredHeight: root.compact ? 140 : 180
                         ColumnLayout {
                             anchors.fill: parent
                             anchors.margins: 15
@@ -525,22 +526,74 @@ Scope {
                     GlassCard {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.minimumHeight: 130
+                        Layout.minimumHeight: root.compact ? 200 : 300
+                        Layout.preferredHeight: root.compact ? 260 : 400
+                        clip: true
+
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 7
-                            Text { text: "Weather"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 12 }
+                            anchors.margins: root.compact ? 12 : 15
+                            spacing: root.compact ? 6 : 9
+
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: Services.WeatherService.icon || "󰖐"; color: Core.Theme.foreground; font.pixelSize: 28 }
-                                ColumnLayout {
-                                    Text { text: Services.WeatherService.available ? Services.WeatherService.temp : "--"; color: Core.Theme.foreground; font.pixelSize: 26; font.bold: true }
-                                    Text { text: Services.WeatherService.condition || "Unavailable"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { text: "Weather"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 12 }
+                                Item { Layout.fillWidth: true }
+                                Text {
+                                    visible: Services.WeatherService.available && Services.WeatherService.locationName
+                                    text: Services.WeatherService.locationName
+                                    color: Core.Theme.muted
+                                    font.pixelSize: 9
+                                    elide: Text.ElideRight
                                 }
                             }
-                            Item { Layout.fillHeight: true }
-                            Text { text: Services.TimeService.dateLong; color: Core.Theme.muted; font.pixelSize: 9 }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 10
+                                Text {
+                                    text: Services.WeatherService.icon || "󰖐"
+                                    color: Core.Theme.foreground
+                                    font.pixelSize: root.compact ? 24 : 30
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 1
+                                    Text {
+                                        text: Services.WeatherService.available ? Services.WeatherService.temp : "--"
+                                        color: Core.Theme.foreground
+                                        font.pixelSize: root.compact ? 22 : 28
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: Services.WeatherService.available ? Services.WeatherService.condition : "Unavailable"
+                                        color: Core.Theme.muted
+                                        font.pixelSize: 10
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                                ColumnLayout {
+                                    spacing: 1
+                                    Text {
+                                        text: "H " + (Services.WeatherService.available ? Services.WeatherService.high : "--")
+                                        color: Core.Theme.foreground
+                                        font.pixelSize: 10
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: "L " + (Services.WeatherService.available ? Services.WeatherService.low : "--")
+                                        color: Core.Theme.muted
+                                        font.pixelSize: 10
+                                    }
+                                }
+                            }
+
+                            WeatherWidgets.ForecastSection {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                compact: root.compact
+                                expand: true
+                            }
                         }
                     }
                 }
