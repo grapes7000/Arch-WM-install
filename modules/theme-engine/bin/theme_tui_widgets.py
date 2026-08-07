@@ -19,6 +19,10 @@ class Palette:
     panel: int = 0
 
 
+_SWATCH_PAIRS: dict[int, int] = {}
+_NEXT_SWATCH_PAIR = 16
+
+
 def init_palette() -> Palette:
     if not curses.has_colors():
         return Palette()
@@ -127,6 +131,63 @@ def slider_text(value: float, minimum: float, maximum: float, width: int = 16,
     if precision is None:
         precision = 2 if isinstance(value, float) and not float(value).is_integer() else 0
     return f"{bar} {value:.{precision}f}"
+
+
+def _xterm256_from_hex(value: str) -> int | None:
+    """Approximate a #RRGGBB value with the nearest xterm-256 color."""
+    if not isinstance(value, str) or len(value) != 7 or not value.startswith("#"):
+        return None
+    try:
+        red = int(value[1:3], 16)
+        green = int(value[3:5], 16)
+        blue = int(value[5:7], 16)
+    except ValueError:
+        return None
+
+    if max(red, green, blue) - min(red, green, blue) < 10:
+        if red < 8:
+            return 16
+        if red > 248:
+            return 231
+        return 232 + max(0, min(23, round((red - 8) / 10)))
+
+    def cube(value8: int) -> int:
+        return max(0, min(5, round(value8 / 255 * 5)))
+
+    return 16 + 36 * cube(red) + 6 * cube(green) + cube(blue)
+
+
+def color_swatch_attr(value: str) -> int:
+    """Return a curses attribute that renders close to the requested hex color."""
+    global _NEXT_SWATCH_PAIR
+    if not curses.has_colors() or getattr(curses, "COLORS", 0) < 256:
+        return 0
+    color = _xterm256_from_hex(value)
+    if color is None:
+        return 0
+    if color in _SWATCH_PAIRS:
+        return curses.color_pair(_SWATCH_PAIRS[color])
+
+    pair_limit = max(0, getattr(curses, "COLOR_PAIRS", 0) - 1)
+    if _NEXT_SWATCH_PAIR > pair_limit:
+        return 0
+    pair = _NEXT_SWATCH_PAIR
+    _NEXT_SWATCH_PAIR += 1
+    try:
+        curses.init_pair(pair, color, -1)
+    except curses.error:
+        return 0
+    _SWATCH_PAIRS[color] = pair
+    return curses.color_pair(pair)
+
+
+def draw_color_swatch(win: Any, y: int, x: int, value: str, width: int = 3) -> None:
+    """Draw a compact terminal color chip with a graceful monochrome fallback."""
+    attr = color_swatch_attr(value)
+    if attr:
+        safe_addstr(win, y, x, "█" * max(1, width), attr, width)
+    else:
+        safe_addstr(win, y, x, "■" * max(1, width), 0, width)
 
 
 def role_swatch(value: str, width: int = 10) -> str:
