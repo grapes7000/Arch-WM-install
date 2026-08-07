@@ -8,26 +8,30 @@ Rectangle {
     property bool interactive: false
     property alias hoverHandler: hover
 
-    radius: Core.Theme.radius + 4
+    radius: Core.Theme.homepageCardRadius
     color: {
         const token = active ? Core.Theme.surfaceElevated : Core.Theme.surfaceRaised
         const c = Qt.color(token)
-        const alpha = active ? Math.min(1.0, Core.Theme.surfaceOpacity + 0.03) : Core.Theme.surfaceOpacity
+        const alpha = active
+            ? Math.min(1.0, Core.Theme.homepageCardOpacity + 0.03)
+            : Core.Theme.homepageCardOpacity
         return Qt.rgba(c.r, c.g, c.b, alpha)
     }
     border.width: active ? Math.max(2, Core.Theme.borderWidth) : Core.Theme.borderWidth
-    border.color: active ? Core.Theme.accent : (Core.Theme.roles.border_subtle || Core.Theme.accent2)
+    border.color: active
+        ? Core.Theme.accent
+        : (Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor)
     scale: interactive && hover.hovered ? 1.015 : 1.0
 
     Behavior on scale {
         NumberAnimation {
-            duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale)
+            duration: Math.round(Core.Theme.homepageTransitionMs * Core.Theme.motionScale)
             easing.type: Core.Theme.animationProfile === "snappy" ? Easing.OutQuad : Easing.OutCubic
         }
     }
 
     Behavior on border.color {
-        ColorAnimation { duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale) }
+        ColorAnimation { duration: Math.round(Core.Theme.homepageTransitionMs * Core.Theme.motionScale) }
     }
 
     HoverHandler {
@@ -45,7 +49,7 @@ Rectangle {
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, hover.hovered ? 0.12 : 0.06)
         Behavior on opacity {
-            NumberAnimation { duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale) }
+            NumberAnimation { duration: Math.round(Core.Theme.homepageTransitionMs * Core.Theme.motionScale) }
         }
     }
 }
