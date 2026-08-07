@@ -16,8 +16,9 @@ Rectangle {
     property bool scaleEnabled: true
     property real growScale: 1.02
     property real pressScale: 0.97
-    // Slow, eased target for hover/active state changes.
-    readonly property real stateScale: root.scaleEnabled
+    // Slow, eased target for hover/active state changes. This must be writable
+    // because QML Behavior animates the property's intermediate values.
+    property real stateScale: root.scaleEnabled
         ? (root.active ? pressScale : (hover.hovered ? growScale : 1.0))
         : 1.0
     // Fast, un-eased press/release pop, driven directly off the tap so it
