@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
+import "../../components" as Components
 import "../../services" as Services
 
 Item {
@@ -13,11 +14,19 @@ Item {
         allows: function() { return false }
     })
 
-    implicitWidth: context.variant === "compact" ? compactText.implicitWidth : 280
-    implicitHeight: context.variant === "compact" ? compactText.implicitHeight
+    implicitWidth: context.variant === "compact"
+        ? pill.horizontalPadding * 2 + compactText.implicitWidth : 280
+    implicitHeight: context.variant === "compact"
+        ? pill.verticalPadding * 2 + compactText.implicitHeight
         : context.variant === "standard" ? 92 : 170
 
-    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "system", anchorItem: root }) }
+    Components.BarPill {
+        id: pill
+        anchors.fill: parent
+        radius: context.variant === "compact" ? height / 2 : Core.Theme.radius
+        clickable: context.allows("drawer.open")
+        onClicked: context.request("drawer.open", { kind: "system", anchorItem: root })
+    }
 
     Text {
         font.family: Core.Theme.fontFamily

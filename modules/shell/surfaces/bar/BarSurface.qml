@@ -171,8 +171,17 @@ Scope {
                             }
 
                             Item {
-                                Layout.preferredWidth: menuTrigger.implicitWidth + 8
+                                Layout.preferredWidth: menuTrigger.implicitWidth + 20
                                 Layout.fillHeight: true
+
+                                BarPill {
+                                    anchors.fill: parent
+                                    onClicked: {
+                                        if (menuPopup.menuOpen
+                                                || Core.InteractiveShellController.prepareMenuOpen())
+                                            menuPopup.toggle()
+                                    }
+                                }
 
                                 Text {
                                     font.family: Core.Theme.fontFamily
@@ -182,16 +191,6 @@ Scope {
                                     color: menuPopup.menuOpen
                                         ? Core.Theme.accent : Core.Theme.foreground
                                     font.pixelSize: 16
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
-                                            if (menuPopup.menuOpen
-                                                    || Core.InteractiveShellController.prepareMenuOpen())
-                                                menuPopup.toggle()
-                                        }
-                                    }
                                 }
                             }
 

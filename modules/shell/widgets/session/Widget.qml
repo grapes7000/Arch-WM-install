@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
+import "../../components" as Components
 import "../../services" as Services
 
 Item {
@@ -13,10 +14,16 @@ Item {
         allows: function() { return false }
     })
 
-    implicitWidth: content.implicitWidth
-    implicitHeight: content.implicitHeight
+    implicitWidth: pill.horizontalPadding * 2 + content.implicitWidth
+    implicitHeight: pill.verticalPadding * 2 + content.implicitHeight
 
-    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "session", anchorItem: root }) }
+    Components.BarPill {
+        id: pill
+        z: 10
+        anchors.fill: parent
+        clickable: context.allows("drawer.open")
+        onClicked: context.request("drawer.open", { kind: "session", anchorItem: root })
+    }
 
     RowLayout {
         id: content

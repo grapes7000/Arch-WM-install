@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
+import "../../components" as Components
 import "../../services" as Services
 
 Item {
@@ -13,10 +14,16 @@ Item {
         allows: function() { return false }
     })
 
-    implicitWidth: content.implicitWidth
-    implicitHeight: content.implicitHeight
+    implicitWidth: pill.horizontalPadding * 2 + content.implicitWidth
+    implicitHeight: pill.verticalPadding * 2 + content.implicitHeight
 
     visible: Services.PowerService.available
+
+    Components.BarPill {
+        id: pill
+        anchors.fill: parent
+        clickable: false
+    }
 
     RowLayout {
         id: content
