@@ -61,89 +61,209 @@ SPACING_PRESETS = {
         "components.windows.gaps_in": 3,
         "components.windows.gaps_out": 6,
         "components.notifications.padding": 8,
+        "components.homepage.bar_outer_margin": 6,
+        "components.homepage.bar_padding": 6,
+        "components.homepage.drawer_padding": 10,
     },
     "cozy": {
         "style.gaps": 10,
         "components.windows.gaps_in": 5,
         "components.windows.gaps_out": 10,
         "components.notifications.padding": 12,
+        "components.homepage.bar_outer_margin": 8,
+        "components.homepage.bar_padding": 8,
+        "components.homepage.drawer_padding": 16,
     },
     "airy": {
         "style.gaps": 18,
         "components.windows.gaps_in": 9,
         "components.windows.gaps_out": 18,
         "components.notifications.padding": 18,
+        "components.homepage.bar_outer_margin": 14,
+        "components.homepage.bar_padding": 10,
+        "components.homepage.drawer_padding": 22,
     },
 }
 
 DENSITY_PRESETS = {
-    "compact": {"components.notifications.width": 300},
-    "comfortable": {"components.notifications.width": 340},
-    "spacious": {"components.notifications.width": 400},
+    "compact": {
+        "components.notifications.width": 300,
+        "components.homepage.bar_height": 40,
+        "components.homepage.bar_widget_spacing": 4,
+        "components.homepage.drawer_width": 360,
+    },
+    "comfortable": {
+        "components.notifications.width": 340,
+        "components.homepage.bar_height": 48,
+        "components.homepage.bar_widget_spacing": 7,
+        "components.homepage.drawer_width": 420,
+    },
+    "spacious": {
+        "components.notifications.width": 400,
+        "components.homepage.bar_height": 56,
+        "components.homepage.bar_widget_spacing": 10,
+        "components.homepage.drawer_width": 500,
+    },
 }
 
 SHAPE_PRESETS = {
-    "sharp": {"components.windows.corner_radius": 0, "components.windows.rounding_power": 2.0},
-    "soft": {"components.windows.corner_radius": 10, "components.windows.rounding_power": 2.0},
-    "rounded": {"components.windows.corner_radius": 16, "components.windows.rounding_power": 2.5},
-    "pillowy": {"components.windows.corner_radius": 24, "components.windows.rounding_power": 3.0},
-    "retro_box": {"components.windows.corner_radius": 2, "components.windows.rounding_power": 2.0,
-                  "components.windows.border_width": 2},
+    "sharp": {
+        "components.windows.corner_radius": 0,
+        "components.windows.rounding_power": 2.0,
+        "components.homepage.bar_radius": 0,
+        "components.homepage.drawer_radius": 0,
+        "components.homepage.card_radius": 2,
+    },
+    "soft": {
+        "components.windows.corner_radius": 10,
+        "components.windows.rounding_power": 2.0,
+        "components.homepage.bar_radius": 10,
+        "components.homepage.drawer_radius": 12,
+        "components.homepage.card_radius": 14,
+    },
+    "rounded": {
+        "components.windows.corner_radius": 16,
+        "components.windows.rounding_power": 2.5,
+        "components.homepage.bar_radius": 14,
+        "components.homepage.drawer_radius": 16,
+        "components.homepage.card_radius": 18,
+    },
+    "pillowy": {
+        "components.windows.corner_radius": 24,
+        "components.windows.rounding_power": 3.0,
+        "components.homepage.bar_radius": 20,
+        "components.homepage.drawer_radius": 22,
+        "components.homepage.card_radius": 24,
+    },
+    "retro_box": {
+        "components.windows.corner_radius": 2,
+        "components.windows.rounding_power": 2.0,
+        "components.windows.border_width": 2,
+        "components.homepage.bar_radius": 2,
+        "components.homepage.drawer_radius": 2,
+        "components.homepage.card_radius": 2,
+    },
 }
 
 TEXTURE_PRESETS = {
-    "clear": {"components.windows.blur.enabled": False, "components.windows.active_opacity": 1.0,
-              "components.windows.inactive_opacity": 1.0},
-    "frosted": {"components.windows.blur.enabled": True, "components.windows.blur.size": 8,
-                "components.windows.blur.passes": 3, "components.windows.active_opacity": 0.96,
-                "components.windows.inactive_opacity": 0.90},
-    "haze": {"components.windows.blur.enabled": True, "components.windows.blur.size": 12,
-             "components.windows.blur.passes": 4, "components.windows.blur.noise": 0.02,
-             "components.windows.active_opacity": 0.91},
-    "glaze": {"components.windows.blur.enabled": True, "components.windows.blur.size": 6,
-              "components.windows.blur.passes": 2, "components.windows.blur.brightness": 1.05,
-              "components.windows.active_opacity": 0.97},
-    "bloom": {"components.windows.blur.enabled": True, "components.windows.blur.size": 14,
-              "components.windows.blur.passes": 5, "components.windows.blur.vibrancy": 0.35,
-              "components.windows.active_opacity": 0.88},
+    "clear": {
+        "components.windows.blur.enabled": False,
+        "components.windows.active_opacity": 1.0,
+        "components.windows.inactive_opacity": 1.0,
+        "components.homepage.bar_opacity": 1.0,
+        "components.homepage.drawer_opacity": 1.0,
+        "components.homepage.card_opacity": 0.98,
+    },
+    "frosted": {
+        "components.windows.blur.enabled": True,
+        "components.windows.blur.size": 8,
+        "components.windows.blur.passes": 3,
+        "components.windows.active_opacity": 0.96,
+        "components.windows.inactive_opacity": 0.90,
+        "components.homepage.bar_opacity": 0.94,
+        "components.homepage.drawer_opacity": 0.95,
+        "components.homepage.card_opacity": 0.92,
+    },
+    "haze": {
+        "components.windows.blur.enabled": True,
+        "components.windows.blur.size": 12,
+        "components.windows.blur.passes": 4,
+        "components.windows.blur.noise": 0.02,
+        "components.windows.active_opacity": 0.91,
+        "components.homepage.bar_opacity": 0.88,
+        "components.homepage.drawer_opacity": 0.90,
+        "components.homepage.card_opacity": 0.88,
+    },
+    "glaze": {
+        "components.windows.blur.enabled": True,
+        "components.windows.blur.size": 6,
+        "components.windows.blur.passes": 2,
+        "components.windows.blur.brightness": 1.05,
+        "components.windows.active_opacity": 0.97,
+        "components.homepage.bar_opacity": 0.91,
+        "components.homepage.drawer_opacity": 0.93,
+        "components.homepage.card_opacity": 0.90,
+    },
+    "bloom": {
+        "components.windows.blur.enabled": True,
+        "components.windows.blur.size": 14,
+        "components.windows.blur.passes": 5,
+        "components.windows.blur.vibrancy": 0.35,
+        "components.windows.active_opacity": 0.88,
+        "components.homepage.bar_opacity": 0.86,
+        "components.homepage.drawer_opacity": 0.88,
+        "components.homepage.card_opacity": 0.86,
+    },
 }
 
 BORDER_PRESETS = {
-    "minimal": {"components.windows.border_width": 1,
-                "components.windows.active_border.style": "solid",
-                "components.windows.inactive_border.opacity": 0.35},
-    "defined": {"components.windows.border_width": 2,
-                "components.windows.active_border.style": "gradient",
-                "components.windows.inactive_border.opacity": 0.66},
-    "gradient": {"components.windows.border_width": 2,
-                 "components.windows.active_border.style": "gradient",
-                 "components.windows.active_border.angle": 45,
-                 "components.windows.inactive_border.opacity": 0.55},
-    "glow": {"components.windows.border_width": 3,
-             "components.windows.active_border.style": "gradient",
-             "components.windows.active_border.angle": 45,
-             "components.windows.inactive_border.opacity": 0.45,
-             "components.windows.shadow.enabled": True,
-             "components.windows.shadow.opacity": 0.55},
+    "minimal": {
+        "components.windows.border_width": 1,
+        "components.windows.active_border.style": "solid",
+        "components.windows.inactive_border.opacity": 0.35,
+        "components.windows.glow": 0,
+        "components.homepage.bar_outline_width": 1,
+        "components.homepage.bar_outline_role": "border_subtle",
+        "components.homepage.bar_outline_opacity": 0.55,
+        "components.homepage.drawer_outline_width": 1,
+        "components.homepage.drawer_outline_role": "border_subtle",
+        "components.homepage.drawer_outline_opacity": 0.55,
+    },
+    "defined": {
+        "components.windows.border_width": 2,
+        "components.windows.active_border.style": "gradient",
+        "components.windows.inactive_border.opacity": 0.66,
+        "components.windows.glow": 0,
+        "components.homepage.bar_outline_width": 1,
+        "components.homepage.bar_outline_role": "border_normal",
+        "components.homepage.bar_outline_opacity": 0.78,
+        "components.homepage.drawer_outline_width": 1,
+        "components.homepage.drawer_outline_role": "border_normal",
+        "components.homepage.drawer_outline_opacity": 0.78,
+    },
+    "gradient": {
+        "components.windows.border_width": 2,
+        "components.windows.active_border.style": "gradient",
+        "components.windows.active_border.angle": 45,
+        "components.windows.inactive_border.opacity": 0.55,
+        "components.windows.glow": 0,
+        "components.homepage.bar_outline_width": 1,
+        "components.homepage.bar_outline_role": "border_subtle",
+        "components.homepage.bar_outline_opacity": 0.72,
+        "components.homepage.drawer_outline_width": 1,
+        "components.homepage.drawer_outline_role": "border_subtle",
+        "components.homepage.drawer_outline_opacity": 0.72,
+    },
+    "glow": {
+        "components.windows.border_width": 2,
+        "components.windows.active_border.style": "gradient",
+        "components.windows.active_border.angle": 45,
+        "components.windows.inactive_border.opacity": 0.42,
+        "components.windows.glow": 14,
+        "components.windows.glow_opacity": 0.34,
+        "components.windows.glow_role": "focus",
+        "components.windows.glow_render_power": 2,
+        "components.windows.glow_inactive_opacity": 0.0,
+        "components.windows.shadow.enabled": True,
+        "components.windows.shadow.opacity": 0.35,
+        "components.homepage.bar_outline_width": 1,
+        "components.homepage.bar_outline_role": "border_strong",
+        "components.homepage.bar_outline_opacity": 0.70,
+        "components.homepage.drawer_outline_width": 1,
+        "components.homepage.drawer_outline_role": "border_strong",
+        "components.homepage.drawer_outline_opacity": 0.70,
+    },
 }
 
 WINDOW_PRESETS = {
-    "clean_flat": {"shape": "sharp", "texture": "clear", "border": "minimal",
-                   "shadow": "off"},
-    "soft_glass": {"shape": "soft", "texture": "frosted", "border": "defined",
-                   "shadow": "soft"},
-    "frosted": {"shape": "rounded", "texture": "haze", "border": "minimal",
-                "shadow": "soft"},
-    "sharp_technical": {"shape": "sharp", "texture": "clear", "border": "gradient",
-                        "shadow": "defined"},
-    "retro_box": {"shape": "retro_box", "texture": "clear", "border": "defined",
-                  "shadow": "defined"},
-    "neon_edge": {"shape": "soft", "texture": "glaze", "border": "glow",
-                  "shadow": "glow"},
-    "borderless": {"shape": "soft", "texture": "clear", "border": "minimal",
-                   "shadow": "off", "border_width": 0},
-    "minimal_dark": {"shape": "sharp", "texture": "clear", "border": "minimal",
-                     "shadow": "soft"},
+    "clean_flat": {"shape": "sharp", "texture": "clear", "border": "minimal", "shadow": "off"},
+    "soft_glass": {"shape": "soft", "texture": "frosted", "border": "defined", "shadow": "soft"},
+    "frosted": {"shape": "rounded", "texture": "haze", "border": "minimal", "shadow": "soft"},
+    "sharp_technical": {"shape": "sharp", "texture": "clear", "border": "gradient", "shadow": "defined"},
+    "retro_box": {"shape": "retro_box", "texture": "clear", "border": "defined", "shadow": "defined"},
+    "neon_edge": {"shape": "soft", "texture": "glaze", "border": "glow", "shadow": "glow"},
+    "borderless": {"shape": "soft", "texture": "clear", "border": "minimal", "shadow": "off", "border_width": 0},
+    "minimal_dark": {"shape": "sharp", "texture": "clear", "border": "minimal", "shadow": "soft"},
 }
 
 ANIMATION_PRESETS = ("none", "subtle", "smooth", "snappy", "bouncy", "dramatic", "glitch")
@@ -158,21 +278,28 @@ BASE_COMPONENTS: dict[str, Any] = {
         "active_opacity": 1.0,
         "inactive_opacity": 0.92,
         "inactive_dim": 0.08,
-        "blur": {"enabled": True, "size": 8, "passes": 3, "noise": 0.0117,
-                 "contrast": 0.8916, "brightness": 0.8172, "vibrancy": 0.1696},
-        "shadow": {"enabled": True, "radius": 20, "render_power": 3,
-                   "offset": "0 0", "color": "shadow", "opacity": 0.40},
-        "active_border": {"style": "gradient", "color": "focus", "color_2": "accent2",
-                          "angle": 45, "opacity": 1.0},
+        "blur": {
+            "enabled": True, "size": 8, "passes": 3, "noise": 0.0117,
+            "contrast": 0.8916, "brightness": 0.8172, "vibrancy": 0.1696,
+        },
+        "shadow": {
+            "enabled": True, "radius": 20, "render_power": 3,
+            "offset": "0 0", "color": "shadow", "opacity": 0.40,
+        },
+        "active_border": {
+            "style": "gradient", "color": "focus", "color_2": "accent2",
+            "angle": 45, "opacity": 1.0,
+        },
         "inactive_border": {"color": "border_normal", "opacity": 0.66},
-        "group_border": {"active": "accent", "inactive": "surface_1",
-                         "locked": "warning", "text": "on_accent"},
-    },
-    "layout": {
-        "engine": "dwindle",
-        "smart_split": False,
-        "smart_resizing": True,
-        "no_gaps_when_only": False,
+        "group_border": {
+            "active": "accent", "inactive": "surface_1",
+            "locked": "warning", "text": "on_accent",
+        },
+        "glow": 0,
+        "glow_opacity": 0.30,
+        "glow_role": "focus",
+        "glow_render_power": 2,
+        "glow_inactive_opacity": 0.0,
     },
     "notifications": {
         "width": 340, "origin": "top-right", "offset": "12x12", "padding": 12,
@@ -194,9 +321,42 @@ BASE_COMPONENTS: dict[str, Any] = {
         "outline_role": "accent", "text_role": "text", "show_avatar": False,
     },
     "homepage": {
-        "enabled": False, "alignment": "left", "card_radius": 16,
-        "card_opacity": 0.82, "show_weather": True, "show_system": True,
-        "show_shortcuts": True, "density": "comfortable",
+        "enabled": False,
+        "alignment": "left",
+        "card_radius": 16,
+        "card_opacity": 0.92,
+        "show_weather": True,
+        "show_system": True,
+        "show_shortcuts": True,
+        "density": "comfortable",
+        "bar_position": "top",
+        "bar_height": 48,
+        "bar_padding": 8,
+        "bar_outer_margin": 8,
+        "bar_radius": 10,
+        "bar_surface_role": "surface_0",
+        "bar_opacity": 0.96,
+        "bar_outline_role": "border_subtle",
+        "bar_outline_opacity": 0.72,
+        "bar_outline_width": 1,
+        "bar_widget_spacing": 6,
+        "bar_icon_size": 16,
+        "bar_font_size": 11,
+        "drawer_width": 420,
+        "drawer_offset": 12,
+        "drawer_padding": 16,
+        "drawer_radius": 14,
+        "drawer_surface_role": "surface_1",
+        "drawer_opacity": 0.97,
+        "drawer_outline_role": "border_subtle",
+        "drawer_outline_opacity": 0.76,
+        "drawer_outline_width": 1,
+        "image_fit": "cover",
+        "slideshow_seconds": 30,
+        "image_overlay_opacity": 0.10,
+        "image_dimming": 0.28,
+        "transition_ms": 320,
+        "font_size": 11,
     },
     "apps": {
         "gtk_radius": 10, "button_role": "bg_alt", "button_hover_role": "hover",
@@ -235,7 +395,6 @@ STYLE_DEFAULTS = {
     "shadow_opacity": 0.4,
 }
 
-
 @dataclass(frozen=True)
 class FieldSpec:
     path: str
@@ -248,69 +407,39 @@ class FieldSpec:
     help: str = ""
     advanced: bool = False
 
-
 COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
     "windows": (
-        FieldSpec("components.windows.gaps_out", "Outer gaps", "int", 0, 60, 1,
-                  help="Space between windows and the screen edges, in pixels."),
-        FieldSpec("components.windows.gaps_in", "Inner gaps", "int", 0, 40, 1,
-                  help="Space between neighboring windows, in pixels."),
-        FieldSpec("components.windows.border_width", "Border width", "int", 0, 10, 1,
-                  help="Thickness of the focus border around windows."),
-        FieldSpec("components.windows.corner_radius", "Corner radius", "int", 0, 40, 1,
-                  help="How rounded window corners are; 0 is square."),
-        FieldSpec("components.windows.rounding_power", "Corner curvature", "float", 1.0, 8.0, 0.1, advanced=True,
-                  help="Higher values make rounded corners visually stronger."),
-        FieldSpec("components.windows.active_opacity", "Active opacity", "float", 0.2, 1.0, 0.01,
-                  help="Opacity of the focused window; lower is more see-through."),
-        FieldSpec("components.windows.inactive_opacity", "Inactive opacity", "float", 0.2, 1.0, 0.01,
-                  help="Opacity of unfocused windows in the background."),
-        FieldSpec("components.windows.inactive_dim", "Inactive dim", "float", 0.0, 1.0, 0.01,
-                  help="How much unfocused windows are dimmed toward the background."),
-        FieldSpec("components.windows.blur.enabled", "Blur", "bool",
-                  help="Blur the wallpaper and transparent content behind windows."),
-        FieldSpec("components.windows.blur.size", "Blur size", "int", 1, 30, 1,
-                  help="Blur radius; larger is softer but costlier to render."),
-        FieldSpec("components.windows.blur.passes", "Blur passes", "int", 1, 8, 1,
-                  help="How many blur passes run; more is smoother and heavier."),
-        FieldSpec("components.windows.blur.noise", "Blur noise", "float", 0.0, 0.20, 0.001, advanced=True,
-                  help="Randomness added to the blur to hide banding."),
-        FieldSpec("components.windows.blur.contrast", "Blur contrast", "float", 0.0, 2.0, 0.01, advanced=True,
-                  help="Contrast of the blurred backdrop."),
-        FieldSpec("components.windows.blur.brightness", "Blur brightness", "float", 0.0, 2.0, 0.01, advanced=True,
-                  help="Brightness of the blurred backdrop."),
-        FieldSpec("components.windows.blur.vibrancy", "Blur vibrancy", "float", 0.0, 1.0, 0.01, advanced=True,
-                  help="Color saturation boost on the blurred backdrop."),
-        FieldSpec("components.windows.shadow.enabled", "Shadow", "bool",
-                  help="Drop shadows under windows."),
-        FieldSpec("components.windows.shadow.radius", "Shadow radius", "int", 0, 60, 1,
-                  help="Shadow spread distance from the window edge."),
-        FieldSpec("components.windows.shadow.render_power", "Shadow sharpness", "int", 1, 4, 1, advanced=True,
-                  help="Higher values sharpen the shadow falloff."),
-        FieldSpec("components.windows.shadow.opacity", "Shadow opacity", "float", 0.0, 1.0, 0.01,
-                  help="Shadow darkness."),
-        FieldSpec("components.windows.shadow.color", "Shadow role", "role",
-                  help="Palette role or hex color for the drop shadow."),
-        FieldSpec("components.windows.active_border.color", "Active border role", "role",
-                  help="Palette role for the focused window border."),
-        FieldSpec("components.windows.active_border.color_2", "Gradient role", "role",
-                  help="Second palette role for the border gradient."),
-        FieldSpec("components.windows.active_border.angle", "Gradient angle", "int", 0, 360, 5,
-                  help="Angle of the border color gradient."),
-        FieldSpec("components.windows.inactive_border.color", "Inactive border role", "role",
-                  help="Palette role for unfocused window borders."),
-        FieldSpec("components.windows.inactive_border.opacity", "Inactive border opacity", "float", 0.0, 1.0, 0.01,
-                  help="How visible unfocused borders are."),
-    ),
-    "layout": (
-        FieldSpec("components.layout.engine", "Tiling engine", "choice", choices=("dwindle", "master"),
-                  help="Which Hyprland layout engine manages new windows."),
-        FieldSpec("components.layout.smart_split", "Smart split", "bool",
-                  help="Split direction follows window aspect ratio instead of a fixed rule."),
-        FieldSpec("components.layout.smart_resizing", "Smart resizing", "bool",
-                  help="Resizing a window adjusts the split ratio intelligently."),
-        FieldSpec("components.layout.no_gaps_when_only", "No gaps when only one window", "bool",
-                  help="Remove gaps/borders when a workspace has a single window."),
+        FieldSpec("components.windows.gaps_out", "Outer gaps", "int", 0, 60, 1, help="Space between windows and the screen edges, in pixels."),
+        FieldSpec("components.windows.gaps_in", "Inner gaps", "int", 0, 40, 1, help="Space between neighboring windows, in pixels."),
+        FieldSpec("components.windows.border_width", "Border width", "int", 0, 10, 1, help="Thickness of the focus border around windows."),
+        FieldSpec("components.windows.corner_radius", "Corner radius", "int", 0, 40, 1, help="How rounded window corners are; 0 is square."),
+        FieldSpec("components.windows.rounding_power", "Corner curvature", "float", 1.0, 8.0, 0.1, advanced=True, help="Higher values make rounded corners visually stronger."),
+        FieldSpec("components.windows.active_opacity", "Active opacity", "float", 0.2, 1.0, 0.01, help="Opacity of the focused window; lower is more see-through."),
+        FieldSpec("components.windows.inactive_opacity", "Inactive opacity", "float", 0.2, 1.0, 0.01, help="Opacity of unfocused windows in the background."),
+        FieldSpec("components.windows.inactive_dim", "Inactive dim", "float", 0.0, 1.0, 0.01, help="How much unfocused windows are dimmed toward the background."),
+        FieldSpec("components.windows.blur.enabled", "Blur", "bool", help="Blur the wallpaper and transparent content behind windows."),
+        FieldSpec("components.windows.blur.size", "Blur size", "int", 1, 30, 1, help="Blur radius; larger is softer but costlier to render."),
+        FieldSpec("components.windows.blur.passes", "Blur passes", "int", 1, 8, 1, help="How many blur passes run; more is smoother and heavier."),
+        FieldSpec("components.windows.blur.noise", "Blur noise", "float", 0.0, 0.20, 0.001, advanced=True, help="Randomness added to the blur to hide banding."),
+        FieldSpec("components.windows.blur.contrast", "Blur contrast", "float", 0.0, 2.0, 0.01, advanced=True, help="Contrast of the blurred backdrop."),
+        FieldSpec("components.windows.blur.brightness", "Blur brightness", "float", 0.0, 2.0, 0.01, advanced=True, help="Brightness of the blurred backdrop."),
+        FieldSpec("components.windows.blur.vibrancy", "Blur vibrancy", "float", 0.0, 1.0, 0.01, advanced=True, help="Color saturation boost on the blurred backdrop."),
+        FieldSpec("components.windows.shadow.enabled", "Shadow", "bool", help="Drop shadows under windows."),
+        FieldSpec("components.windows.shadow.radius", "Shadow radius", "int", 0, 60, 1, help="Shadow spread distance from the window edge."),
+        FieldSpec("components.windows.shadow.render_power", "Shadow sharpness", "int", 1, 4, 1, advanced=True, help="Higher values sharpen the shadow falloff."),
+        FieldSpec("components.windows.shadow.opacity", "Shadow opacity", "float", 0.0, 1.0, 0.01, help="Shadow darkness."),
+        FieldSpec("components.windows.active_border.style", "Active border style", "choice", choices=("solid", "gradient"), help="Use a single focused-border color or a two-color gradient."),
+        FieldSpec("components.windows.active_border.color", "Active border role", "role", help="Palette role for the focused window border."),
+        FieldSpec("components.windows.active_border.color_2", "Gradient role", "role", help="Second palette role for the border gradient."),
+        FieldSpec("components.windows.active_border.angle", "Gradient angle", "int", 0, 360, 5, help="Angle of the border color gradient."),
+        FieldSpec("components.windows.active_border.opacity", "Active border opacity", "float", 0.0, 1.0, 0.01, help="Opacity of the focused border itself."),
+        FieldSpec("components.windows.inactive_border.color", "Inactive border role", "role", help="Palette role for unfocused window borders."),
+        FieldSpec("components.windows.inactive_border.opacity", "Inactive border opacity", "float", 0.0, 1.0, 0.01, help="How visible unfocused borders are."),
+        FieldSpec("components.windows.glow", "Glow size", "int", 0, 40, 1, help="Real Hyprland inner-glow range. Zero disables glow."),
+        FieldSpec("components.windows.glow_opacity", "Glow opacity", "float", 0.0, 1.0, 0.01, help="Alpha of the focused window glow."),
+        FieldSpec("components.windows.glow_role", "Glow color role", "role", help="Palette role used by the glow."),
+        FieldSpec("components.windows.glow_render_power", "Glow falloff", "int", 1, 4, 1, advanced=True, help="Higher values make glow fall off faster."),
+        FieldSpec("components.windows.glow_inactive_opacity", "Inactive glow opacity", "float", 0.0, 1.0, 0.01, advanced=True, help="Usually keep this at zero so only the focused window glows."),
     ),
     "notifications": (
         FieldSpec("components.notifications.width", "Width", "int", 220, 900, 10),
@@ -333,26 +462,16 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.terminal.selection_role", "Selection role", "role"),
     ),
     "prompt": (
-        FieldSpec("components.prompt.layout", "Prompt layout", "choice", choices=("one_line", "two_line"),
-                  help="one_line keeps everything on a single line; two_line adds a dedicated prompt line."),
-        FieldSpec("components.prompt.separator", "Separator", "choice", choices=("powerline", "rounded", "block", "minimal"),
-                  help="Glyphs used between prompt segments: powerline arrows, rounded caps, block bars, or none."),
-        FieldSpec("components.prompt.directory_role", "Directory role", "role",
-                  help="Palette role for the directory segment background."),
-        FieldSpec("components.prompt.git_role", "Git role", "role",
-                  help="Palette role for the git branch/status segments."),
-        FieldSpec("components.prompt.status_role", "Status role", "role",
-                  help="Palette role for the exit-status and git-state markers."),
-        FieldSpec("components.prompt.show_duration", "Show duration", "bool",
-                  help="Show how long each command took (on the right side)."),
-        FieldSpec("components.prompt.show_jobs", "Show jobs", "bool",
-                  help="Show the number of background jobs."),
-        FieldSpec("components.prompt.show_battery", "Show battery", "bool",
-                  help="Show battery percentage on the right side of the prompt."),
-        FieldSpec("components.prompt.show_memory", "Show memory", "bool",
-                  help="Show memory usage once it passes a threshold."),
-        FieldSpec("components.prompt.show_time", "Show time", "bool",
-                  help="Show the current time on the right side."),
+        FieldSpec("components.prompt.layout", "Prompt layout", "choice", choices=("one_line", "two_line"), help="one_line keeps everything on a single line; two_line adds a dedicated prompt line."),
+        FieldSpec("components.prompt.separator", "Separator", "choice", choices=("powerline", "rounded", "block", "minimal"), help="Glyphs used between prompt segments: powerline arrows, rounded caps, block bars, or none."),
+        FieldSpec("components.prompt.directory_role", "Directory role", "role", help="Palette role for the directory segment background."),
+        FieldSpec("components.prompt.git_role", "Git role", "role", help="Palette role for the git branch/status segments."),
+        FieldSpec("components.prompt.status_role", "Status role", "role", help="Palette role for the exit-status and git-state markers."),
+        FieldSpec("components.prompt.show_duration", "Show duration", "bool", help="Show how long each command took (on the right side)."),
+        FieldSpec("components.prompt.show_jobs", "Show jobs", "bool", help="Show the number of background jobs."),
+        FieldSpec("components.prompt.show_battery", "Show battery", "bool", help="Show battery percentage on the right side of the prompt."),
+        FieldSpec("components.prompt.show_memory", "Show memory", "bool", help="Show memory usage once it passes a threshold."),
+        FieldSpec("components.prompt.show_time", "Show time", "bool", help="Show the current time on the right side."),
     ),
     "lock_screen": (
         FieldSpec("components.lock_screen.clock_size", "Clock size", "int", 16, 160, 1),
@@ -366,10 +485,38 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.lock_screen.show_avatar", "Show avatar", "bool"),
     ),
     "homepage": (
-        FieldSpec("components.homepage.enabled", "Enabled", "bool"),
-        FieldSpec("components.homepage.alignment", "Alignment", "choice", choices=("left", "right")),
-        FieldSpec("components.homepage.card_radius", "Card radius", "int", 0, 50, 1),
-        FieldSpec("components.homepage.card_opacity", "Card opacity", "float", 0.0, 1.0, 0.01),
+        FieldSpec("components.homepage.bar_position", "Bar position", "choice", choices=("top", "bottom"), help="Place the Quickshell bar at the top or bottom of the display."),
+        FieldSpec("components.homepage.bar_height", "Bar height", "int", 28, 96, 1),
+        FieldSpec("components.homepage.bar_padding", "Bar padding", "int", 0, 24, 1, help="Internal bar padding; it is safely clamped against bar height."),
+        FieldSpec("components.homepage.bar_outer_margin", "Bar outer margin", "int", 0, 32, 1),
+        FieldSpec("components.homepage.bar_radius", "Bar radius", "int", 0, 40, 1),
+        FieldSpec("components.homepage.bar_surface_role", "Bar surface role", "role"),
+        FieldSpec("components.homepage.bar_opacity", "Bar opacity", "float", 0.2, 1.0, 0.01),
+        FieldSpec("components.homepage.bar_outline_role", "Bar outline role", "role"),
+        FieldSpec("components.homepage.bar_outline_opacity", "Bar outline opacity", "float", 0.0, 1.0, 0.01),
+        FieldSpec("components.homepage.bar_outline_width", "Bar outline width", "int", 0, 6, 1),
+        FieldSpec("components.homepage.bar_widget_spacing", "Bar widget spacing", "int", 0, 24, 1),
+        FieldSpec("components.homepage.bar_icon_size", "Bar icon size", "int", 10, 32, 1),
+        FieldSpec("components.homepage.bar_font_size", "Bar font size", "int", 8, 24, 1),
+        FieldSpec("components.homepage.drawer_width", "Drawer width", "int", 260, 760, 10),
+        FieldSpec("components.homepage.drawer_offset", "Drawer offset", "int", 0, 60, 1),
+        FieldSpec("components.homepage.drawer_padding", "Drawer padding", "int", 4, 40, 1),
+        FieldSpec("components.homepage.drawer_radius", "Drawer radius", "int", 0, 40, 1),
+        FieldSpec("components.homepage.drawer_surface_role", "Drawer surface role", "role"),
+        FieldSpec("components.homepage.drawer_opacity", "Drawer opacity", "float", 0.2, 1.0, 0.01),
+        FieldSpec("components.homepage.drawer_outline_role", "Drawer outline role", "role"),
+        FieldSpec("components.homepage.drawer_outline_opacity", "Drawer outline opacity", "float", 0.0, 1.0, 0.01),
+        FieldSpec("components.homepage.drawer_outline_width", "Drawer outline width", "int", 0, 6, 1),
+        FieldSpec("components.homepage.card_radius", "Homepage card radius", "int", 0, 50, 1),
+        FieldSpec("components.homepage.card_opacity", "Homepage card opacity", "float", 0.2, 1.0, 0.01),
+        FieldSpec("components.homepage.image_fit", "Homepage image fit", "choice", choices=("cover", "contain")),
+        FieldSpec("components.homepage.slideshow_seconds", "Slideshow seconds", "int", 5, 300, 5),
+        FieldSpec("components.homepage.image_overlay_opacity", "Wallpaper wash", "float", 0.0, 0.50, 0.01, help="Opacity of the large faded wallpaper behind the homepage layout."),
+        FieldSpec("components.homepage.image_dimming", "Hero image dim", "float", 0.0, 0.85, 0.01, help="Dark overlay on the main homepage image for readable text."),
+        FieldSpec("components.homepage.transition_ms", "Image transition", "int", 0, 2000, 25),
+        FieldSpec("components.homepage.font_size", "Shell base font size", "int", 8, 22, 1),
+        FieldSpec("components.homepage.enabled", "Homepage enabled", "bool"),
+        FieldSpec("components.homepage.alignment", "Homepage alignment", "choice", choices=("left", "right")),
         FieldSpec("components.homepage.show_weather", "Weather card", "bool"),
         FieldSpec("components.homepage.show_system", "System card", "bool"),
         FieldSpec("components.homepage.show_shortcuts", "Shortcut card", "bool"),
@@ -389,10 +536,9 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
 }
 
 COMPONENT_LABELS = {
-    "windows": "Windows", "layout": "Layout", "notifications": "Notifications", "terminal": "Terminal",
-    "prompt": "Prompt", "lock_screen": "Lock Screen", "homepage": "Homepage", "apps": "Apps",
+    "windows": "Windows", "notifications": "Notifications", "terminal": "Terminal",
+    "prompt": "Prompt", "lock_screen": "Lock Screen", "homepage": "Shell", "apps": "Apps",
 }
-
 
 def _rgb(hex_color: str) -> tuple[int, int, int]:
     value = hex_color.lstrip("#")
@@ -400,35 +546,29 @@ def _rgb(hex_color: str) -> tuple[int, int, int]:
         raise ValueError(f"invalid color: {hex_color}")
     return int(value[:2], 16), int(value[2:4], 16), int(value[4:], 16)
 
-
 def _hex(rgb: Iterable[float]) -> str:
     vals = [max(0, min(255, int(round(v)))) for v in rgb]
     return "#" + "".join(f"{v:02x}" for v in vals)
-
 
 def blend(c1: str, c2: str, ratio: float) -> str:
     a, b = _rgb(c1), _rgb(c2)
     t = max(0.0, min(1.0, float(ratio)))
     return _hex(x + (y - x) * t for x, y in zip(a, b))
 
-
 def relative_luminance(color: str) -> float:
     def channel(v: int) -> float:
         c = v / 255.0
         return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-    r, g, b = (_rgb(color))
+    r, g, b = _rgb(color)
     return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-
 
 def contrast_ratio(c1: str, c2: str) -> float:
     l1, l2 = relative_luminance(c1), relative_luminance(c2)
     lighter, darker = max(l1, l2), min(l1, l2)
     return (lighter + 0.05) / (darker + 0.05)
 
-
 def best_contrast(bg: str, candidates: Iterable[str]) -> str:
     return max(candidates, key=lambda c: contrast_ratio(bg, c))
-
 
 def resolve_roles(roles: dict[str, str]) -> dict[str, str]:
     r = dict(roles)
@@ -442,77 +582,55 @@ def resolve_roles(roles: dict[str, str]) -> dict[str, str]:
     focus = r.get("focus", accent)
     border_normal = r.get("border_normal", bg_alt)
     defaults = {
-        "surface_0": bg,
-        "surface_1": bg_alt,
-        "surface_2": blend(bg_alt, text, 0.08),
-        "overlay": bg,
-        "hover": blend(bg_alt, accent, 0.15),
-        "selected": accent,
-        "border_subtle": border_normal,
-        "border_strong": focus,
-        "success": r.get("ansi_green", accent2),
-        "warning": r.get("ansi_yellow", accent2),
-        "info": r.get("ansi_blue", accent2),
-        "disabled": text_dim,
-        "shadow": "#000000",
+        "surface_0": bg, "surface_1": bg_alt, "surface_2": blend(bg_alt, text, 0.08),
+        "overlay": bg, "hover": blend(bg_alt, accent, 0.15), "selected": accent,
+        "border_subtle": border_normal, "border_strong": focus,
+        "success": r.get("ansi_green", accent2), "warning": r.get("ansi_yellow", accent2),
+        "info": r.get("ansi_blue", accent2), "disabled": text_dim, "shadow": "#000000",
         "on_accent": best_contrast(accent, [bg, text, "#000000", "#ffffff"]),
         "on_urgent": best_contrast(urgent, [bg, text, "#000000", "#ffffff"]),
     }
-    for key, value in defaults.items():
-        r.setdefault(key, value)
+    for key, value in defaults.items(): r.setdefault(key, value)
     return r
-
 
 def deep_get(data: dict[str, Any], path: str, default: Any = None) -> Any:
     cur: Any = data
     for part in path.split("."):
-        if not isinstance(cur, dict) or part not in cur:
-            return default
+        if not isinstance(cur, dict) or part not in cur: return default
         cur = cur[part]
     return cur
-
 
 def deep_set(data: dict[str, Any], path: str, value: Any) -> None:
     parts = path.split(".")
     cur: dict[str, Any] = data
     for part in parts[:-1]:
         nxt = cur.get(part)
-        if not isinstance(nxt, dict):
-            nxt = {}
-            cur[part] = nxt
+        if not isinstance(nxt, dict): nxt = {}; cur[part] = nxt
         cur = nxt
     cur[parts[-1]] = value
-
 
 def deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
     result = deepcopy(base)
     for key, value in overlay.items():
-        if isinstance(value, dict) and isinstance(result.get(key), dict):
-            result[key] = deep_merge(result[key], value)
-        else:
-            result[key] = deepcopy(value)
+        if isinstance(value, dict) and isinstance(result.get(key), dict): result[key] = deep_merge(result[key], value)
+        else: result[key] = deepcopy(value)
     return result
-
 
 def ensure_theme_schema(theme: dict[str, Any]) -> dict[str, Any]:
     out = deepcopy(theme)
-    out.setdefault("version", 3)
-    out.setdefault("dark", True)
+    out.setdefault("version", 3); out.setdefault("dark", True)
     out["style"] = deep_merge(STYLE_DEFAULTS, out.get("style", {}))
     out["components"] = deep_merge(BASE_COMPONENTS, out.get("components", {}))
     out["roles"] = resolve_roles(out.get("roles", {}))
-    out.setdefault("studio", {})
-    out["studio"].setdefault("locks", [])
-    out["studio"].setdefault("notes", "")
+    out.setdefault("studio", {}); out["studio"].setdefault("locks", []); out["studio"].setdefault("notes", "")
     synchronize_style(out)
     return out
 
-
 def synchronize_style(theme: dict[str, Any]) -> None:
-    """Keep legacy style keys in sync with the richer component schema."""
-    style = theme.setdefault("style", {})
-    windows = theme.setdefault("components", {}).setdefault("windows", {})
+    style = theme.setdefault("style", {}); components = theme.setdefault("components", {})
+    windows = components.setdefault("windows", {}); shell = components.setdefault("homepage", {})
     style["gaps"] = int(windows.get("gaps_out", style.get("gaps", 10)))
+    style["window_gap"] = int(windows.get("gaps_out", style.get("window_gap", style.get("gaps", 10))))
     style["border_width"] = int(windows.get("border_width", style.get("border_width", 2)))
     style["corner_radius"] = int(windows.get("corner_radius", style.get("corner_radius", 10)))
     style["rounding_power"] = float(windows.get("rounding_power", style.get("rounding_power", 2.0)))
@@ -520,247 +638,133 @@ def synchronize_style(theme: dict[str, Any]) -> None:
     style["opacity_inactive"] = float(windows.get("inactive_opacity", style.get("opacity_inactive", 0.92)))
     style["inactive_dim"] = float(windows.get("inactive_dim", style.get("inactive_dim", 0.08)))
     blur = windows.get("blur", {})
-    style["blur_on"] = bool(blur.get("enabled", style.get("blur_on", True)))
-    style["blur_strength"] = int(blur.get("size", style.get("blur_strength", 8)))
-    style["blur_passes"] = int(blur.get("passes", style.get("blur_passes", 3)))
-    style["blur_noise"] = float(blur.get("noise", style.get("blur_noise", 0.0117)))
-    style["blur_contrast"] = float(blur.get("contrast", style.get("blur_contrast", 0.8916)))
-    style["blur_brightness"] = float(blur.get("brightness", style.get("blur_brightness", 0.8172)))
+    style["blur_on"] = bool(blur.get("enabled", style.get("blur_on", True))); style["blur_strength"] = int(blur.get("size", style.get("blur_strength", 8)))
+    style["blur_passes"] = int(blur.get("passes", style.get("blur_passes", 3))); style["blur_noise"] = float(blur.get("noise", style.get("blur_noise", 0.0117)))
+    style["blur_contrast"] = float(blur.get("contrast", style.get("blur_contrast", 0.8916))); style["blur_brightness"] = float(blur.get("brightness", style.get("blur_brightness", 0.8172)))
     style["blur_vibrancy"] = float(blur.get("vibrancy", style.get("blur_vibrancy", 0.1696)))
     shadow = windows.get("shadow", {})
-    style["shadow_on"] = bool(shadow.get("enabled", style.get("shadow_on", True)))
-    style["shadow_radius"] = int(shadow.get("radius", style.get("shadow_radius", 20)))
-    style["shadow_render_power"] = int(shadow.get("render_power", style.get("shadow_render_power", 3)))
-    style["shadow_offset"] = str(shadow.get("offset", style.get("shadow_offset", "0 0")))
+    style["shadow_on"] = bool(shadow.get("enabled", style.get("shadow_on", True))); style["shadow_radius"] = int(shadow.get("radius", style.get("shadow_radius", 20)))
+    style["shadow_render_power"] = int(shadow.get("render_power", style.get("shadow_render_power", 3))); style["shadow_offset"] = str(shadow.get("offset", style.get("shadow_offset", "0 0")))
     style["shadow_opacity"] = float(shadow.get("opacity", style.get("shadow_opacity", 0.4)))
     shadow_role = shadow.get("color", "shadow")
     style["shadow_color"] = resolve_roles(theme.get("roles", {})).get(shadow_role, shadow_role if is_hex(shadow_role) else "#000000")
-
+    style["bar_height"] = int(shell.get("bar_height", style.get("bar_height", 48))); style["bar_padding"] = int(shell.get("bar_padding", style.get("bar_padding", 8)))
+    style["surface_opacity"] = float(shell.get("bar_opacity", style.get("surface_opacity", 0.96)))
 
 def apply_mapping(theme: dict[str, Any], mapping: dict[str, Any]) -> None:
-    for path, value in mapping.items():
-        deep_set(theme, path, deepcopy(value))
+    for path, value in mapping.items(): deep_set(theme, path, deepcopy(value))
     synchronize_style(theme)
 
-
 def apply_axis(theme: dict[str, Any], axis: str, name: str) -> None:
-    mapping_table = {
-        "spacing": SPACING_PRESETS,
-        "density": DENSITY_PRESETS,
-        "shape": SHAPE_PRESETS,
-        "texture": TEXTURE_PRESETS,
-        "border": BORDER_PRESETS,
-    }
+    mapping_table = {"spacing": SPACING_PRESETS, "density": DENSITY_PRESETS, "shape": SHAPE_PRESETS, "texture": TEXTURE_PRESETS, "border": BORDER_PRESETS}
     if axis == "animation":
-        if name not in ANIMATION_PRESETS:
-            raise KeyError(name)
-        deep_set(theme, "style.animation_preset", name)
-        return
+        if name not in ANIMATION_PRESETS: raise KeyError(name)
+        deep_set(theme, "style.animation_preset", name); return
     table = mapping_table[axis]
-    if name not in table:
-        raise KeyError(name)
-    deep_set(theme, f"style.{axis}_preset", name)
-    apply_mapping(theme, table[name])
-
+    if name not in table: raise KeyError(name)
+    deep_set(theme, f"style.{axis}_preset", name); apply_mapping(theme, table[name])
 
 def apply_window_preset(theme: dict[str, Any], name: str) -> None:
     preset = WINDOW_PRESETS[name]
-    apply_axis(theme, "shape", preset["shape"])
-    apply_axis(theme, "texture", preset["texture"])
-    apply_axis(theme, "border", preset["border"])
-    if preset.get("shadow") == "off":
-        deep_set(theme, "components.windows.shadow.enabled", False)
+    apply_axis(theme, "shape", preset["shape"]); apply_axis(theme, "texture", preset["texture"]); apply_axis(theme, "border", preset["border"])
+    if preset.get("shadow") == "off": deep_set(theme, "components.windows.shadow.enabled", False)
     elif preset.get("shadow") == "glow":
-        deep_set(theme, "components.windows.shadow.enabled", True)
-        deep_set(theme, "components.windows.shadow.radius", 32)
-        deep_set(theme, "components.windows.shadow.opacity", 0.55)
+        deep_set(theme, "components.windows.shadow.enabled", True); deep_set(theme, "components.windows.shadow.radius", 20); deep_set(theme, "components.windows.shadow.opacity", 0.30)
+        deep_set(theme, "components.windows.glow", 16); deep_set(theme, "components.windows.glow_opacity", 0.34)
     elif preset.get("shadow") == "defined":
-        deep_set(theme, "components.windows.shadow.enabled", True)
-        deep_set(theme, "components.windows.shadow.radius", 14)
-        deep_set(theme, "components.windows.shadow.opacity", 0.45)
+        deep_set(theme, "components.windows.shadow.enabled", True); deep_set(theme, "components.windows.shadow.radius", 14); deep_set(theme, "components.windows.shadow.opacity", 0.45)
     else:
-        deep_set(theme, "components.windows.shadow.enabled", True)
-        deep_set(theme, "components.windows.shadow.radius", 20)
-        deep_set(theme, "components.windows.shadow.opacity", 0.32)
-    if "border_width" in preset:
-        deep_set(theme, "components.windows.border_width", preset["border_width"])
+        deep_set(theme, "components.windows.shadow.enabled", True); deep_set(theme, "components.windows.shadow.radius", 20); deep_set(theme, "components.windows.shadow.opacity", 0.32)
+    if "border_width" in preset: deep_set(theme, "components.windows.border_width", preset["border_width"])
     synchronize_style(theme)
 
-
-def is_hex(value: Any) -> bool:
-    return isinstance(value, str) and bool(HEX_RE.fullmatch(value))
-
-
+def is_hex(value: Any) -> bool: return isinstance(value, str) and bool(HEX_RE.fullmatch(value))
 def role_color(theme: dict[str, Any], value: str, fallback: str = "#ffffff") -> str:
-    if is_hex(value):
-        return value
+    if is_hex(value): return value
     return resolve_roles(theme.get("roles", {})).get(value, fallback)
 
-
 def color_variants(color: str) -> dict[str, str]:
-    r, g, b = (v / 255.0 for v in _rgb(color))
-    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    r, g, b = (v / 255.0 for v in _rgb(color)); h, l, s = colorsys.rgb_to_hls(r, g, b)
     def mk(dl: float, ds: float = 0.0) -> str:
         rr, gg, bb = colorsys.hls_to_rgb(h, max(0.0, min(1.0, l + dl)), max(0.0, min(1.0, s + ds)))
         return _hex((rr * 255, gg * 255, bb * 255))
-    return {
-        "darker": mk(-0.18), "dark": mk(-0.10), "base": color.lower(),
-        "light": mk(0.10), "lighter": mk(0.18), "muted": mk(0.0, -0.25),
-        "vivid": mk(0.0, 0.18),
-    }
-
+    return {"darker": mk(-0.18), "dark": mk(-0.10), "base": color.lower(), "light": mk(0.10), "lighter": mk(0.18), "muted": mk(0.0, -0.25), "vivid": mk(0.0, 0.18)}
 
 def generate_palette_from_seed(seed: str, dark: bool = True) -> dict[str, str]:
     variants = color_variants(seed)
     if dark:
-        bg = blend(variants["darker"], "#000000", 0.62)
-        bg_alt = blend(bg, seed, 0.12)
-        text = best_contrast(bg, ["#f8f8f2", "#ffffff", "#e8e8ec"])
-        text_dim = blend(text, bg, 0.38)
+        bg = blend(variants["darker"], "#000000", 0.62); bg_alt = blend(bg, seed, 0.12); text = best_contrast(bg, ["#f8f8f2", "#ffffff", "#e8e8ec"]); text_dim = blend(text, bg, 0.38)
     else:
-        bg = blend(variants["lighter"], "#ffffff", 0.76)
-        bg_alt = blend(bg, seed, 0.08)
-        text = best_contrast(bg, ["#101014", "#202028", "#000000"])
-        text_dim = blend(text, bg, 0.42)
-    accent2 = color_variants(seed)["light" if dark else "dark"]
-    urgent = "#ff5f78" if dark else "#c62848"
-    roles = {
-        "bg": bg, "bg_alt": bg_alt, "text": text, "text_dim": text_dim,
-        "accent": seed.lower(), "accent2": accent2, "urgent": urgent,
-        "focus": seed.lower(), "border_normal": blend(bg_alt, text, 0.16),
-    }
-    return resolve_roles(roles)
-
+        bg = blend(variants["lighter"], "#ffffff", 0.76); bg_alt = blend(bg, seed, 0.08); text = best_contrast(bg, ["#101014", "#202028", "#000000"]); text_dim = blend(text, bg, 0.42)
+    accent2 = color_variants(seed)["light" if dark else "dark"]; urgent = "#ff5f78" if dark else "#c62848"
+    return resolve_roles({"bg": bg, "bg_alt": bg_alt, "text": text, "text_dim": text_dim, "accent": seed.lower(), "accent2": accent2, "urgent": urgent, "focus": seed.lower(), "border_normal": blend(bg_alt, text, 0.16)})
 
 def extract_wallpaper_palette(path: str | os.PathLike[str], count: int = 8) -> list[str]:
-    try:
-        from PIL import Image
-    except Exception as exc:  # pragma: no cover - optional dependency
-        raise RuntimeError("Wallpaper palette extraction needs Pillow (python-pillow).") from exc
-    image = Image.open(path).convert("RGB")
-    image.thumbnail((240, 240))
-    quantized = image.quantize(colors=max(3, min(16, count)), method=Image.Quantize.MEDIANCUT)
-    palette = quantized.getpalette() or []
-    counts = sorted(quantized.getcolors() or [], reverse=True)
-    result: list[str] = []
+    try: from PIL import Image
+    except Exception as exc: raise RuntimeError("Wallpaper palette extraction needs Pillow (python-pillow).") from exc
+    image = Image.open(path).convert("RGB"); image.thumbnail((240, 240)); quantized = image.quantize(colors=max(3, min(16, count)), method=Image.Quantize.MEDIANCUT)
+    palette = quantized.getpalette() or []; counts = sorted(quantized.getcolors() or [], reverse=True); result: list[str] = []
     for _, index in counts:
         start = index * 3
-        if start + 2 >= len(palette):
-            continue
+        if start + 2 >= len(palette): continue
         color = _hex(palette[start:start + 3])
-        if all(math.dist(_rgb(color), _rgb(old)) > 36 for old in result):
-            result.append(color)
-        if len(result) >= count:
-            break
+        if all(math.dist(_rgb(color), _rgb(old)) > 36 for old in result): result.append(color)
+        if len(result) >= count: break
     return result
-
 
 def palette_from_wallpaper(path: str | os.PathLike[str], dark: bool = True) -> dict[str, str]:
     colors = extract_wallpaper_palette(path, 10)
-    if not colors:
-        raise RuntimeError("No colors could be extracted from the wallpaper.")
+    if not colors: raise RuntimeError("No colors could be extracted from the wallpaper.")
     colors = sorted(colors, key=relative_luminance)
-    if dark:
-        bg = colors[0]
-        bg_alt = colors[min(2, len(colors) - 1)]
-        text = colors[-1]
-        accent_candidates = colors[2:-1] or colors
-    else:
-        bg = colors[-1]
-        bg_alt = colors[max(0, len(colors) - 3)]
-        text = colors[0]
-        accent_candidates = colors[1:-2] or colors
-    accent = max(accent_candidates, key=lambda c: abs(relative_luminance(c) - relative_luminance(bg)))
-    accent2 = max(accent_candidates, key=lambda c: contrast_ratio(c, accent))
-    urgent = "#ff5f78" if dark else "#c62848"
-    roles = {
-        "bg": bg, "bg_alt": bg_alt, "text": text,
-        "text_dim": blend(text, bg, 0.38), "accent": accent, "accent2": accent2,
-        "urgent": urgent, "focus": accent,
-        "border_normal": blend(bg_alt, text, 0.16),
-    }
-    return resolve_roles(roles)
+    if dark: bg, bg_alt, text, accent_candidates = colors[0], colors[min(2, len(colors) - 1)], colors[-1], (colors[2:-1] or colors)
+    else: bg, bg_alt, text, accent_candidates = colors[-1], colors[max(0, len(colors) - 3)], colors[0], (colors[1:-2] or colors)
+    accent = max(accent_candidates, key=lambda c: abs(relative_luminance(c) - relative_luminance(bg))); accent2 = max(accent_candidates, key=lambda c: contrast_ratio(c, accent)); urgent = "#ff5f78" if dark else "#c62848"
+    return resolve_roles({"bg": bg, "bg_alt": bg_alt, "text": text, "text_dim": blend(text, bg, 0.38), "accent": accent, "accent2": accent2, "urgent": urgent, "focus": accent, "border_normal": blend(bg_alt, text, 0.16)})
 
-
-def _validation_item(level: str, path: str, message: str) -> dict[str, str]:
-    return {"level": level, "path": path, "message": message}
-
-
+def _validation_item(level: str, path: str, message: str) -> dict[str, str]: return {"level": level, "path": path, "message": message}
 def validate_theme(theme: dict[str, Any]) -> list[dict[str, str]]:
-    issues: list[dict[str, str]] = []
-    roles = theme.get("roles")
-    if not isinstance(roles, dict):
-        return [_validation_item("error", "roles", "Theme has no role map.")]
+    issues: list[dict[str, str]] = []; roles = theme.get("roles")
+    if not isinstance(roles, dict): return [_validation_item("error", "roles", "Theme has no role map.")]
     for role in CORE_ROLES:
         value = roles.get(role)
-        if value is None:
-            issues.append(_validation_item("error", f"roles.{role}", f"Missing required color role: {role}."))
-        elif not is_hex(value):
-            issues.append(_validation_item("error", f"roles.{role}", f"{role} must be a six-digit hex color."))
+        if value is None: issues.append(_validation_item("error", f"roles.{role}", f"Missing required color role: {role}."))
+        elif not is_hex(value): issues.append(_validation_item("error", f"roles.{role}", f"{role} must be a six-digit hex color."))
     for role, value in roles.items():
-        if not is_hex(value):
-            issues.append(_validation_item("error", f"roles.{role}", f"Invalid color: {value!r}."))
+        if not is_hex(value): issues.append(_validation_item("error", f"roles.{role}", f"Invalid color: {value!r}."))
     resolved = resolve_roles({k: v for k, v in roles.items() if is_hex(v)})
-    pairs = (
-        ("text", "bg", 4.5), ("text", "surface_0", 4.5),
-        ("text_dim", "bg", 3.0), ("on_accent", "accent", 4.5),
-        ("on_urgent", "urgent", 4.5),
-    )
-    for fg, bg, minimum in pairs:
+    for fg, bg, minimum in (("text", "bg", 4.5), ("text", "surface_0", 4.5), ("text_dim", "bg", 3.0), ("on_accent", "accent", 4.5), ("on_urgent", "urgent", 4.5)):
         ratio = contrast_ratio(resolved[fg], resolved[bg])
-        if ratio < minimum:
-            issues.append(_validation_item("warning", f"roles.{fg}",
-                                           f"{ROLE_LABELS.get(fg, fg)} contrast on {ROLE_LABELS.get(bg, bg)} is {ratio:.1f}:1; target {minimum:.1f}:1."))
+        if ratio < minimum: issues.append(_validation_item("warning", f"roles.{fg}", f"{ROLE_LABELS.get(fg, fg)} contrast on {ROLE_LABELS.get(bg, bg)} is {ratio:.1f}:1; target {minimum:.1f}:1."))
     ensured = ensure_theme_schema(theme)
     for component, fields in COMPONENT_FIELDS.items():
         for field in fields:
             value = deep_get(ensured, field.path)
             if field.kind in ("int", "float") and isinstance(value, (int, float)):
-                if field.minimum is not None and value < field.minimum:
-                    issues.append(_validation_item("error", field.path, f"{field.label} is below {field.minimum}."))
-                if field.maximum is not None and value > field.maximum:
-                    issues.append(_validation_item("error", field.path, f"{field.label} is above {field.maximum}."))
-            elif field.kind == "choice" and value not in field.choices:
-                issues.append(_validation_item("error", field.path, f"Unknown {field.label.lower()}: {value!r}."))
-            elif field.kind == "role" and not (is_hex(value) or value in resolved):
-                issues.append(_validation_item("error", field.path, f"Unknown palette role: {value!r}."))
+                if field.minimum is not None and value < field.minimum: issues.append(_validation_item("error", field.path, f"{field.label} is below {field.minimum}."))
+                if field.maximum is not None and value > field.maximum: issues.append(_validation_item("error", field.path, f"{field.label} is above {field.maximum}."))
+            elif field.kind == "choice" and value not in field.choices: issues.append(_validation_item("error", field.path, f"Unknown {field.label.lower()}: {value!r}."))
+            elif field.kind == "role" and not (is_hex(value) or value in resolved): issues.append(_validation_item("error", field.path, f"Unknown palette role: {value!r}."))
     passes = deep_get(ensured, "components.windows.blur.passes", 3)
-    if isinstance(passes, int) and passes > 5:
-        issues.append(_validation_item("warning", "components.windows.blur.passes",
-                                       "More than five blur passes may reduce performance."))
+    if isinstance(passes, int) and passes > 5: issues.append(_validation_item("warning", "components.windows.blur.passes", "More than five blur passes may reduce performance."))
+    glow = int(deep_get(ensured, "components.windows.glow", 0) or 0); glow_opacity = float(deep_get(ensured, "components.windows.glow_opacity", 0.0) or 0.0)
+    if glow > 24 and glow_opacity > 0.55: issues.append(_validation_item("warning", "components.windows.glow", "Large, opaque glow can be visually harsh and add GPU cost; try range 8–20 and opacity 0.2–0.45."))
+    bar_height = int(deep_get(ensured, "components.homepage.bar_height", 48)); bar_padding = int(deep_get(ensured, "components.homepage.bar_padding", 8))
+    if bar_padding * 2 > bar_height - 16: issues.append(_validation_item("warning", "components.homepage.bar_padding", "Bar padding leaves too little vertical room; Quickshell will clamp it to keep widgets usable."))
     return issues
 
-
-def validation_summary(issues: list[dict[str, str]]) -> tuple[int, int]:
-    return sum(i["level"] == "error" for i in issues), sum(i["level"] == "warning" for i in issues)
-
-
+def validation_summary(issues: list[dict[str, str]]) -> tuple[int, int]: return sum(i["level"] == "error" for i in issues), sum(i["level"] == "warning" for i in issues)
 def search_index() -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
     for component, fields in COMPONENT_FIELDS.items():
         label = COMPONENT_LABELS[component]
-        for field in fields:
-            items.append({"label": f"{label} › {field.label}", "path": field.path,
-                          "component": component, "help": field.help})
-    for role in ALL_ROLES:
-        items.append({"label": f"Palette › {ROLE_LABELS.get(role, role)}", "path": f"roles.{role}",
-                      "component": "palette", "help": role})
-    for axis, names in (
-        ("Spacing", SPACING_PRESETS), ("Shape", SHAPE_PRESETS), ("Texture", TEXTURE_PRESETS),
-        ("Borders", BORDER_PRESETS),
-    ):
-        for name in names:
-            items.append({"label": f"Quick Style › {axis} › {name.replace('_', ' ').title()}",
-                          "path": f"quick.{axis.lower()}.{name}", "component": "quick", "help": "preset"})
+        for field in fields: items.append({"label": f"{label} › {field.label}", "path": field.path, "component": component, "help": field.help})
+    for role in ALL_ROLES: items.append({"label": f"Palette › {ROLE_LABELS.get(role, role)}", "path": f"roles.{role}", "component": "palette", "help": role})
+    for axis, names in (("Spacing", SPACING_PRESETS), ("Shape", SHAPE_PRESETS), ("Texture", TEXTURE_PRESETS), ("Borders", BORDER_PRESETS)):
+        for name in names: items.append({"label": f"Quick Style › {axis} › {name.replace('_', ' ').title()}", "path": f"quick.{axis.lower()}.{name}", "component": "quick", "help": "preset"})
     return items
 
-
-def dump_json(theme: dict[str, Any]) -> str:
-    return json.dumps(theme, indent=2, ensure_ascii=False) + "\n"
-
-
+def dump_json(theme: dict[str, Any]) -> str: return json.dumps(theme, indent=2, ensure_ascii=False) + "\n"
 def safe_theme_name(name: str) -> str:
     value = re.sub(r"[^a-zA-Z0-9._-]+", "_", name.strip()).strip("._-")
-    if not value:
-        raise ValueError("Theme name cannot be empty.")
+    if not value: raise ValueError("Theme name cannot be empty.")
     return value

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import curses
 from dataclasses import dataclass
+import re
 from typing import Any, Iterable
 
 
@@ -17,6 +18,11 @@ class Palette:
     warning: int = 0
     error: int = 0
     panel: int = 0
+
+
+_SWATCH_PAIRS: dict[int, int] = {}
+_NEXT_SWATCH_PAIR = 16
+_HEX_COLOR_RE = re.compile(r"#[0-9A-Fa-f]{6}")
 
 
 def init_palette() -> Palette:
@@ -51,6 +57,13 @@ def init_palette() -> Palette:
 
 
 def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int | None = None) -> None:
+    """Safely draw text and turn literal hex colors into visible color chips.
+
+    Unselected text containing #RRGGBB is rendered as a small colored block plus
+    the original hex value. This makes Palette Studio visually scannable instead
+    of showing a wall of nearly identical white strings. Selected/highlighted
+    rows keep the selection styling so keyboard navigation remains obvious.
+    """
     try:
         h, w = win.getmaxyx()
         if y < 0 or y >= h or x < 0 or x >= w:
@@ -58,7 +71,48 @@ def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int |
         room = max(0, w - x - 1)
         if width is not None:
             room = min(room, max(0, width))
-        win.addnstr(y, x, str(text), room, attr)
+        rendered = str(text)
+        matches = list(_HEX_COLOR_RE.finditer(rendered))
+        if not matches or attr:
+            win.addnstr(y, x, rendered, room, attr)
+            return
+
+        cursor = 0
+        column = x
+        used = 0
+        for match in matches:
+            if used >= room:
+                break
+            prefix = rendered[cursor:match.start()]
+            if prefix:
+                chunk = prefix[: max(0, room - used)]
+                win.addnstr(y, column, chunk, max(0, room - used), attr)
+                column += len(chunk)
+                used += len(chunk)
+            if used >= room:
+                break
+
+            value = match.group(0)
+            color_attr = color_swatch_attr(value)
+            chip = "███ " if color_attr else "■ "
+            chip = chip[: max(0, room - used)]
+            if chip:
+                win.addnstr(y, column, chip, max(0, room - used), color_attr or attr)
+                column += len(chip)
+                used += len(chip)
+            if used >= room:
+                break
+
+            hex_text = value[: max(0, room - used)]
+            if hex_text:
+                win.addnstr(y, column, hex_text, max(0, room - used), color_attr or attr)
+                column += len(hex_text)
+                used += len(hex_text)
+            cursor = match.end()
+
+        suffix = rendered[cursor:]
+        if suffix and used < room:
+            win.addnstr(y, column, suffix, room - used, attr)
     except curses.error:
         pass
 
@@ -127,6 +181,63 @@ def slider_text(value: float, minimum: float, maximum: float, width: int = 16,
     if precision is None:
         precision = 2 if isinstance(value, float) and not float(value).is_integer() else 0
     return f"{bar} {value:.{precision}f}"
+
+
+def _xterm256_from_hex(value: str) -> int | None:
+    """Approximate a #RRGGBB value with the nearest xterm-256 color."""
+    if not isinstance(value, str) or len(value) != 7 or not value.startswith("#"):
+        return None
+    try:
+        red = int(value[1:3], 16)
+        green = int(value[3:5], 16)
+        blue = int(value[5:7], 16)
+    except ValueError:
+        return None
+
+    if max(red, green, blue) - min(red, green, blue) < 10:
+        if red < 8:
+            return 16
+        if red > 248:
+            return 231
+        return 232 + max(0, min(23, round((red - 8) / 10)))
+
+    def cube(value8: int) -> int:
+        return max(0, min(5, round(value8 / 255 * 5)))
+
+    return 16 + 36 * cube(red) + 6 * cube(green) + cube(blue)
+
+
+def color_swatch_attr(value: str) -> int:
+    """Return a curses attribute that renders close to the requested hex color."""
+    global _NEXT_SWATCH_PAIR
+    if not curses.has_colors() or getattr(curses, "COLORS", 0) < 256:
+        return 0
+    color = _xterm256_from_hex(value)
+    if color is None:
+        return 0
+    if color in _SWATCH_PAIRS:
+        return curses.color_pair(_SWATCH_PAIRS[color])
+
+    pair_limit = max(0, getattr(curses, "COLOR_PAIRS", 0) - 1)
+    if _NEXT_SWATCH_PAIR > pair_limit:
+        return 0
+    pair = _NEXT_SWATCH_PAIR
+    _NEXT_SWATCH_PAIR += 1
+    try:
+        curses.init_pair(pair, color, -1)
+    except curses.error:
+        return 0
+    _SWATCH_PAIRS[color] = pair
+    return curses.color_pair(pair)
+
+
+def draw_color_swatch(win: Any, y: int, x: int, value: str, width: int = 3) -> None:
+    """Draw a compact terminal color chip with a graceful monochrome fallback."""
+    attr = color_swatch_attr(value)
+    if attr:
+        safe_addstr(win, y, x, "█" * max(1, width), attr, width)
+    else:
+        safe_addstr(win, y, x, "■" * max(1, width), 0, width)
 
 
 def role_swatch(value: str, width: int = 10) -> str:
