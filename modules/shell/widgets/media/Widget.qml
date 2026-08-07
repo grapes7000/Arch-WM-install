@@ -33,12 +33,13 @@ Item {
             color: Core.Theme.muted
             font.pixelSize: 16
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: prevArea
                 anchors.fill: parent
                 onClicked: Services.MprisService.previous()
             }
+
+            Components.PressBounce { pressed: prevArea.pressed }
         }
 
         Text {
@@ -48,12 +49,13 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 16 : 20
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: playPauseArea
                 anchors.fill: parent
                 onClicked: Services.MprisService.playPause()
             }
+
+            Components.PressBounce { pressed: playPauseArea.pressed }
         }
 
         Text {
@@ -63,25 +65,27 @@ Item {
             color: Core.Theme.muted
             font.pixelSize: 16
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: nextArea
                 anchors.fill: parent
                 onClicked: Services.MprisService.next()
             }
+
+            Components.PressBounce { pressed: nextArea.pressed }
         }
 
         ColumnLayout {
             spacing: 0
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: openMediaArea
                 anchors.fill: parent
                 enabled: context.allows("drawer.open")
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: context.request("drawer.open", { kind: "media" })
             }
+
+            Components.PressBounce { target: parent; pressed: openMediaArea.pressed }
 
             Text {
                 font.family: Core.Theme.fontFamily

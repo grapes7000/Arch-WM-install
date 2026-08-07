@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 ColumnLayout {
     implicitHeight: 350
@@ -19,9 +20,9 @@ ColumnLayout {
     RowLayout {
         Layout.alignment: Qt.AlignHCenter
         spacing: Core.Theme.gap * 2
-        Text { font.family: Core.Theme.fontFamily; text: "󰒮"; color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted; font.pixelSize: 20; MouseArea { anchors.fill: parent; enabled: Services.MprisService.canPrev; onClicked: Services.MprisService.previous() } }
-        Text { font.family: Core.Theme.fontFamily; text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"; color: Core.Theme.accent; font.pixelSize: 24; MouseArea { anchors.fill: parent; onClicked: Services.MprisService.playPause() } }
-        Text { font.family: Core.Theme.fontFamily; text: "󰒭"; color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted; font.pixelSize: 20; MouseArea { anchors.fill: parent; enabled: Services.MprisService.canNext; onClicked: Services.MprisService.next() } }
+        Text { font.family: Core.Theme.fontFamily; text: "󰒮"; color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted; font.pixelSize: 20; MouseArea { id: audioPrevArea; anchors.fill: parent; enabled: Services.MprisService.canPrev; onClicked: Services.MprisService.previous() } Components.PressBounce { pressed: audioPrevArea.pressed } }
+        Text { font.family: Core.Theme.fontFamily; text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"; color: Core.Theme.accent; font.pixelSize: 24; MouseArea { id: audioPlayPauseArea; anchors.fill: parent; onClicked: Services.MprisService.playPause() } Components.PressBounce { pressed: audioPlayPauseArea.pressed } }
+        Text { font.family: Core.Theme.fontFamily; text: "󰒭"; color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted; font.pixelSize: 20; MouseArea { id: audioNextArea; anchors.fill: parent; enabled: Services.MprisService.canNext; onClicked: Services.MprisService.next() } Components.PressBounce { pressed: audioNextArea.pressed } }
     }
 
     Row {
@@ -44,7 +45,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        Text { font.family: Core.Theme.fontFamily; text: Services.AudioService.muted ? "󰝟" : "󰕾"; color: Core.Theme.foreground; font.pixelSize: 18; MouseArea { anchors.fill: parent; onClicked: Services.AudioService.toggleMute() } }
+        Text { font.family: Core.Theme.fontFamily; text: Services.AudioService.muted ? "󰝟" : "󰕾"; color: Core.Theme.foreground; font.pixelSize: 18; MouseArea { id: audioMuteArea; anchors.fill: parent; onClicked: Services.AudioService.toggleMute() } Components.PressBounce { pressed: audioMuteArea.pressed } }
         Rectangle {
             Layout.fillWidth: true; height: 8; radius: 4; color: Core.Theme.background
             Rectangle { width: parent.width * Services.AudioService.volume / 100; height: parent.height; radius: parent.radius; color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.accent }

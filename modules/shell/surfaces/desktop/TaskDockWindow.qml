@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 PanelWindow {
     id: root
@@ -171,6 +172,7 @@ PanelWindow {
                         hoverEnabled: true
                         onClicked: root.focusWindow(modelData)
                     }
+                    Components.PressBounce { pressed: chooserMouse.pressed }
                 }
             }
         }
@@ -256,6 +258,7 @@ PanelWindow {
                             hoverEnabled: true
                             onClicked: root.chooseGroup(modelData)
                         }
+                        Components.PressBounce { pressed: groupMouse.pressed }
                     }
                 }
             }

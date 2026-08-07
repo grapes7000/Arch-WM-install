@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 Item {
     id: panel
@@ -99,11 +100,13 @@ Item {
                 color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted
                 font.pixelSize: 22
                 MouseArea {
+                    id: panelPrevArea
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     enabled: Services.MprisService.canPrev
                     onClicked: Services.MprisService.previous()
                 }
+                Components.PressBounce { pressed: panelPrevArea.pressed }
             }
 
             Rectangle {
@@ -120,10 +123,12 @@ Item {
                 }
 
                 MouseArea {
+                    id: panelPlayPauseArea
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: Services.MprisService.playPause()
                 }
+                Components.PressBounce { pressed: panelPlayPauseArea.pressed }
             }
 
             Text {
@@ -132,11 +137,13 @@ Item {
                 color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted
                 font.pixelSize: 22
                 MouseArea {
+                    id: panelNextArea
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     enabled: Services.MprisService.canNext
                     onClicked: Services.MprisService.next()
                 }
+                Components.PressBounce { pressed: panelNextArea.pressed }
             }
         }
 
@@ -150,10 +157,12 @@ Item {
                 color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
                 font.pixelSize: 16
                 MouseArea {
+                    id: panelMuteArea
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: Services.AudioService.toggleMute()
                 }
+                Components.PressBounce { pressed: panelMuteArea.pressed }
             }
 
             Rectangle {

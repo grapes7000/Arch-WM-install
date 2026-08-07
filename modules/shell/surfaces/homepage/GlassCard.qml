@@ -11,9 +11,11 @@ Rectangle {
     // as a solid background rather than a faint tint.
     property real fillAlphaBoost: 0
     property alias hoverHandler: hover
-    // Multiplies the hover scale below; pops briefly above 1.0 on release
-    // and eases back. Only driven when interactive (clickable cards).
+    // Multiplies the hover scale below; dips on press and settles back to
+    // exactly 1.0 (the card's regular size) on release. Only driven when
+    // interactive (clickable cards).
     property real bounce: 1.0
+    signal clicked()
 
     radius: Core.Theme.radius + 4
     color: {
@@ -44,23 +46,44 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
     }
 
-    // Non-exclusive tap tracking for the press/release bounce; does not grab
-    // the event, so a TapHandler/MouseArea elsewhere on this card (e.g.
-    // RailCard's own click handler) still fires normally.
+    // The card's one and only tap handler: a second TapHandler/MouseArea
+    // layered on top of this (e.g. RailCard used to add its own) can
+    // grab-conflict with this one in Qt6 and silently stop the bounce (or
+    // the click) from firing. Subclasses should use `clicked()` instead of
+    // adding their own handler.
     TapHandler {
         id: tap
         enabled: root.interactive
         gesturePolicy: TapHandler.WithinBounds
+        onTapped: root.clicked()
         onPressedChanged: {
-            if (!pressed)
+            if (pressed) {
+                bounceAnim.stop()
+                pressAnim.restart()
+            } else {
+                pressAnim.stop()
                 bounceAnim.restart()
+            }
         }
     }
 
-    SequentialAnimation {
+    NumberAnimation {
+        id: pressAnim
+        target: root
+        property: "bounce"
+        to: 0.97
+        duration: 60
+        easing.type: Easing.OutQuad
+    }
+
+    NumberAnimation {
         id: bounceAnim
-        NumberAnimation { target: root; property: "bounce"; to: 1.06; duration: 90; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "bounce"; to: 1.0; duration: 130; easing.type: Easing.OutBack; easing.overshoot: 3 }
+        target: root
+        property: "bounce"
+        to: 1.0
+        duration: 140
+        easing.type: Easing.OutBack
+        easing.overshoot: 2.2
     }
 
     Rectangle {

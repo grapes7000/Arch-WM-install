@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 ColumnLayout {
     implicitHeight: 270
@@ -32,12 +33,14 @@ ColumnLayout {
                 font.bold: Services.SessionService.pendingAction === parent.modelData.action
             }
             MouseArea {
+                id: sessionActionArea
                 anchors.fill: parent
                 onClicked: {
                     if (modelData.action === "lock") Services.SessionService.lock()
                     else Services.SessionService[modelData.action]()
                 }
             }
+            Components.PressBounce { pressed: sessionActionArea.pressed }
         }
     }
     Text { font.family: Core.Theme.fontFamily; visible: Services.SessionService.error !== ""; text: Services.SessionService.error; color: Core.Theme.urgent; font.pixelSize: 10; Layout.fillWidth: true; wrapMode: Text.Wrap }

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 ColumnLayout {
     id: root
@@ -35,7 +36,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Text { font.family: Core.Theme.fontFamily; text: "Available Wi-Fi"; color: Core.Theme.muted; font.pixelSize: 10; font.bold: true }
         Item { Layout.fillWidth: true }
-        Text { font.family: Core.Theme.fontFamily; text: Services.NetworkService.scanning ? "Scanning…" : "Refresh"; color: Core.Theme.accent; MouseArea { anchors.fill: parent; enabled: !Services.NetworkService.scanning; onClicked: Services.NetworkService.scan() } }
+        Text { font.family: Core.Theme.fontFamily; text: Services.NetworkService.scanning ? "Scanning…" : "Refresh"; color: Core.Theme.accent; MouseArea { id: refreshArea; anchors.fill: parent; enabled: !Services.NetworkService.scanning; onClicked: Services.NetworkService.scan() } Components.PressBounce { pressed: refreshArea.pressed } }
     }
 
     ListView {
@@ -56,7 +57,8 @@ ColumnLayout {
                 Text { font.family: Core.Theme.fontFamily; Layout.fillWidth: true; text: modelData.ssid || "Hidden network"; color: Core.Theme.foreground; elide: Text.ElideRight }
                 Text { font.family: Core.Theme.fontFamily; text: (modelData.strength || 0) + "%"; color: Core.Theme.muted; font.pixelSize: 10 }
             }
-            MouseArea { anchors.fill: parent; onClicked: { root.selectedSsid = modelData.ssid || ""; passwordField.forceActiveFocus() } }
+            MouseArea { id: apArea; anchors.fill: parent; onClicked: { root.selectedSsid = modelData.ssid || ""; passwordField.forceActiveFocus() } }
+            Components.PressBounce { pressed: apArea.pressed }
         }
     }
 
@@ -78,6 +80,7 @@ ColumnLayout {
         color: Core.Theme.accent
         font.bold: true
         MouseArea {
+            id: connectArea
             anchors.fill: parent
             enabled: !Services.NetworkService.connecting
             onClicked: {
@@ -85,6 +88,7 @@ ColumnLayout {
                 root.clearPassword()
             }
         }
+        Components.PressBounce { pressed: connectArea.pressed }
     }
     Text { font.family: Core.Theme.fontFamily; visible: Services.NetworkService.error !== ""; text: Services.NetworkService.error; color: Core.Theme.urgent; font.pixelSize: 10; wrapMode: Text.Wrap; Layout.fillWidth: true }
 }
