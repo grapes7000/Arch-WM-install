@@ -12,7 +12,9 @@ Singleton {
         return configured || (Quickshell.env("HOME") + "/.config")
     }
     readonly property string path: configHome + "/theme-engine/generated/theme.json"
+    readonly property string homepageImagesDir: configHome + "/quickshell/homepage-images"
 
+    property var homepageImages: []
     property var data: ({
         schema_version: 1,
         name: "fallback",
@@ -52,6 +54,12 @@ Singleton {
     readonly property int barHeight: style.bar_height === undefined ? 48 : style.bar_height
     readonly property int animationMs: style.animation_ms === undefined ? 160 : style.animation_ms
 
+    function applyHomepageImages(baseData) {
+        const merged = Object.assign({}, baseData || root.data)
+        merged.wallpapers = root.homepageImages.slice()
+        root.data = merged
+    }
+
     function parse(contents) {
         if (!contents || typeof contents !== "string" || contents.length === 0)
             return
@@ -62,9 +70,34 @@ Singleton {
                 throw new Error("unsupported theme schema")
             if (!parsed.roles || !parsed.style)
                 throw new Error("theme requires roles and style")
-            root.data = parsed
+            applyHomepageImages(parsed)
         } catch (error) {
             console.warn("Theme update rejected; keeping last known-good theme:", error)
+        }
+    }
+
+    function refreshHomepageImages() {
+        if (!homepageImagesProcess.running)
+            homepageImagesProcess.running = true
+    }
+
+    Process {
+        id: homepageImagesProcess
+        command: [
+            "sh", "-c",
+            "dir=\"$1\"; mkdir -p \"$dir\"; "
+            + "find \"$dir\" -maxdepth 1 -type f \\( "
+            + "-iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o "
+            + "-iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' \\) "
+            + "-print | LC_ALL=C sort",
+            "sh", root.homepageImagesDir
+        ]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const images = text.split("\n").map(path => path.trim()).filter(path => path.length > 0)
+                root.homepageImages = images
+                root.applyHomepageImages(root.data)
+            }
         }
     }
 
@@ -77,5 +110,16 @@ Singleton {
         onFileChanged: themeFile.reload()
     }
 
-    Component.onCompleted: root.parse(themeFile.text())
+    Timer {
+        interval: 5000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.refreshHomepageImages()
+    }
+
+    Component.onCompleted: {
+        root.parse(themeFile.text())
+        root.refreshHomepageImages()
+    }
 }
