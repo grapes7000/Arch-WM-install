@@ -51,10 +51,14 @@ class StructureTests(unittest.TestCase):
         content = (
             ROOT / "modules/shell/components/WidgetHost.qml"
         ).read_text(encoding="utf-8")
+        # Widget content is created inside the animated pill container on the
+        # bar so hover/press state bubbles up; the context is still passed at
+        # construction time either way.
         self.assertIn(
-            "component.createObject(root, { context: widgetContext })",
+            "component.createObject(container, { context: widgetContext })",
             content,
         )
+        self.assertIn("const container = root.pillEnabled ? pill : root", content)
         self.assertNotIn("item.context = widgetContext", content)
         self.assertNotIn("loader.setSource", content)
 
@@ -161,7 +165,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.07.2")
+        self.assertEqual(version, "2026.08.07.14")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,15 @@ Item {
         allows: function() { return false }
     })
 
+    // Each indicator lifts and grows on its own hover, so the surrounding
+    // pill must not scale the whole widget as one unit. The widget is created
+    // inside the pill by WidgetHost; disabling its container scale leaves the
+    // pill's color hover intact while the group stays still.
+    Component.onCompleted: {
+        if (parent && parent.hasOwnProperty("scaleEnabled"))
+            parent.scaleEnabled = false
+    }
+
     // Semantic workspace slots, left to right. Each workspace id maps to a
     // purpose: an icon (Nerd Font glyph) and a lowercase label that is only
     // shown while the workspace is focused.
@@ -31,6 +40,15 @@ Item {
 
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
+
+    // When the host sets settings.showLabels (e.g. the homepage strip) AND the
+    // widget has room, each slot shows its icon and label instead of revealing
+    // the label only on the focused workspace. The width gate (~10 labeled
+    // slots need ~960px) makes the mode adaptive: on narrow surfaces it falls
+    // back to the bar's focused-only labels instead of overflowing.
+    readonly property bool showAllLabels: context && context.settings
+        && context.settings.showLabels === true
+        && root.width >= 1050
 
     // Look up a live Hyprland workspace by id. Reads `.values` rather than
     // indexing the model directly so QML re-evaluates this binding whenever
@@ -61,20 +79,42 @@ Item {
                 readonly property var ws: root.workspaceFor(workspaceId)
                 readonly property bool selected: !!ws && ws.focused
                 readonly property bool active: !!ws && ws.active
-                readonly property int base: context.variant === "compact" ? 30 : 38
+                // Compact base leaves headroom inside the bar's content band
+                // so a hovered indicator can lift and grow without clipping.
+                // Compact stays small for the bar; standard (used by the
+                // homepage strip) is sized for larger icons.
+                readonly property int base: context.variant === "compact" ? 28 : 46
 
                 property bool hovered: false
                 property real hoverScale: 1.0
+                // Lifts the indicator up a touch while hovered. Kept separate
+                // from scale so the pulse pop on focus never fights the hover
+                // animation (each animates its own property).
+                property real liftY: 0
                 property real pulse: 1.0
+
+                Behavior on hoverScale {
+                    NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                }
+                Behavior on liftY {
+                    NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                }
+                onHoveredChanged: {
+                    hoverScale = hovered ? 1.10 : 1.0
+                    liftY = hovered ? -2 : 0
+                }
 
                 readonly property color activeTint: {
                     const c = Qt.color(Core.Theme.accent2)
                     return Qt.rgba(c.r, c.g, c.b, 0.28)
                 }
 
-                // Square box; the focused slot grows to show icon + label.
-                Layout.preferredWidth: selected ? content.implicitWidth + base * 0.8 : base
-                Layout.preferredHeight: selected ? base + 8 : base
+                // Square box; the focused slot grows to show icon + label. The
+                // grown height is capped so the selected slot stays inside the
+                // bar's content band instead of being clipped by the cell.
+                Layout.preferredWidth: (selected || root.showAllLabels)
+                    ? content.implicitWidth + base * 0.8 : base
+                Layout.preferredHeight: selected ? base + 4 : base
                 Behavior on Layout.preferredWidth {
                     NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
                 }
@@ -99,6 +139,7 @@ Item {
                 }
 
                 scale: hoverScale * pulse
+                transform: Translate { y: box.liftY }
 
                 RowLayout {
                     id: content
@@ -108,7 +149,8 @@ Item {
                     Text {
                         text: modelData.icon
                         font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: box.selected ? 17 : (context.variant === "compact" ? 15 : 18)
+                        font.pixelSize: context.variant === "compact"
+                            ? (box.selected ? 17 : 15) : 26
                         color: box.selected ? Core.Theme.background
                             : box.active ? Core.Theme.accent2
                             : Core.Theme.foreground
@@ -117,11 +159,13 @@ Item {
 
                     Text {
                         text: modelData.name
-                        visible: box.selected
+                        visible: box.selected || root.showAllLabels
                         font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 11
+                        font.pixelSize: root.showAllLabels ? 10 : 11
                         font.bold: true
-                        color: Core.Theme.background
+                        // Dark-on-accent when focused, foreground on the
+                        // surface fills the other slots use otherwise.
+                        color: box.selected ? Core.Theme.background : Core.Theme.foreground
                         Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
                     }
                 }

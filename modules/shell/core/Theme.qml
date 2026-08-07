@@ -54,6 +54,14 @@ Singleton {
     readonly property var style: data.style || ({})
     readonly property string background: roles.bg || "#0a0a0f"
     readonly property string surface: roles.bg_alt || "#15121a"
+    // Slightly lifted surface used for hovered fills and track backgrounds.
+    readonly property color _surfaceColor: surface
+    readonly property color surfaceHover: Qt.rgba(
+        Math.min(1, _surfaceColor.r * 1.08),
+        Math.min(1, _surfaceColor.g * 1.08),
+        Math.min(1, _surfaceColor.b * 1.08),
+        1.0
+    )
     readonly property string foreground: roles.text || "#ff6ec7"
     readonly property string muted: roles.text_dim || foreground
     readonly property string accent: roles.accent || "#00e5ff"

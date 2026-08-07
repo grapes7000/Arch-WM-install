@@ -5,6 +5,13 @@ Item {
     id: root
 
     required property string widgetId
+    readonly property bool pillEnabled: root.surfaceKind === "bar"
+    // Inset between the widget content and its pill border so hover states
+    // never crowd the widget's glyphs. Horizontal padding is generous; the
+    // vertical inset keeps text clear of the top/bottom pill border while the
+    // pill itself fills the bar's content band.
+    readonly property real pillPadding: 10
+    readonly property real pillPadV: 4
     required property string surfaceKind
     required property string instanceId
     property string variant: "standard"
@@ -28,6 +35,7 @@ Item {
             return 0
         if (loadedItem)
             return Math.max(0, loadedItem.implicitWidth)
+                + (root.pillEnabled ? root.pillPadding * 2 : 0)
         return loadError ? 24 : 0
     }
     implicitHeight: {
@@ -59,7 +67,10 @@ Item {
         if (component.status !== Component.Ready)
             return
 
-        const item = component.createObject(root, { context: widgetContext })
+        // Widget content lives inside the pill so hover/press state bubbles up
+        // from the widget's own mouse areas to the pill's passive handler.
+        const container = root.pillEnabled ? pill : root
+        const item = component.createObject(container, { context: widgetContext })
         if (!item) {
             root.loadError = component.errorString() || ("Failed to create " + root.widgetId)
             console.warn(root.loadError)
@@ -67,8 +78,12 @@ Item {
         }
 
         root.loadedItem = item
-        item.width = Qt.binding(function() { return root.width })
-        item.height = Qt.binding(function() { return root.height })
+        const insetX = root.pillEnabled ? root.pillPadding : 0
+        const insetY = root.pillEnabled ? root.pillPadV : 0
+        item.width = Qt.binding(function() { return Math.max(0, container.width - insetX * 2) })
+        item.height = Qt.binding(function() { return Math.max(0, container.height - insetY * 2) })
+        item.x = Qt.binding(function() { return (container.width - item.width) / 2 })
+        item.y = Qt.binding(function() { return (container.height - item.height) / 2 })
         root.loadError = ""
     }
 
@@ -109,6 +124,13 @@ Item {
         capabilities: Core.SurfaceRegistry.grant(root.surfaceKind, root.requestedCapabilities)
         settings: root.settings
         requestHandler: root.requestHandler
+    }
+
+    PillBox {
+        id: pill
+        anchors.fill: parent
+        visible: root.pillEnabled && root.supported && root.contentVisible
+            && root.loadError.length === 0
     }
 
     Rectangle {

@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 ROOT="${ARCH_WM_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-REF="origin/fix/arch-wm-ui"
 TARGET="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/arch-wm"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/arch-wm-install"
 BACKUPS="${XDG_DATA_HOME:-$HOME/.local/share}/arch-wm-install/manual-backups"
@@ -11,10 +10,10 @@ LOG="$STATE/quickshell-force-repair.log"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-printf 'Fetching fixed shell...\n'
-git -C "$ROOT" fetch --quiet origin fix/arch-wm-ui
-git -C "$ROOT" archive "$REF" modules/shell | tar -x -C "$TMP"
-SOURCE="$TMP/modules/shell"
+# Install the shell from the local checkout (the same source the installer
+# stages), never from a remote branch: stale branches were the cause of
+# reverting newer shell work.
+SOURCE="$ROOT/modules/shell"
 
 if grep -R -n -F 'required property var context' "$SOURCE/widgets"; then
     echo 'Repair aborted: remote branch still contains required widget contexts.' >&2

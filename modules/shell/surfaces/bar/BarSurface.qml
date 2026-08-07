@@ -70,7 +70,10 @@ Scope {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: Core.Theme.gap
+                    anchors.leftMargin: Core.Theme.gap
+                    anchors.rightMargin: Core.Theme.gap
+                    anchors.topMargin: Math.max(4, Math.floor(Core.Theme.gap / 2))
+                    anchors.bottomMargin: Math.max(4, Math.floor(Core.Theme.gap / 2))
                     spacing: Core.Theme.gap
 
                     Item {
@@ -82,7 +85,8 @@ Scope {
                         RowLayout {
                             anchors {
                                 left: parent.left
-                                verticalCenter: parent.verticalCenter
+                                top: parent.top
+                                bottom: parent.bottom
                             }
                             spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
 
@@ -100,6 +104,7 @@ Scope {
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
+                                    Layout.fillWidth: true
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
@@ -114,7 +119,11 @@ Scope {
                         clip: true
 
                         RowLayout {
-                            anchors.centerIn: parent
+                            anchors {
+                                horizontalCenter: parent.horizontalCenter
+                                top: parent.top
+                                bottom: parent.bottom
+                            }
                             spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
 
                             Repeater {
@@ -131,6 +140,7 @@ Scope {
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
+                                    Layout.fillWidth: true
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
@@ -147,7 +157,8 @@ Scope {
                         RowLayout {
                             anchors {
                                 right: parent.right
-                                verticalCenter: parent.verticalCenter
+                                top: parent.top
+                                bottom: parent.bottom
                             }
                             spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
 
@@ -165,14 +176,16 @@ Scope {
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
+                                    Layout.fillWidth: true
                                     Layout.preferredWidth: implicitWidth
                                     Layout.preferredHeight: implicitHeight
                                 }
                             }
 
-                            Item {
-                                Layout.preferredWidth: menuTrigger.implicitWidth + 8
+                            PillBox {
+                                Layout.preferredWidth: menuTrigger.implicitWidth + 12
                                 Layout.fillHeight: true
+                                active: menuPopup.menuOpen
 
                                 Text {
                                     font.family: Core.Theme.fontFamily

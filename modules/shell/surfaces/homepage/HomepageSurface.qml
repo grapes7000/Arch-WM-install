@@ -337,78 +337,82 @@ Scope {
                                 font.bold: true
                             }
 
-                            GridLayout {
+                            GlassCard {
                                 visible: root.selectedPage === "home"
                                 Layout.fillWidth: true
-                                columns: root.compact ? 4 : 5
-                                rowSpacing: 9
-                                columnSpacing: 9
+                                fillAlphaBoost: 0.28
+                                implicitHeight: appsLayout.implicitHeight + (root.compact ? 20 : 28)
 
-                                Repeater {
-                                    model: root.quickAccessApps
+                                ColumnLayout {
+                                    id: appsLayout
+                                    anchors.fill: parent
+                                    anchors.margins: root.compact ? 10 : 14
+                                    spacing: 9
 
-                                    Item {
-                                        id: appTile
-                                        required property var modelData
-                                        readonly property string desktopIcon: root.desktopIconFor(modelData.command)
+                                    GridLayout {
                                         Layout.fillWidth: true
-                                        Layout.preferredHeight: root.compact ? 68 : 86
+                                        columns: root.compact ? 4 : 5
+                                        rowSpacing: 9
+                                        columnSpacing: 9
 
-                                        Column {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            IconImage {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                visible: appTile.desktopIcon !== ""
-                                                implicitSize: root.compact ? 30 : 40
-                                                source: appTile.desktopIcon !== "" ? Quickshell.iconPath(appTile.desktopIcon, "") : ""
-                                                opacity: appHover.hovered ? 1.0 : 0.9
-                                                scale: appHover.hovered ? 1.08 : 1.0
-                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                        Repeater {
+                                            model: root.quickAccessApps
+
+                                            Item {
+                                                id: appTile
+                                                required property var modelData
+                                                readonly property string desktopIcon: root.desktopIconFor(modelData.command)
+                                                Layout.fillWidth: true
+                                                Layout.preferredHeight: root.compact ? 68 : 86
+
+                                                Column {
+                                                    anchors.centerIn: parent
+                                                    spacing: 4
+                                                    IconImage {
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        visible: appTile.desktopIcon !== ""
+                                                        implicitSize: root.compact ? 30 : 40
+                                                        source: appTile.desktopIcon !== "" ? Quickshell.iconPath(appTile.desktopIcon, "") : ""
+                                                        opacity: appHover.hovered ? 1.0 : 0.9
+                                                        scale: appHover.hovered ? 1.08 : 1.0
+                                                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                                    }
+                                                    Text {
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        visible: appTile.desktopIcon === ""
+                                                        text: modelData.icon
+                                                        color: Core.Theme.accent
+                                                        font.pixelSize: root.compact ? 26 : 34
+                                                        scale: appHover.hovered ? 1.08 : 1.0
+                                                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                                    }
+                                                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 9 }
+                                                }
+                                                HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
+                                                TapHandler { onTapped: root.launch(modelData.command) }
                                             }
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                visible: appTile.desktopIcon === ""
-                                                text: modelData.icon
-                                                color: Core.Theme.accent
-                                                font.pixelSize: root.compact ? 26 : 34
-                                                scale: appHover.hovered ? 1.08 : 1.0
-                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                            }
-                                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 9 }
                                         }
-                                        HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
-                                        TapHandler { onTapped: root.launch(modelData.command) }
                                     }
                                 }
                             }
 
-                            Loader {
-                                id: networkPanelLoader
-                                visible: root.selectedPage === "network"
-                                active: visible
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: item ? item.implicitHeight : 0
-                                source: active ? Qt.resolvedUrl("../../widgets/network/Panel.qml") : ""
-                            }
-
                             GlassCard {
-                                visible: root.selectedPage !== "home" && root.selectedPage !== "network"
+                                visible: root.selectedPage !== "home"
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: root.compact ? 95 : 120
-                                Text {
+                                fillAlphaBoost: 0.28
+                                implicitHeight: panelHostLayout.implicitHeight + (root.compact ? 20 : 32)
+
+                                ColumnLayout {
+                                    id: panelHostLayout
                                     anchors.fill: parent
-                                    anchors.margins: 16
-                                    color: Core.Theme.foreground
-                                    wrapMode: Text.WordWrap
-                                    font.pixelSize: 12
-                                    text: root.selectedPage === "system"
-                                        ? "CPU " + Services.SystemStatsService.cpuPercent + "% · RAM " + Services.SystemStatsService.memoryPercent + "% · Disk " + Services.SystemStatsService.diskPercent + "% · Uptime " + Services.SystemStatsService.uptime
-                                        : root.selectedPage === "audio"
-                                        ? "Use the media controls and visualizer while audio is playing."
-                                        : root.selectedPage === "calendar"
-                                        ? Services.TimeService.dateLong
-                                        : "Now playing: " + (Services.MprisService.title || "Nothing")
+                                    anchors.margins: root.compact ? 10 : 16
+                                    spacing: 0
+
+                                    PagePanel { page: "network" }
+                                    PagePanel { page: "system" }
+                                    PagePanel { page: "media" }
+                                    PagePanel { page: "audio" }
+                                    PagePanel { page: "calendar" }
                                 }
                             }
                         }
@@ -416,26 +420,24 @@ Scope {
 
                     GlassCard {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 58 : 70
-                        RowLayout {
+                        Layout.preferredHeight: root.compact ? 66 : 80
+
+                        // The same workspaces widget the bar renders: identical
+                        // icons, names, focus/active coloring, hover lift, and
+                        // click-to-switch behavior. showLabels reveals every
+                        // slot name since the strip has room for it.
+                        Loader {
+                            id: workspaceStrip
                             anchors.fill: parent
-                            anchors.margins: 10
-                            spacing: 8
-                            Repeater {
-                                model: 10
-                                Rectangle {
-                                    required property int index
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                    radius: Core.Theme.radius
-                                    color: index === 0 ? Core.Theme.accent : Core.Theme.surface
-                                    border.width: 1
-                                    border.color: index === 0 ? Core.Theme.accent : Core.Theme.accent2
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: String(index + 1)
-                                        color: index === 0 ? Core.Theme.background : Core.Theme.foreground
-                                        font.bold: index === 0
+                            anchors.margins: 6
+                            source: Qt.resolvedUrl("../../widgets/workspaces/Widget.qml")
+                            onLoaded: {
+                                item.context = {
+                                    variant: "standard",
+                                    settings: { showLabels: true },
+                                    locked: false,
+                                    allows: function(capability) {
+                                        return capability === "workspace.switch"
                                     }
                                 }
                             }
@@ -675,6 +677,28 @@ Scope {
                         onClicked: controlRow.toggled()
                     }
                 }
+            }
+
+            // Homepage pages reuse the same shared panels the bar's drawers
+            // render, so a page is never a stale summary of its widget.
+            function panelSourceFor(page) {
+                switch (page) {
+                    case "network": return Qt.resolvedUrl("../../widgets/network/Panel.qml")
+                    case "system": return Qt.resolvedUrl("../../widgets/system-stats/Panel.qml")
+                    case "media": return Qt.resolvedUrl("../../widgets/media/Panel.qml")
+                    case "audio": return Qt.resolvedUrl("../../surfaces/bar/AudioDrawer.qml")
+                    case "calendar": return Qt.resolvedUrl("../../surfaces/bar/CalendarDrawer.qml")
+                }
+                return ""
+            }
+
+            component PagePanel: Loader {
+                property string page: ""
+                Layout.fillWidth: true
+                Layout.preferredHeight: item ? item.implicitHeight : 0
+                visible: root.selectedPage === page
+                active: visible
+                source: active ? root.panelSourceFor(page) : ""
             }
 
             Timer {

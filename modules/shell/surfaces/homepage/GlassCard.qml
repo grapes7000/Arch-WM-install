@@ -6,12 +6,17 @@ Rectangle {
 
     property bool active: false
     property bool interactive: false
+    // Extra fill opacity above the theme's surface opacity. Content cards that
+    // sit directly over the hero wallpaper use this so their panel box reads
+    // as a solid background rather than a faint tint.
+    property real fillAlphaBoost: 0
     property alias hoverHandler: hover
 
     radius: Core.Theme.radius + 4
     color: {
         var c = Qt.color(Core.Theme.surface)
-        var alpha = active ? Math.min(1.0, Core.Theme.surfaceOpacity + 0.16) : Core.Theme.surfaceOpacity
+        var alpha = Math.min(1.0, Core.Theme.surfaceOpacity + fillAlphaBoost
+            + (active ? 0.16 : 0))
         return Qt.rgba(c.r, c.g, c.b, alpha)
     }
     border.width: active ? 2 : Core.Theme.borderWidth
