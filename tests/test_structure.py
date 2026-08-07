@@ -79,6 +79,9 @@ class StructureTests(unittest.TestCase):
         self.assertGreaterEqual(bar.count("Layout.fillWidth: true"), 3)
         self.assertIn("anchors.fill: parent", desktop)
         self.assertIn("exclusionMode: ExclusionMode.Ignore", desktop)
+        self.assertIn("anchors.margins: Core.Theme.barPadding", bar)
+        self.assertIn("Core.Theme.windowGap", bar)
+        self.assertNotIn("anchors.margins: Core.Theme.gap", bar)
 
     def test_quickshell_autostart_prevents_duplicate_instances(self) -> None:
         autostart = (
@@ -90,7 +93,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
         self.assertIn("theme-sync.py", autostart)
-        self.assertEqual(version, "2026.08.07.2")
+        self.assertEqual(version, "2026.08.07.3")
 
     def test_universal_theme_contract_drives_shell_and_hyprland(self) -> None:
         schema = json.loads(
@@ -99,6 +102,8 @@ class StructureTests(unittest.TestCase):
         style = schema["properties"]["style"]["properties"]
         for token in (
             "surface_opacity",
+            "window_gap",
+            "bar_padding",
             "animation_profile",
             "workspace_animation",
             "motion_scale",
@@ -108,17 +113,68 @@ class StructureTests(unittest.TestCase):
         shell_theme = (
             ROOT / "modules/shell/core/Theme.qml"
         ).read_text(encoding="utf-8")
-        self.assertIn("surfaceOpacity", shell_theme)
-        self.assertIn("animationProfile", shell_theme)
-        self.assertIn("motionScale", shell_theme)
+        for token in (
+            "surfaceBase",
+            "surfaceRaised",
+            "surfaceElevated",
+            "surfaceOverlay",
+            "surfaceHover",
+            "windowGap",
+            "barPadding",
+            "surfaceOpacity",
+            "animationProfile",
+            "motionScale",
+        ):
+            self.assertIn(token, shell_theme)
+        self.assertIn("barHeight - 16", shell_theme)
 
         hypr_sync = (
             ROOT / "modules/hyprland/config/scripts/theme-sync.py"
         ).read_text(encoding="utf-8")
         self.assertIn("theme-engine/generated/theme.json", hypr_sync)
+        self.assertIn("window_gap", hypr_sync)
         self.assertIn("animation_profile", hypr_sync)
         self.assertIn("workspace_animation", hypr_sync)
         self.assertIn("motion_scale", hypr_sync)
+
+    def test_modern_reference_themes_exist(self) -> None:
+        for name, dark in (
+            ("obsidian", True),
+            ("porcelain", False),
+            ("ultraviolet", True),
+            ("sorbet", False),
+        ):
+            path = ROOT / "modules/theme-engine/themes" / f"{name}.json"
+            self.assertTrue(path.is_file(), name)
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["name"], name)
+            self.assertEqual(payload["dark"], dark)
+            for role in (
+                "surface_0",
+                "surface_1",
+                "surface_2",
+                "overlay",
+                "hover",
+                "accent",
+                "accent2",
+            ):
+                self.assertIn(role, payload["roles"])
+            self.assertIn("window_gap", payload["style"])
+            self.assertIn("bar_padding", payload["style"])
+            self.assertGreaterEqual(payload["style"]["surface_opacity"], 0.9)
+
+    def test_theme_quality_lint_is_available_to_studio(self) -> None:
+        quality = (
+            ROOT / "modules/theme-engine/bin/theme_schema.py"
+        ).read_text(encoding="utf-8")
+        studio = (
+            ROOT / "modules/theme-engine/bin/theme-studio"
+        ).read_text(encoding="utf-8")
+        self.assertIn("def quality_warnings", quality)
+        self.assertIn("low-saturation", quality)
+        self.assertIn("contrast", quality)
+        self.assertIn("catalog_warnings", studio)
+        self.assertIn("Theme quality notes", studio)
 
     def test_special_workspaces_and_smart_rules_exist(self) -> None:
         keybinds = (
@@ -161,7 +217,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.07.2")
+        self.assertEqual(version, "2026.08.07.3")
 
 
 if __name__ == "__main__":
