@@ -89,7 +89,7 @@ class StructureTests(unittest.TestCase):
         ).read_text(encoding="utf-8").strip()
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
-        self.assertEqual(version, "2026.08.04.3")
+        self.assertEqual(version, "2026.08.04.4")
 
     def test_menu_popup_dismisses_from_backdrop_and_escape(self) -> None:
         popup = (
