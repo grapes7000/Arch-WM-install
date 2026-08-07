@@ -10,16 +10,13 @@ Rectangle {
 
     radius: Core.Theme.radius + 4
     color: {
-        var c = Qt.color(Core.Theme.surface)
-        var alpha = active ? Math.min(1.0, Core.Theme.surfaceOpacity + 0.16) : Core.Theme.surfaceOpacity
+        const token = active ? Core.Theme.surfaceElevated : Core.Theme.surfaceRaised
+        const c = Qt.color(token)
+        const alpha = active ? Math.min(1.0, Core.Theme.surfaceOpacity + 0.03) : Core.Theme.surfaceOpacity
         return Qt.rgba(c.r, c.g, c.b, alpha)
     }
-    border.width: active ? 2 : Core.Theme.borderWidth
-    border.color: {
-        if (active) return Core.Theme.accent
-        var c = Qt.color(Core.Theme.accent2)
-        return Qt.rgba(c.r, c.g, c.b, 0.34)
-    }
+    border.width: active ? Math.max(2, Core.Theme.borderWidth) : Core.Theme.borderWidth
+    border.color: active ? Core.Theme.accent : (Core.Theme.roles.border_subtle || Core.Theme.accent2)
     scale: interactive && hover.hovered ? 1.015 : 1.0
 
     Behavior on scale {
@@ -43,8 +40,12 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 1
         radius: Math.max(0, parent.radius - 1)
-        color: "transparent"
+        color: interactive && hover.hovered ? Core.Theme.surfaceHover : "transparent"
+        opacity: interactive && hover.hovered ? 0.22 : 0
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, hover.hovered ? 0.16 : 0.08)
+        border.color: Qt.rgba(1, 1, 1, hover.hovered ? 0.12 : 0.06)
+        Behavior on opacity {
+            NumberAnimation { duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale) }
+        }
     }
 }
