@@ -60,13 +60,13 @@ Scope {
                 right: true
             }
             margins {
-                top: Core.Theme.gap
-                left: Core.Theme.gap
-                right: Core.Theme.gap
+                top: Core.Theme.windowGap
+                left: Core.Theme.windowGap
+                right: Core.Theme.windowGap
             }
 
             implicitHeight: Core.Theme.barHeight
-            exclusiveZone: Core.Theme.barHeight + Core.Theme.gap * 2
+            exclusiveZone: Core.Theme.barHeight + Core.Theme.windowGap * 2
             focusable: false
             color: "transparent"
             visible: !Services.LockStateService.locked
@@ -74,15 +74,16 @@ Scope {
             Rectangle {
                 id: background
                 anchors.fill: parent
-                color: Core.Theme.surface
+                color: Core.Theme.surfaceBase
+                opacity: Core.Theme.surfaceOpacity
                 radius: Core.Theme.radius
                 border.width: Core.Theme.borderWidth
                 border.color: Core.Theme.accent2
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: Core.Theme.gap
-                    spacing: Core.Theme.gap
+                    anchors.margins: Core.Theme.barPadding
+                    spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
 
                     Item {
                         id: startCell
@@ -95,7 +96,7 @@ Scope {
                                 left: parent.left
                                 verticalCenter: parent.verticalCenter
                             }
-                            spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
+                            spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
 
                             Repeater {
                                 model: Services.LayoutService.bar.regions.start || []
@@ -126,7 +127,7 @@ Scope {
 
                         RowLayout {
                             anchors.centerIn: parent
-                            spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
+                            spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
 
                             Repeater {
                                 model: Services.LayoutService.bar.regions.center || []
@@ -160,7 +161,7 @@ Scope {
                                 right: parent.right
                                 verticalCenter: parent.verticalCenter
                             }
-                            spacing: Math.max(4, Math.floor(Core.Theme.gap / 2))
+                            spacing: Math.max(4, Math.floor(Core.Theme.barPadding / 2))
 
                             Repeater {
                                 model: Services.LayoutService.bar.regions.end || []
