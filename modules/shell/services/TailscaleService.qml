@@ -17,6 +17,10 @@ Singleton {
     property string ipAddress: ""
     property int peerCount: 0
     property string error: ""
+    // Exit nodes that route out through Mullvad even though their
+    // hostname doesn't literally contain "mullvad" (e.g. a homelab
+    // box whose own uplink is a Mullvad WireGuard tunnel).
+    readonly property var mullvadRoutedExitNodes: ["homelab"]
 
     function clear(message) {
         running = false
@@ -70,12 +74,17 @@ Singleton {
                     if (peer.ID === exitId || peer.PublicKey === exitId) {
                         root.exitNodeName = peer.HostName || peer.DNSName || "unknown"
                         const lower = root.exitNodeName.toLowerCase()
-                        root.isMullvad = lower.indexOf("mullvad") !== -1
-                        if (root.isMullvad) {
+                        const directlyMullvad = lower.indexOf("mullvad") !== -1
+                        const routesViaMullvad = root.mullvadRoutedExitNodes.some(
+                            name => lower.indexOf(name) !== -1)
+                        root.isMullvad = directlyMullvad || routesViaMullvad
+                        if (directlyMullvad) {
                             const parts = lower.split(/[-.]+/)
                             if (parts.length >= 2)
                                 root.mullvadLocation = parts[0].toUpperCase()
                                     + "-" + parts[1].toUpperCase()
+                        } else if (routesViaMullvad) {
+                            root.mullvadLocation = "via " + root.exitNodeName
                         }
                         break
                     }

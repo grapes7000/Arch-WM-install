@@ -6,6 +6,9 @@ import "../../services" as Services
 Item {
     id: panel
 
+    property string selectedSsid: ""
+    property string passwordDraft: ""
+
     implicitHeight: layout.implicitHeight
 
     ColumnLayout {
@@ -149,6 +152,168 @@ Item {
                             font.pixelSize: 10
                         }
                     }
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: selectorCol.implicitHeight + 24
+            radius: Math.max(6, Core.Theme.radius - 2)
+            color: Qt.rgba(1, 1, 1, 0.04)
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.06)
+
+            ColumnLayout {
+                id: selectorCol
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 12
+                spacing: 8
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Available Networks"
+                        color: Core.Theme.foreground
+                        font.pixelSize: 12
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: Services.NetworkService.scanning ? "…" : "󰑐"
+                        color: Core.Theme.muted
+                        font.pixelSize: 14
+
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -6
+                            cursorShape: Qt.PointingHandCursor
+                            enabled: !Services.NetworkService.scanning
+                            onClicked: Services.NetworkService.scan()
+                        }
+                    }
+                }
+
+                Repeater {
+                    model: Services.NetworkService.accessPoints
+
+                    delegate: ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            Text {
+                                text: modelData.active ? "󰤨" : "󰤢"
+                                color: modelData.active ? Core.Theme.accent : Core.Theme.muted
+                                font.pixelSize: 14
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.ssid
+                                color: modelData.active ? Core.Theme.foreground : Core.Theme.muted
+                                font.pixelSize: 12
+                                font.bold: modelData.active
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                visible: modelData.security !== ""
+                                text: "󰌾"
+                                color: Core.Theme.muted
+                                font.pixelSize: 11
+                            }
+
+                            Text {
+                                text: modelData.strength + "%"
+                                color: Core.Theme.muted
+                                font.pixelSize: 10
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                enabled: !modelData.active && !Services.NetworkService.connecting
+                                onClicked: {
+                                    if (modelData.security !== "") {
+                                        panel.selectedSsid = panel.selectedSsid === modelData.ssid
+                                            ? "" : modelData.ssid
+                                        panel.passwordDraft = ""
+                                    } else {
+                                        Services.NetworkService.connectWifi(modelData.ssid, "")
+                                    }
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: panel.selectedSsid === modelData.ssid
+                            spacing: 8
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: pwField.implicitHeight + 10
+                                radius: 999
+                                color: Qt.rgba(1, 1, 1, 0.06)
+                                border.width: 1
+                                border.color: Qt.rgba(1, 1, 1, 0.1)
+
+                                TextInput {
+                                    id: pwField
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 12
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    color: Core.Theme.foreground
+                                    font.pixelSize: 11
+                                    echoMode: TextInput.Password
+                                    text: panel.passwordDraft
+                                    onTextChanged: panel.passwordDraft = text
+                                    Keys.onReturnPressed: {
+                                        Services.NetworkService.connectWifi(
+                                            modelData.ssid, panel.passwordDraft)
+                                        panel.selectedSsid = ""
+                                        panel.passwordDraft = ""
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: "Connect"
+                                color: Core.Theme.accent
+                                font.pixelSize: 11
+                                font.bold: true
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    anchors.margins: -6
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        Services.NetworkService.connectWifi(
+                                            modelData.ssid, panel.passwordDraft)
+                                        panel.selectedSsid = ""
+                                        panel.passwordDraft = ""
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    visible: Services.NetworkService.accessPoints.length === 0
+                    text: Services.NetworkService.scanning ? "Scanning…" : "No networks found"
+                    color: Core.Theme.muted
+                    font.pixelSize: 11
                 }
             }
         }
