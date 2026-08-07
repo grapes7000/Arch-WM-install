@@ -34,12 +34,6 @@ Item {
             }
             color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 16 : 20
-
-            MouseArea {
-                anchors.fill: parent
-                enabled: context.allows("audio.control")
-                onClicked: Services.AudioService.toggleMute()
-            }
         }
 
         Text {

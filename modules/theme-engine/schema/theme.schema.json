@@ -20,7 +20,7 @@
         "corner_radius": {"type": "integer", "minimum": 0},
         "opacity": {"type": "number", "minimum": 0, "maximum": 1},
         "opacity_inactive": {"type": "number", "minimum": 0, "maximum": 1},
-        "surface_opacity": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.72},
+        "surface_opacity": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.96},
         "inactive_dim": {"type": "number", "minimum": 0, "maximum": 1},
         "blur_on": {"type": "boolean"},
         "blur_strength": {"type": "integer", "minimum": 1},
@@ -31,7 +31,13 @@
         "shadow_opacity": {"type": "number", "minimum": 0, "maximum": 1},
         "shadow_color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
         "shadow_offset": {"type": "string"},
-        "gaps": {"type": "integer", "minimum": 0},
+        "gaps": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Legacy alias for window_gap. Kept for compatibility with existing themes."
+        },
+        "window_gap": {"type": "integer", "minimum": 0, "default": 8},
+        "bar_padding": {"type": "integer", "minimum": 0, "default": 8},
         "border_width": {"type": "integer", "minimum": 0},
         "bar_height": {"type": "integer", "minimum": 24},
         "animation_ms": {"type": "integer", "minimum": 0},

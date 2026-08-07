@@ -68,7 +68,10 @@ def derived_profile(style: dict[str, Any]) -> str:
 
 def apply(payload: dict[str, Any]) -> None:
     style = payload["style"]
-    gaps = max(0, int(style.get("gaps", 8)))
+    # window_gap is the canonical compositor spacing token. `gaps` remains a
+    # compatibility fallback for the existing catalog, while bar_padding is a
+    # shell-only geometry token and must never affect Hyprland window spacing.
+    gaps = max(0, int(style.get("window_gap", style.get("gaps", 8))))
     radius = max(0, int(style.get("corner_radius", 8)))
     border = max(0, int(style.get("border_width", 2)))
     active_opacity = max(0.0, min(1.0, float(style.get("opacity", 1.0))))

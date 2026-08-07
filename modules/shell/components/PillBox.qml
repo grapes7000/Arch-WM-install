@@ -2,8 +2,9 @@ import QtQuick
 import "../core" as Core
 
 // Animated pill background used behind bar widgets and buttons. It observes
-// hover and press passively (blocking: false) so the widget's own mouse areas
-// keep receiving clicks, and animates a subtle grow on hover, a dip on press,
+// hover and press passively (blocking: false / non-exclusive tap) so the
+// widget's own mouse areas keep receiving clicks, and animates a subtle grow
+// on hover, a dip+dim on press, a snappy overshoot bounce back on release,
 // and a gentle accent tint per state. `active` forces the pressed look for
 // items whose popup is currently open.
 Rectangle {
@@ -15,6 +16,9 @@ Rectangle {
     property bool scaleEnabled: true
     property real growScale: 1.02
     property real pressScale: 0.97
+    // Multiplies the state-driven scale above; pops briefly above 1.0 on
+    // release and eases back, independent of the hover/press target scale.
+    property real bounce: 1.0
 
     // String -> color conversion is implicit on color-typed properties.
     readonly property color _accent: Core.Theme.accent
@@ -39,17 +43,21 @@ Rectangle {
 
     radius: Math.max(6, Core.Theme.radius - 2)
     color: root.active ? pressColor
-        : (hover.hovered ? (hover.pressed ? pressColor : hoverColor) : idleColor)
+        : (hover.hovered ? (tap.pressed ? pressColor : hoverColor) : idleColor)
+    opacity: tap.pressed ? 0.85 : 1.0
     border.width: Core.Theme.borderWidth
     border.color: root.active ? pressBorder
-        : (hover.hovered ? (hover.pressed ? pressBorder : hoverBorder) : idleBorder)
-    scale: root.scaleEnabled
+        : (hover.hovered ? (tap.pressed ? pressBorder : hoverBorder) : idleBorder)
+    scale: (root.scaleEnabled
         ? (root.active ? pressScale
-            : (hover.hovered ? (hover.pressed ? pressScale : growScale) : 1.0))
-        : 1.0
+            : (hover.hovered ? (tap.pressed ? pressScale : growScale) : 1.0))
+        : 1.0) * root.bounce
 
     Behavior on scale {
         NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
+    }
+    Behavior on opacity {
+        NumberAnimation { duration: Core.Theme.animationMs; easing.type: Easing.OutQuad }
     }
     Behavior on color {
         ColorAnimation { duration: Core.Theme.animationMs * 2 }
@@ -61,5 +69,23 @@ Rectangle {
     HoverHandler {
         id: hover
         blocking: false
+    }
+
+    // Non-exclusive tap tracking: reports press state without grabbing the
+    // event, so the widget's own MouseArea underneath still gets the click.
+    TapHandler {
+        id: tap
+        acceptedButtons: Qt.LeftButton
+        gesturePolicy: TapHandler.WithinBounds
+        onPressedChanged: {
+            if (!pressed && root.scaleEnabled)
+                bounceAnim.restart()
+        }
+    }
+
+    SequentialAnimation {
+        id: bounceAnim
+        NumberAnimation { target: root; property: "bounce"; to: 1.06; duration: 90; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "bounce"; to: 1.0; duration: 220; easing.type: Easing.OutBack; easing.overshoot: 3 }
     }
 }
