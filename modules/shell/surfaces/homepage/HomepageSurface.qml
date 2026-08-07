@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Widgets
 import "../../core" as Core
@@ -20,8 +21,12 @@ Scope {
                 const configured = Core.Theme.data.wallpapers || []
                 if (Array.isArray(configured) && configured.length > 0)
                     return configured
+                // theme.json exposes wallpaper as { path, generator }; only
+                // fall back to it while the homepage images are loading.
                 const wallpaper = Core.Theme.data.wallpaper || ""
-                return wallpaper ? [wallpaper] : []
+                if (typeof wallpaper === "string" && wallpaper)
+                    return [wallpaper]
+                return wallpaper && wallpaper.path ? [wallpaper.path] : []
             }
             readonly property string currentSlide: slides.length > 0
                 ? String(slides[Math.min(slideIndex, slides.length - 1)]) : ""
@@ -50,6 +55,13 @@ Scope {
                 { icon: "󱓧", name: "Obsidian", command: "obsidian" }
             ]
 
+            // Hide the dashboard whenever any real window is open so the
+            // theme wallpaper shows through instead. Polled by a timer rather
+            // than bound to the toplevel model: reacting synchronously to the
+            // model's update group crashes this Quickshell version.
+            property bool anyWindowOpen: false
+            property bool hiddenForWindows: false
+
             screen: modelData
             anchors { top: true; bottom: true; left: true; right: true }
             margins {
@@ -62,7 +74,41 @@ Scope {
             focusable: true
             exclusionMode: ExclusionMode.Ignore
             color: "transparent"
-            visible: !Services.LockStateService.locked
+            visible: !hiddenForWindows && !Services.LockStateService.locked
+            Timer {
+                id: windowProbe
+                interval: 600
+                repeat: true
+                triggeredOnStart: true
+                running: !Services.LockStateService.locked
+                onTriggered: {
+                    // Only windows on the workspace currently shown by this
+                    // screen should hide the dashboard. Hyprland.toplevels
+                    // lists every workspace, so windows elsewhere must not
+                    // keep an empty workspace's homepage hidden.
+                    const monitor = Hyprland.monitorFor(root.screen)
+                    const workspace = monitor
+                        ? monitor.activeWorkspace
+                        : Hyprland.focusedWorkspace
+                    const open = workspace
+                        ? workspace.toplevels.values.length > 0
+                        : false
+                    if (open === root.anyWindowOpen)
+                        return
+                    root.anyWindowOpen = open
+                    if (open) {
+                        fadeOutTimer.start()
+                    } else {
+                        fadeOutTimer.stop()
+                        root.hiddenForWindows = false
+                    }
+                }
+            }
+            Timer {
+                id: fadeOutTimer
+                interval: Core.Theme.animationMs * 2
+                onTriggered: root.hiddenForWindows = true
+            }
 
             function select(page) {
                 selectedPage = selectedPage === page ? "home" : page
@@ -91,14 +137,26 @@ Scope {
                 onExited: command = []
             }
 
-            Rectangle {
+            // Fades the whole dashboard out when windows are open so the theme
+            // wallpaper shows through. PanelWindow has no opacity in this
+            // Quickshell version, so the fade lives on a content layer and the
+            // window itself is hidden once the fade finishes.
+            Item {
+                id: contentLayer
                 anchors.fill: parent
-                radius: Core.Theme.radius + 10
-                color: Core.Theme.background
-                opacity: 0.86
-                border.width: Core.Theme.borderWidth
-                border.color: Core.Theme.accent2
-            }
+                opacity: root.anyWindowOpen ? 0 : 1
+                Behavior on opacity {
+                    NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Core.Theme.radius + 10
+                    color: Core.Theme.background
+                    opacity: 0.86
+                    border.width: Core.Theme.borderWidth
+                    border.color: Core.Theme.accent2
+                }
 
             Image {
                 anchors.fill: parent
@@ -486,6 +544,8 @@ Scope {
                         }
                     }
                 }
+            }
+
             }
 
             component StatBar: ColumnLayout {

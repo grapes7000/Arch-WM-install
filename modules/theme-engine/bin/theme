@@ -611,17 +611,70 @@ def reload_consumers(targets: dict[str, str | bool]) -> None:
         run_quiet(["dunstctl", "reload"])
 
 
+def write_hyprpaper() -> None:
+    """Point hyprpaper at the user's homepage image slideshow.
+
+    The shell cycles through the images in
+    ~/.config/quickshell/homepage-images on the homepage every 30s, so keep
+    hyprpaper pointed at the same directory with a matching slideshow timeout.
+    This way the desktop wallpaper follows the homepage hero image and any new
+    image dropped into that directory appears in both. The managed block is
+    replaced on each apply so it survives restarts and theme switches.
+    """
+    path = CONFIG / "hypr/hyprpaper.conf"
+    marker = "# arch-wm: theme wallpaper (managed)"
+    slideshow_dir = CONFIG / "quickshell/homepage-images"
+    slideshow_dir.mkdir(parents=True, exist_ok=True)
+    # hyprpaper 0.8+ dropped the one-line `wallpaper = monitor,path` form in
+    # favor of special-category blocks; `monitor = *` applies to all outputs
+    # and a directory `path` with a `timeout` enables the built-in slideshow.
+    block = (
+        f"{marker}\n"
+        f"wallpaper {{\n"
+        f"    monitor = *\n"
+        f"    path = {slideshow_dir}\n"
+        f"    timeout = 30\n"
+        f"    order = default\n"
+        f"}}\n"
+    )
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    lines: list[str] = []
+    skipping = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped == marker:
+            skipping = True
+            continue
+        if skipping:
+            if stripped.startswith(("wallpaper", "monitor", "path", "fit_mode", "timeout", "order", "preload")):
+                continue
+            if stripped == "}":
+                # End of the managed block's closing brace.
+                skipping = False
+                continue
+            skipping = False
+        lines.append(line)
+    base = "\n".join(lines).strip()
+    if not base:
+        base = "splash = false\nipc = true"
+    updated = base + "\n" + block
+    if updated != text:
+        atomic_write(path, updated)
+
+
 def apply(name: str) -> None:
     theme = load_theme(name)
     targets = load_targets()
     write_outputs(theme, targets)
-    if "wallpaper" in targets and shutil.which("wallgen"):
-        command = ["wallgen", name]
-        if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-            command.append("--set")
-        result = subprocess.run(command, text=True, capture_output=True, check=False)
-        if result.returncode != 0:
-            print(result.stderr.strip() or "wallpaper generation failed", file=sys.stderr)
+    if "wallpaper" in targets:
+        write_hyprpaper()
+        if shutil.which("wallgen"):
+            command = ["wallgen", name]
+            if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+                command.append("--set")
+            result = subprocess.run(command, text=True, capture_output=True, check=False)
+            if result.returncode != 0:
+                print(result.stderr.strip() or "wallpaper generation failed", file=sys.stderr)
     reload_consumers(targets)
     print(f"Applied theme: {name}")
 
