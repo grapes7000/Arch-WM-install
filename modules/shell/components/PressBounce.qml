@@ -11,9 +11,11 @@ Item {
     property Item target: parent
     property real pressScale: 0.94
     property real overshootScale: 1.08
-    property int pressDuration: 80
-    property int reboundPeakDuration: 90
-    property int reboundSettleDuration: 130
+    // Kept short and un-eased-in so the press reads as immediate (tracking
+    // real mouse-down timing) and the rebound fires right at mouse-up.
+    property int pressDuration: 60
+    property int reboundPeakDuration: 70
+    property int reboundSettleDuration: 110
 
     TapHandler {
         id: tap

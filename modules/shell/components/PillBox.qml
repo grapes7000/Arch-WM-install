@@ -16,9 +16,14 @@ Rectangle {
     property bool scaleEnabled: true
     property real growScale: 1.02
     property real pressScale: 0.97
-    // Multiplies the state-driven scale above; pops briefly above 1.0 on
-    // release and eases back, independent of the hover/press target scale.
-    property real bounce: 1.0
+    // Slow, eased target for hover/active state changes.
+    readonly property real stateScale: root.scaleEnabled
+        ? (root.active ? pressScale : (hover.hovered ? growScale : 1.0))
+        : 1.0
+    // Fast, un-eased press/release pop, driven directly off the tap so it
+    // tracks the actual mouse-down/mouse-up timing instead of riding the
+    // slower hover Behavior below. Multiplies into the final scale.
+    property real pressPop: 1.0
 
     // String -> color conversion is implicit on color-typed properties.
     readonly property color _accent: Core.Theme.accent
@@ -48,22 +53,19 @@ Rectangle {
     border.width: Core.Theme.borderWidth
     border.color: root.active ? pressBorder
         : (hover.hovered ? (tap.pressed ? pressBorder : hoverBorder) : idleBorder)
-    scale: (root.scaleEnabled
-        ? (root.active ? pressScale
-            : (hover.hovered ? (tap.pressed ? pressScale : growScale) : 1.0))
-        : 1.0) * root.bounce
+    scale: root.stateScale * root.pressPop
 
-    Behavior on scale {
+    Behavior on stateScale {
         NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
     }
     Behavior on opacity {
-        NumberAnimation { duration: Core.Theme.animationMs; easing.type: Easing.OutQuad }
+        NumberAnimation { duration: 60; easing.type: Easing.OutQuad }
     }
     Behavior on color {
-        ColorAnimation { duration: Core.Theme.animationMs * 2 }
+        ColorAnimation { duration: 120 }
     }
     Behavior on border.color {
-        ColorAnimation { duration: Core.Theme.animationMs * 2 }
+        ColorAnimation { duration: 120 }
     }
 
     HoverHandler {
@@ -78,14 +80,33 @@ Rectangle {
         acceptedButtons: Qt.LeftButton
         gesturePolicy: TapHandler.WithinBounds
         onPressedChanged: {
-            if (!pressed && root.scaleEnabled)
+            if (!root.scaleEnabled)
+                return
+            if (pressed) {
+                bounceAnim.stop()
+                pressAnim.restart()
+            } else {
+                pressAnim.stop()
                 bounceAnim.restart()
+            }
         }
+    }
+
+    // Snappy, direct animations tracking real mouse-down/mouse-up timing —
+    // no Behavior easing in between, so press feels immediate and the
+    // rebound fires right as the button releases.
+    NumberAnimation {
+        id: pressAnim
+        target: root
+        property: "pressPop"
+        to: 0.97
+        duration: 60
+        easing.type: Easing.OutQuad
     }
 
     SequentialAnimation {
         id: bounceAnim
-        NumberAnimation { target: root; property: "bounce"; to: 1.06; duration: 90; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "bounce"; to: 1.0; duration: 130; easing.type: Easing.OutBack; easing.overshoot: 3 }
+        NumberAnimation { target: root; property: "pressPop"; to: 1.05; duration: 70; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "pressPop"; to: 1.0; duration: 110; easing.type: Easing.OutBack; easing.overshoot: 3 }
     }
 }
