@@ -35,7 +35,18 @@ Singleton {
             gaps: 8,
             border_width: 2,
             bar_height: 48,
-            animation_ms: 160
+            animation_ms: 160,
+            animation_profile: "smooth",
+            workspace_animation: "slide",
+            motion_scale: 1.0,
+            surface_opacity: 0.72,
+            opacity: 1.0,
+            opacity_inactive: 0.96,
+            blur_on: true,
+            blur_strength: 6,
+            blur_passes: 2,
+            shadow_on: true,
+            shadow_radius: 20
         }
     })
 
@@ -53,6 +64,15 @@ Singleton {
     readonly property int borderWidth: style.border_width === undefined ? 2 : style.border_width
     readonly property int barHeight: style.bar_height === undefined ? 48 : style.bar_height
     readonly property int animationMs: style.animation_ms === undefined ? 160 : style.animation_ms
+    readonly property string animationProfile: style.animation_profile || "smooth"
+    readonly property string workspaceAnimation: style.workspace_animation || "slide"
+    readonly property real motionScale: style.motion_scale === undefined ? 1.0 : Math.max(0, Math.min(2, Number(style.motion_scale)))
+    readonly property real surfaceOpacity: style.surface_opacity === undefined ? 0.72 : Math.max(0, Math.min(1, Number(style.surface_opacity)))
+    readonly property bool blurEnabled: style.blur_on === undefined ? true : Boolean(style.blur_on)
+    readonly property int blurStrength: style.blur_strength === undefined ? 6 : Math.max(1, Number(style.blur_strength))
+    readonly property int blurPasses: style.blur_passes === undefined ? 2 : Math.max(1, Number(style.blur_passes))
+    readonly property bool shadowEnabled: style.shadow_on === undefined ? true : Boolean(style.shadow_on)
+    readonly property int shadowRadius: style.shadow_radius === undefined ? 20 : Math.max(0, Number(style.shadow_radius))
 
     function applyHomepageImages(baseData) {
         const merged = Object.assign({}, baseData || root.data)
