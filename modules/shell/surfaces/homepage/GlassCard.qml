@@ -11,7 +11,8 @@ Rectangle {
     radius: Core.Theme.radius + 4
     color: {
         var c = Qt.color(Core.Theme.surface)
-        return Qt.rgba(c.r, c.g, c.b, active ? 0.84 : 0.68)
+        var alpha = active ? Math.min(1.0, Core.Theme.surfaceOpacity + 0.16) : Core.Theme.surfaceOpacity
+        return Qt.rgba(c.r, c.g, c.b, alpha)
     }
     border.width: active ? 2 : Core.Theme.borderWidth
     border.color: {
@@ -22,11 +23,14 @@ Rectangle {
     scale: interactive && hover.hovered ? 1.015 : 1.0
 
     Behavior on scale {
-        NumberAnimation { duration: 170; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale)
+            easing.type: Core.Theme.animationProfile === "snappy" ? Easing.OutQuad : Easing.OutCubic
+        }
     }
 
     Behavior on border.color {
-        ColorAnimation { duration: 190 }
+        ColorAnimation { duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale) }
     }
 
     HoverHandler {
