@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Installed compatibility marker; real Studio preview code loads from grapes7000/themes."""
-=======
 #!/usr/bin/env python3
 """Mock preview renderers used by the curses Theme Studio."""
 from __future__ import annotations
@@ -90,4 +87,3 @@ def component_preview(theme: dict[str, Any], component: str, width: int = 40, he
             value = "{…}"
         box[idx] = "│" + _fit(f" {key.replace('_', ' ')}: {value}", width - 2).ljust(width - 2) + "│"
     return box
->>>>>>> Stashed changes

@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Installed compatibility marker; real Studio components load from grapes7000/themes."""
-=======
 #!/usr/bin/env python3
 """Component renderers and plugin registry for Theme Studio."""
 from __future__ import annotations
@@ -509,4 +506,3 @@ def component_registry() -> list[dict[str, Any]]:
             "fields": COMPONENT_FIELDS.get(name, ()),
         })
     return result
->>>>>>> Stashed changes

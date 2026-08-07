@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Installed compatibility marker; real Theme Studio widgets load from grapes7000/themes."""
-=======
 #!/usr/bin/env python3
 """Small curses widgets used by Theme Studio."""
 from __future__ import annotations
@@ -234,4 +231,3 @@ def message(stdscr: Any, title: str, lines: Iterable[str], palette: Palette | No
     safe_addstr(stdscr, y + box_h - 2, x + 2, "Press any key", palette.muted, box_w - 4)
     stdscr.refresh()
     stdscr.getch()
->>>>>>> Stashed changes

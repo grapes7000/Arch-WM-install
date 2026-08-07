@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Compatibility module reserved for future Theme Studio schema support."""
-=======
 #!/usr/bin/env python3
 """Schema, presets, validation, search metadata, and palette helpers for Theme Studio.
 
@@ -756,4 +753,3 @@ def safe_theme_name(name: str) -> str:
     if not value:
         raise ValueError("Theme name cannot be empty.")
     return value
->>>>>>> Stashed changes

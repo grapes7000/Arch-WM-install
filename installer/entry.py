@@ -14,12 +14,6 @@ THEME_UPSTREAM_COMMIT = "c609410fbd88ddc2a15c51ab142743c49ae861e0"
 # `theme-legacy` so every legacy subcommand still passes through unchanged.
 # Plain helper commands below are installed under their own names.
 THEME_COMMANDS = (
-<<<<<<< Updated upstream
-    "theme",
-    "theme-legacy",
-    "theme-studio",
-=======
->>>>>>> Stashed changes
     "theme-catalog-sync",
     "theme-install",
     "theme-new",
@@ -34,19 +28,6 @@ THEME_ENTRY_POINTS = (
 )
 # Python modules installed beside the `theme` entry point so Studio's imports
 # resolve from ~/.local/bin exactly as they do in the development checkout.
-THEME_STUDIO_MODULES = (
-    "theme_runtime.py",
-    "theme_schema.py",
-    "theme_editor.py",
-    "theme_preview.py",
-    "theme_components.py",
-    "theme_tui.py",
-    "theme_tui_widgets.py",
-    "theme_effects.py",
-    "theme_starship.py",
-    "theme_homepage.py",
-)
-
 # Theme Studio is composed of the entrypoint plus sibling Python modules. Keep
 # these installed beside the command so its imports work from ~/.local/bin.
 THEME_STUDIO_MODULES = (
@@ -134,35 +115,6 @@ def theme_payload_current(ctx: runtime.Context) -> bool:
 
 
 def theme_check(ctx: runtime.Context) -> bool:
-<<<<<<< Updated upstream
-    required_paths = (
-        *(ctx.home / ".local/bin" / name for name in THEME_COMMANDS),
-        *(ctx.home / ".local/bin" / name for name in THEME_STUDIO_MODULES),
-        ctx.home / ".local/bin/term",
-        ctx.home / ".zshrc",
-        ctx.config / "zsh/aliases.zsh",
-        ctx.config / "kitty/kitty.conf",
-        ctx.config / "atuin/config.toml",
-        ctx.config / "theme-engine/generated/theme.json",
-    )
-    if not theme_catalog_valid(ctx) or not all(path.is_file() for path in required_paths):
-        return False
-
-    # File presence alone is not enough: older installs contain a legacy
-    # `theme` dispatcher that opens theme-menu instead of Theme Studio. Compare
-    # the installed entrypoints/modules with the current source payload so a
-    # rerun upgrades an existing installation instead of incorrectly no-oping.
-    source_root = ctx.root / "modules/theme-engine/bin"
-    installed_root = ctx.home / ".local/bin"
-    payloads = {
-        "theme": "theme-studio",
-        "theme-legacy": "theme",
-        **{name: name for name in THEME_STUDIO_MODULES},
-    }
-    return all(
-        payload_version_matches(source_root / source_name, installed_root / target_name)
-        for target_name, source_name in payloads.items()
-=======
     return theme_payload_current(ctx) and theme_catalog_valid(ctx) and all(
         path.is_file()
         for path in (
@@ -176,7 +128,6 @@ def theme_check(ctx: runtime.Context) -> bool:
             ctx.config / "atuin/config.toml",
             ctx.config / "theme-engine/generated/theme.json",
         )
->>>>>>> Stashed changes
     )
 
 
@@ -184,12 +135,6 @@ def theme_apply(ctx: runtime.Context) -> None:
     assert ctx.state is not None
     theme = ctx.root / "modules/theme-engine"
     terminal = ctx.root / "modules/terminal"
-<<<<<<< Updated upstream
-    # Keep the stable Arch-WM generator behind Theme Studio. Theme Studio
-    # delegates named-theme application and legacy commands to this binary.
-    ctx.install(theme / "bin/theme", ctx.home / ".local/bin/theme-legacy", executable=True)
-    ctx.install(theme / "bin/theme-studio", ctx.home / ".local/bin/theme", executable=True)
-=======
     # Theme Studio owns the `theme` command; the previous generator is kept as
     # `theme-legacy` so Studio's runtime bridge and all legacy subcommands work.
     for source_name, installed_name in THEME_ENTRY_POINTS:
@@ -198,18 +143,12 @@ def theme_apply(ctx: runtime.Context) -> None:
             ctx.home / ".local/bin" / installed_name,
             executable=True,
         )
->>>>>>> Stashed changes
     for name in THEME_COMMANDS:
         if name in {"theme", "theme-legacy", "theme-studio"}:
             continue
         ctx.install(theme / "bin" / name, ctx.home / ".local/bin" / name, executable=True)
-<<<<<<< Updated upstream
-    for name in THEME_STUDIO_MODULES:
-        ctx.install(theme / "bin" / name, ctx.home / ".local/bin" / name)
-=======
     for module in THEME_STUDIO_MODULES:
         ctx.install(theme / "bin" / module, ctx.home / ".local/bin" / module)
->>>>>>> Stashed changes
     ctx.install(terminal / "bin/term", ctx.home / ".local/bin/term", executable=True)
     ctx.install(
         theme / ".arch-wm-version",

@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Compatibility module reserved for future Theme Studio homepage support."""
-=======
 """Theme-aware Hyprland homepage rendered by Eww.
 
 Generated files live in a dedicated Eww config directory. Runtime helpers avoid
@@ -802,4 +799,3 @@ def _clean_pidfile() -> None:
         PIDFILE.unlink()
     except OSError:
         pass
->>>>>>> Stashed changes

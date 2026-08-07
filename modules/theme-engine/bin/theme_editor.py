@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Compatibility module reserved for the future Theme Studio editor."""
-=======
 #!/usr/bin/env python3
 """Safe working-copy lifecycle for Theme Studio."""
 from __future__ import annotations
@@ -320,4 +317,3 @@ def delete_theme(name: str, theme_dir: Path | None = None) -> Path:
     target = trash / f"{safe_theme_name(name)}-{time.strftime('%Y%m%d-%H%M%S')}.json"
     shutil.move(path, target)
     return target
->>>>>>> Stashed changes

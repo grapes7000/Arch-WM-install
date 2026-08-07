@@ -479,21 +479,12 @@ Item {
                 RowLayout {
                     spacing: 12
 
-<<<<<<< Updated upstream
                     Image {
                         source: "../../assets/icons/tailscale.png"
                         Layout.preferredWidth: 22
                         Layout.preferredHeight: 22
                         smooth: true
                         opacity: Services.TailscaleService.connected ? 1.0 : 0.5
-=======
-                    Text {
-                        font.family: Core.Theme.fontFamily
-                        text: "󰛳"
-                        color: Services.TailscaleService.connected
-                            ? Core.Theme.accent : Core.Theme.muted
-                        font.pixelSize: 22
->>>>>>> Stashed changes
                     }
 
                     ColumnLayout {

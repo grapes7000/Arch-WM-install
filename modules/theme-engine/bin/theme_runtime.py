@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Compatibility module reserved for the future Theme Studio runtime."""
-=======
 #!/usr/bin/env python3
 """Runtime bridge between the stable legacy generator and Theme Studio overrides."""
 from __future__ import annotations
@@ -162,4 +159,3 @@ def restore_theme(name: str) -> dict[str, Any]:
 def apply_saved_theme(name: str) -> dict[str, Any]:
     cleanup_preview()
     return apply_theme(name)
->>>>>>> Stashed changes

@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Compatibility module reserved for future Theme Studio Starship support."""
-=======
 from __future__ import annotations
 
 import json
@@ -441,4 +438,3 @@ vimcmd_replace_one_symbol = "[╰─ {t('vim_symbol')}](bold urgent)"
 vimcmd_replace_symbol = "[╰─ {t('vim_symbol')}](bold urgent)"
 vimcmd_visual_symbol = "[╰─ {t('vim_symbol')}](bold accent2)"
 '''
->>>>>>> Stashed changes

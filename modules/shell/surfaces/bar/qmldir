@@ -1,8 +1,5 @@
 BarSurface 1.0 BarSurface.qml
-<<<<<<< Updated upstream
-=======
 DrawerController 1.0 DrawerController.qml
 DrawerSurface 1.0 DrawerSurface.qml
->>>>>>> Stashed changes
 LauncherOverlay 1.0 LauncherOverlay.qml
 LauncherSession 1.0 LauncherSession.qml

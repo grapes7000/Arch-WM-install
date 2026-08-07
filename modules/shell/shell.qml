@@ -31,7 +31,6 @@ ShellRoot {
         function close(): bool { return Core.InteractiveShellController.drawersClose() }
     }
 
-<<<<<<< Updated upstream
     IpcHandler {
         target: "dock"
 
@@ -40,8 +39,6 @@ ShellRoot {
         function toggle(): bool { return Core.InteractiveShellController.dock("toggle") }
     }
 
-=======
->>>>>>> Stashed changes
     BarSurface {}
     HomepageSurface {}
     TaskDockSurface {}

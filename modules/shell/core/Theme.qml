@@ -64,7 +64,6 @@ Singleton {
     readonly property int borderWidth: style.border_width === undefined ? 2 : style.border_width
     readonly property int barHeight: style.bar_height === undefined ? 48 : style.bar_height
     readonly property int animationMs: style.animation_ms === undefined ? 160 : style.animation_ms
-<<<<<<< Updated upstream
     readonly property string animationProfile: style.animation_profile || "smooth"
     readonly property string workspaceAnimation: style.workspace_animation || "slide"
     readonly property real motionScale: style.motion_scale === undefined ? 1.0 : Math.max(0, Math.min(2, Number(style.motion_scale)))
@@ -75,18 +74,17 @@ Singleton {
     readonly property bool shadowEnabled: style.shadow_on === undefined ? true : Boolean(style.shadow_on)
     readonly property int shadowRadius: style.shadow_radius === undefined ? 20 : Math.max(0, Number(style.shadow_radius))
 
-    function applyHomepageImages(baseData) {
-        const merged = Object.assign({}, baseData || root.data)
-        merged.wallpapers = root.homepageImages.slice()
-        root.data = merged
-    }
-=======
     // Shell typography is intentionally stable across theme changes. Theme data
     // controls visual tokens, while this shared provider keeps every shell
     // surface and widget on JetBrainsMono Nerd Font. Qt registers this font
     // under the canonical installed family name below.
     readonly property string fontFamily: "JetBrainsMono Nerd Font"
->>>>>>> Stashed changes
+
+    function applyHomepageImages(baseData) {
+        const merged = Object.assign({}, baseData || root.data)
+        merged.wallpapers = root.homepageImages.slice()
+        root.data = merged
+    }
 
     function parse(contents) {
         if (!contents || typeof contents !== "string" || contents.length === 0)

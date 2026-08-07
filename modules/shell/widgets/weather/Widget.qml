@@ -18,16 +18,7 @@ Item {
 
     visible: Services.WeatherService.available
 
-<<<<<<< Updated upstream
-    MouseArea {
-        anchors.fill: parent
-        enabled: context.allows("drawer.open")
-        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onClicked: context.request("drawer.open", { kind: "weather" })
-    }
-=======
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "weather", anchorItem: root }) }
->>>>>>> Stashed changes
 
     RowLayout {
         id: content

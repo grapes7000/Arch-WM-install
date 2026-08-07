@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Compatibility module reserved for future Theme Studio effects support."""
-=======
 """Effects-profile system for Hyprland desktop effects.
 
 Three independent axes:
@@ -496,4 +493,3 @@ def render_animations_lua(anim_name):
                     f'speed = {speed}, bezier = "{curve}"{style_part} }})'
                 )
     return lines
->>>>>>> Stashed changes

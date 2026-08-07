@@ -9,53 +9,20 @@ Scope {
     id: barScope
 
     LauncherOverlay {}
-<<<<<<< Updated upstream
-
-    function requestFromWidget(capability, payload, screen) {
-        return Core.InteractiveShellController.requestFromBar(capability, payload, screen)
-    }
-=======
     DrawerSurface {}
->>>>>>> Stashed changes
 
     MenuPopup {
         id: menuPopup
     }
 
-<<<<<<< Updated upstream
-    QtObject {
-        id: drawerAdapter
-        function open(kind, anchorItem, screen) {
-            menuPopup.openTo(kind)
-            return true
-        }
-        function close() {
-            menuPopup.close()
-            return true
-        }
-=======
     function close() {
         if (menuPopup.menuOpen)
             menuPopup.toggle()
         return true
->>>>>>> Stashed changes
     }
 
     Binding {
         target: Core.InteractiveShellController
-<<<<<<< Updated upstream
-        property: "drawerController"
-        value: drawerAdapter
-        restoreMode: Binding.RestoreBindingOrValue
-    }
-
-    Connections {
-        target: Services.LockStateService
-        function onLockedChanged() {
-            if (Services.LockStateService.locked)
-                menuPopup.close()
-        }
-=======
         property: "menuController"
         value: barScope
         restoreMode: Binding.RestoreBindingOrValue
@@ -65,7 +32,6 @@ Scope {
         if (capability === "drawer.open" && menuPopup.menuOpen)
             menuPopup.toggle()
         return Core.InteractiveShellController.requestFromBar(capability, payload, screen)
->>>>>>> Stashed changes
     }
 
     Variants {

@@ -1,116 +1,4 @@
 #!/usr/bin/env python3
-<<<<<<< Updated upstream
-"""Bootstrap the real Theme Studio from grapes7000/themes.
-
-Named-theme and legacy CLI operations stay local and use the stable generator
-installed beside this command. Interactive Studio operations sync the actual
-Theme Studio source bundle from the themes repository, unpack it, and launch
-that implementation with its modules on PYTHONPATH.
-"""
-from __future__ import annotations
-
-import os
-from pathlib import Path
-import shutil
-import subprocess
-import sys
-
-REPOSITORY = "https://github.com/grapes7000/themes.git"
-CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "arch-wm-theme-studio"
-CHECKOUT = CACHE_ROOT / "themes"
-UNPACKED = CACHE_ROOT / "unpacked"
-CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-INSTALLER_THEME_DIR = CONFIG_HOME / "theme-engine" / "themes"
-STUDIO_THEME_DIR = CONFIG_HOME / "hypr" / "themes"
-INSTALLER_ACTIVE = CONFIG_HOME / "theme-engine" / "generated" / ".active"
-STUDIO_ACTIVE = CONFIG_HOME / "hypr" / "generated" / ".active"
-
-
-def legacy_command() -> Path:
-    return Path(__file__).resolve().with_name("theme-legacy")
-
-
-def run_legacy(args: list[str]) -> int:
-    legacy = legacy_command()
-    if not legacy.is_file():
-        print(f"theme: missing local generator: {legacy}", file=sys.stderr)
-        return 1
-    return subprocess.call([str(legacy), *args])
-
-
-def studio_requested(args: list[str]) -> bool:
-    return not args or args[0] in {"studio", "edit", "recover"}
-
-
-def sync_checkout() -> None:
-    CACHE_ROOT.mkdir(parents=True, exist_ok=True)
-    if (CHECKOUT / ".git").is_dir():
-        subprocess.run(
-            ["git", "-C", str(CHECKOUT), "fetch", "--depth", "1", "origin", "main"],
-            check=True,
-        )
-        subprocess.run(
-            ["git", "-C", str(CHECKOUT), "reset", "--hard", "origin/main"],
-            check=True,
-        )
-    else:
-        shutil.rmtree(CHECKOUT, ignore_errors=True)
-        subprocess.run(
-            ["git", "clone", "--depth", "1", REPOSITORY, str(CHECKOUT)],
-            check=True,
-        )
-
-
-def unpack_sources() -> None:
-    shutil.rmtree(UNPACKED, ignore_errors=True)
-    subprocess.run(
-        ["bash", str(CHECKOUT / "tools/unpack-theme-studio.sh"), str(UNPACKED)],
-        check=True,
-    )
-
-
-def sync_installer_catalog() -> None:
-    """Expose the installer catalog at the path expected by Theme Studio."""
-    if not INSTALLER_THEME_DIR.is_dir():
-        return
-
-    STUDIO_THEME_DIR.mkdir(parents=True, exist_ok=True)
-    for source in INSTALLER_THEME_DIR.glob("*.json"):
-        target = STUDIO_THEME_DIR / source.name
-        try:
-            if target.exists() and target.samefile(source):
-                continue
-        except OSError:
-            pass
-        shutil.copy2(source, target)
-
-    if INSTALLER_ACTIVE.is_file():
-        STUDIO_ACTIVE.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(INSTALLER_ACTIVE, STUDIO_ACTIVE)
-
-
-def launch_studio(args: list[str]) -> int:
-    if shutil.which("git") is None:
-        print("theme: git is required to install Theme Studio", file=sys.stderr)
-        return 1
-    try:
-        sync_installer_catalog()
-        sync_checkout()
-        unpack_sources()
-    except (OSError, subprocess.CalledProcessError) as exc:
-        print(f"theme: could not prepare Theme Studio: {exc}", file=sys.stderr)
-        print("Falling back to the classic theme picker.", file=sys.stderr)
-        return run_legacy([])
-
-    environment = os.environ.copy()
-    python_paths = [str(CHECKOUT / "bin"), str(UNPACKED)]
-    if environment.get("PYTHONPATH"):
-        python_paths.append(environment["PYTHONPATH"])
-    environment["PYTHONPATH"] = os.pathsep.join(python_paths)
-
-    command = [sys.executable, str(CHECKOUT / "bin/theme-studio"), *args]
-    return subprocess.call(command, env=environment)
-=======
 """Installed `theme` command: Theme Studio UI plus backward-compatible CLI."""
 from __future__ import annotations
 
@@ -188,16 +76,10 @@ def validate(name: str | None) -> int:
         icon = "✗" if issue["level"] == "error" else "!"
         print(f"{icon} {issue['path']}: {issue['message']}")
     return 1 if errors else 0
->>>>>>> Stashed changes
 
 
 def main() -> int:
     args = sys.argv[1:]
-<<<<<<< Updated upstream
-    if studio_requested(args):
-        return launch_studio(args)
-    return run_legacy(args)
-=======
     if not args:
         return launch()
     if args[0] in ("-h", "--help", "help"):
@@ -236,7 +118,6 @@ def main() -> int:
         print(result["legacy_message"])
     print(f"Theme Studio overrides applied: {args[0]}")
     return 0
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":

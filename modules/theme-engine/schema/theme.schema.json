@@ -35,7 +35,6 @@
         "border_width": {"type": "integer", "minimum": 0},
         "bar_height": {"type": "integer", "minimum": 24},
         "animation_ms": {"type": "integer", "minimum": 0},
-<<<<<<< Updated upstream
         "animation_profile": {
           "type": "string",
           "enum": ["minimal", "smooth", "snappy", "dramatic"],
@@ -46,10 +45,8 @@
           "enum": ["slide", "slidevert", "fade"],
           "default": "slide"
         },
-        "motion_scale": {"type": "number", "minimum": 0, "maximum": 2, "default": 1}
-=======
+        "motion_scale": {"type": "number", "minimum": 0, "maximum": 2, "default": 1},
         "font_family": {"type": "string", "minLength": 1}
->>>>>>> Stashed changes
       },
       "additionalProperties": true
     }

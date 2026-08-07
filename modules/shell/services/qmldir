@@ -12,8 +12,5 @@ singleton SessionService 1.0 SessionService.qml
 singleton WeatherService 1.0 WeatherService.qml
 singleton TailscaleService 1.0 TailscaleService.qml
 singleton LockStateService 1.0 LockStateService.qml
-<<<<<<< Updated upstream
 singleton CavaService 1.0 CavaService.qml
-=======
->>>>>>> Stashed changes
 singleton LauncherStateService 1.0 LauncherStateService.qml

@@ -28,12 +28,12 @@ Item {
                 Layout.fillWidth: true
                 spacing: 3
 
-<<<<<<< Updated upstream
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
 
                     Text {
+                        font.family: Core.Theme.fontFamily
                         text: Services.WeatherService.available ? Services.WeatherService.temp : "--"
                         color: Core.Theme.foreground
                         font.pixelSize: 30
@@ -45,12 +45,14 @@ Item {
                     ColumnLayout {
                         spacing: 1
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: Services.WeatherService.available ? "H " + Services.WeatherService.high : "--"
                             color: Core.Theme.foreground
                             font.pixelSize: 11
                             font.bold: true
                         }
                         Text {
+                            font.family: Core.Theme.fontFamily
                             text: Services.WeatherService.available ? "L " + Services.WeatherService.low : "--"
                             color: Core.Theme.muted
                             font.pixelSize: 11
@@ -59,20 +61,8 @@ Item {
                 }
 
                 Text {
+                    font.family: Core.Theme.fontFamily
                     text: Services.WeatherService.condition || "Unavailable"
-=======
-                Text {
-                    font.family: Core.Theme.fontFamily
-                    text: Services.WeatherService.temp
-                    color: Core.Theme.foreground
-                    font.pixelSize: 32
-                    font.bold: true
-                }
-
-                Text {
-                    font.family: Core.Theme.fontFamily
-                    text: Services.WeatherService.condition
->>>>>>> Stashed changes
                     color: Core.Theme.muted
                     font.pixelSize: 12
                     elide: Text.ElideRight

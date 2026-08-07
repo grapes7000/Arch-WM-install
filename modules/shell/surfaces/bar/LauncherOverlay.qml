@@ -13,7 +13,6 @@ Scope {
     property string query: ""
     property string category: "All"
     property int selectedIndex: 0
-<<<<<<< Updated upstream
     property int appsRevision: 0
     readonly property var categories: [
         { name: "All", icon: "applications-all" },
@@ -29,10 +28,6 @@ Scope {
         { name: "Other", icon: "applications-other" }
     ]
     readonly property var results: buildResults()
-=======
-    readonly property var categories: ["All", "Favorites", "Recent", "Internet", "Development", "Utilities", "System", "Multimedia", "Office", "Games", "Other"]
-    property var results: buildResults()
->>>>>>> Stashed changes
 
     function entryCategory(entry) {
         const values = entry.categories || []
@@ -57,10 +52,7 @@ Scope {
     }
 
     function buildResults() {
-<<<<<<< Updated upstream
         const _entriesVersion = root.appsRevision // re-run this binding when the app list changes
-=======
->>>>>>> Stashed changes
         const needle = root.query.trim().toLowerCase()
         const favorites = Services.LauncherStateService.favorites
         const recents = Services.LauncherStateService.recents
@@ -114,11 +106,7 @@ Scope {
     }
     Connections {
         target: DesktopEntries
-<<<<<<< Updated upstream
         function onApplicationsChanged() { root.appsRevision++ }
-=======
-        function onApplicationsChanged() { root.results = root.buildResults() }
->>>>>>> Stashed changes
     }
 
     PanelWindow {
@@ -134,11 +122,7 @@ Scope {
 
         Rectangle {
             anchors.fill: parent
-<<<<<<< Updated upstream
             color: { var c = Qt.color(Core.Theme.background); return Qt.rgba(c.r, c.g, c.b, 0.82) }
-=======
-            color: Qt.rgba(Core.Theme.background.r, Core.Theme.background.g, Core.Theme.background.b, 0.82)
->>>>>>> Stashed changes
             MouseArea { anchors.fill: parent; onClicked: root.close() }
 
             Rectangle {
@@ -162,10 +146,7 @@ Scope {
                         text: root.query
                         color: Core.Theme.foreground
                         placeholderTextColor: Core.Theme.muted
-<<<<<<< Updated upstream
-=======
                         font.family: Core.Theme.fontFamily
->>>>>>> Stashed changes
                         font.pixelSize: 18
                         background: Rectangle {
                             color: Core.Theme.background
@@ -188,7 +169,6 @@ Scope {
                         model: root.categories
                         clip: true
                         delegate: Rectangle {
-<<<<<<< Updated upstream
                             required property var modelData
                             width: categoryRow.implicitWidth + Core.Theme.gap * 3
                             height: 32
@@ -199,18 +179,9 @@ Scope {
                                 anchors.centerIn: parent
                                 spacing: 6
                                 IconImage { Layout.preferredWidth: 16; Layout.preferredHeight: 16; source: Quickshell.iconPath(modelData.icon, "") }
-                                Text { text: modelData.name; color: Core.Theme.foreground }
+                                Text { font.family: Core.Theme.fontFamily; text: modelData.name; color: Core.Theme.foreground }
                             }
                             MouseArea { anchors.fill: parent; onClicked: { root.category = modelData.name; root.selectedIndex = 0; searchField.forceActiveFocus() } }
-=======
-                            required property string modelData
-                            width: categoryLabel.implicitWidth + Core.Theme.gap * 3
-                            height: 32
-                            radius: Core.Theme.radius
-                            color: root.category === modelData ? Core.Theme.accent2 : Core.Theme.background
-                            Text { font.family: Core.Theme.fontFamily; id: categoryLabel; anchors.centerIn: parent; text: modelData; color: Core.Theme.foreground }
-                            MouseArea { anchors.fill: parent; onClicked: { root.category = modelData; root.selectedIndex = 0; searchField.forceActiveFocus() } }
->>>>>>> Stashed changes
                         }
                     }
                     ListView {
@@ -221,7 +192,6 @@ Scope {
                         currentIndex: root.selectedIndex
                         clip: true
                         spacing: Math.max(2, Core.Theme.gap / 2)
-<<<<<<< Updated upstream
                         ScrollBar.vertical: ScrollBar {
                             policy: ScrollBar.AsNeeded
                             contentItem: Rectangle {
@@ -231,8 +201,6 @@ Scope {
                                 opacity: parent.pressed ? 0.9 : 0.5
                             }
                         }
-=======
->>>>>>> Stashed changes
                         delegate: Rectangle {
                             required property var modelData
                             required property int index
@@ -248,18 +216,11 @@ Scope {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 0
-<<<<<<< Updated upstream
-                                    Text { text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 16; elide: Text.ElideRight; Layout.fillWidth: true }
-                                    Text { text: modelData.comment || root.entryCategory(modelData); color: Core.Theme.muted; elide: Text.ElideRight; Layout.fillWidth: true }
-                                }
-                                Text {
-=======
                                     Text { font.family: Core.Theme.fontFamily; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 16; elide: Text.ElideRight; Layout.fillWidth: true }
                                     Text { font.family: Core.Theme.fontFamily; text: modelData.comment || root.entryCategory(modelData); color: Core.Theme.muted; elide: Text.ElideRight; Layout.fillWidth: true }
                                 }
                                 Text {
                                     font.family: Core.Theme.fontFamily
->>>>>>> Stashed changes
                                     text: Services.LauncherStateService.isFavorite(modelData.id) ? "Unfavorite" : "Favorite"
                                     color: Core.Theme.accent
                                     MouseArea { anchors.fill: parent; anchors.margins: -Core.Theme.gap; onClicked: Services.LauncherStateService.toggleFavorite(modelData.id) }
@@ -267,18 +228,10 @@ Scope {
                             }
                             MouseArea { anchors.fill: parent; z: -1; hoverEnabled: true; onEntered: root.selectedIndex = index; onClicked: root.launch(modelData) }
                         }
-<<<<<<< Updated upstream
-                        Text { anchors.centerIn: parent; visible: appList.count === 0; text: "No matching applications"; color: Core.Theme.muted }
-=======
                         Text { font.family: Core.Theme.fontFamily; anchors.centerIn: parent; visible: appList.count === 0; text: "No matching applications"; color: Core.Theme.muted }
->>>>>>> Stashed changes
                     }
                 }
             }
         }
     }
 }
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes

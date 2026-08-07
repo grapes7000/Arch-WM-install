@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-"""Installed compatibility marker; real Theme Studio TUI loads from grapes7000/themes."""
-=======
 #!/usr/bin/env python3
 """Beautiful, keyboard-first curses interface for Theme Studio.
 
@@ -1175,4 +1172,3 @@ def launch(theme_dir: str | os.PathLike[str] | None = None) -> None:
 
 if __name__ == "__main__":
     launch()
->>>>>>> Stashed changes

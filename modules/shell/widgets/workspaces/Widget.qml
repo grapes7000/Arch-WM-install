@@ -89,7 +89,6 @@ Item {
                     : "transparent"
                 Behavior on color { ColorAnimation { duration: Core.Theme.animationMs; easing.type: Easing.OutCubic } }
 
-<<<<<<< Updated upstream
                 border.width: selected ? 0 : Core.Theme.borderWidth
                 border.color: selected ? Core.Theme.accent
                     : active ? Core.Theme.accent2
@@ -103,10 +102,6 @@ Item {
 
                 RowLayout {
                     id: content
-=======
-                Text {
-                    font.family: Core.Theme.fontFamily
->>>>>>> Stashed changes
                     anchors.centerIn: parent
                     spacing: 6
 
