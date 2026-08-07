@@ -9,6 +9,7 @@ blueman
 pavucontrol
 power-profiles-daemon
 udiskie
+char-white
 noto-fonts
 noto-fonts-emoji
 fastfetch
