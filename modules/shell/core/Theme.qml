@@ -106,6 +106,8 @@ Singleton {
     readonly property string surfaceOverlay: roles.overlay || surfaceElevated
     readonly property string surfaceHover: roles.hover || surfaceElevated
     readonly property string selected: roles.selected || roles.accent || "#4f8cff"
+    // Compatibility alias used by existing components. New components should
+    // prefer the explicit hierarchy above.
     readonly property string surface: surfaceBase
     readonly property string foreground: roles.text || "#f4f7fb"
     readonly property string muted: roles.text_dim || foreground
@@ -116,6 +118,8 @@ Singleton {
     readonly property int windowGap: style.window_gap === undefined
         ? (style.gaps === undefined ? 8 : Math.max(0, Number(style.gaps)))
         : Math.max(0, Number(style.window_gap))
+    // Compatibility alias for existing layout code. It now means window gap,
+    // never internal bar padding.
     readonly property int gap: windowGap
     readonly property int borderWidth: style.border_width === undefined ? 1 : style.border_width
 
@@ -138,6 +142,9 @@ Singleton {
     readonly property int requestedBarPadding: shellConfig.bar_padding === undefined
         ? (style.bar_padding === undefined ? 8 : Math.max(0, Number(style.bar_padding)))
         : Math.max(0, Number(shellConfig.bar_padding))
+    // Keep at least 16px of usable vertical content even if a custom theme has
+    // a wild value. This makes malformed/experimental themes unable to crush
+    // the top-bar widgets into a one-pixel strip.
     readonly property int barPadding: Math.min(requestedBarPadding, Math.max(0, Math.floor((barHeight - 16) / 2)))
     readonly property int barOuterMargin: shellConfig.bar_outer_margin === undefined ? windowGap : Math.max(0, Number(shellConfig.bar_outer_margin))
     readonly property int barRadius: shellConfig.bar_radius === undefined ? radius : Math.max(0, Number(shellConfig.bar_radius))
