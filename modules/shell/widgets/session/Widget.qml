@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
+import "../../components" as Components
 import "../../services" as Services
 
 Item {
@@ -29,6 +30,8 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 16 : 20
 
+            Components.PressBounce {}
+
             MouseArea {
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
@@ -42,6 +45,8 @@ Item {
             text: "󰍃"
             color: Core.Theme.foreground
             font.pixelSize: 18
+
+            Components.PressBounce {}
 
             MouseArea {
                 anchors.fill: parent
@@ -57,6 +62,8 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: 18
 
+            Components.PressBounce {}
+
             MouseArea {
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
@@ -71,6 +78,8 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: 18
 
+            Components.PressBounce {}
+
             MouseArea {
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
@@ -84,6 +93,8 @@ Item {
             text: "󰐥"
             color: Core.Theme.urgent
             font.pixelSize: 18
+
+            Components.PressBounce {}
 
             MouseArea {
                 anchors.fill: parent

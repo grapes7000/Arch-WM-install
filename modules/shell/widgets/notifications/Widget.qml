@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
+import "../../components" as Components
 import "../../services" as Services
 
 Item {
@@ -29,6 +30,8 @@ Item {
             color: Services.NotificationService.count > 0 ? Core.Theme.accent : Core.Theme.muted
             font.pixelSize: context.variant === "compact" ? 16 : 20
 
+            Components.PressBounce {}
+
             MouseArea {
                 anchors.fill: parent
                 enabled: context.allows("notification.dismiss")
@@ -51,6 +54,8 @@ Item {
             text: Services.NotificationService.dndEnabled ? "DND" : ""
             color: Core.Theme.muted
             font.pixelSize: 11
+
+            Components.PressBounce {}
 
             MouseArea {
                 anchors.fill: parent

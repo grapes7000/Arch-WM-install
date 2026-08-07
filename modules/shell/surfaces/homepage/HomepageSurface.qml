@@ -5,6 +5,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Widgets
 import "../../core" as Core
+import "../../components" as Components
 import "../../services" as Services
 import "../../widgets/weather" as WeatherWidgets
 
@@ -284,9 +285,27 @@ Scope {
                             RowLayout {
                                 Layout.alignment: Qt.AlignHCenter
                                 spacing: 22
-                                Text { text: "󰒮"; color: Core.Theme.muted; font.pixelSize: 20; MouseArea { anchors.fill: parent; onClicked: Services.MprisService.previous() } }
-                                Text { text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"; color: Core.Theme.accent; font.pixelSize: 28; MouseArea { anchors.fill: parent; onClicked: Services.MprisService.playPause() } }
-                                Text { text: "󰒭"; color: Core.Theme.muted; font.pixelSize: 20; MouseArea { anchors.fill: parent; onClicked: Services.MprisService.next() } }
+                                Text {
+                                    text: "󰒮"
+                                    color: Core.Theme.muted
+                                    font.pixelSize: 20
+                                    Components.PressBounce {}
+                                    MouseArea { anchors.fill: parent; onClicked: Services.MprisService.previous() }
+                                }
+                                Text {
+                                    text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
+                                    color: Core.Theme.accent
+                                    font.pixelSize: 28
+                                    Components.PressBounce {}
+                                    MouseArea { anchors.fill: parent; onClicked: Services.MprisService.playPause() }
+                                }
+                                Text {
+                                    text: "󰒭"
+                                    color: Core.Theme.muted
+                                    font.pixelSize: 20
+                                    Components.PressBounce {}
+                                    MouseArea { anchors.fill: parent; onClicked: Services.MprisService.next() }
+                                }
                             }
                         }
                     }
@@ -390,6 +409,7 @@ Scope {
                                                 }
                                                 HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
                                                 TapHandler { onTapped: root.launch(modelData.command) }
+                                                Components.PressBounce { target: appTile }
                                             }
                                         }
                                     }
@@ -669,6 +689,8 @@ Scope {
                         color: enabledState ? Core.Theme.background : Core.Theme.muted
                         Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
                     }
+                    Components.PressBounce {}
+
                     MouseArea {
                         anchors.fill: parent
                         anchors.margins: -4

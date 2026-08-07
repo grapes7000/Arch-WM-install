@@ -11,6 +11,9 @@ Rectangle {
     // as a solid background rather than a faint tint.
     property real fillAlphaBoost: 0
     property alias hoverHandler: hover
+    // Multiplies the hover scale below; pops briefly above 1.0 on release
+    // and eases back. Only driven when interactive (clickable cards).
+    property real bounce: 1.0
 
     radius: Core.Theme.radius + 4
     color: {
@@ -22,7 +25,7 @@ Rectangle {
     }
     border.width: active ? Math.max(2, Core.Theme.borderWidth) : Core.Theme.borderWidth
     border.color: active ? Core.Theme.accent : (Core.Theme.roles.border_subtle || Core.Theme.accent2)
-    scale: interactive && hover.hovered ? 1.015 : 1.0
+    scale: (interactive && hover.hovered ? 1.015 : 1.0) * root.bounce
 
     Behavior on scale {
         NumberAnimation {
@@ -39,6 +42,25 @@ Rectangle {
         id: hover
         enabled: root.interactive
         cursorShape: Qt.PointingHandCursor
+    }
+
+    // Non-exclusive tap tracking for the press/release bounce; does not grab
+    // the event, so a TapHandler/MouseArea elsewhere on this card (e.g.
+    // RailCard's own click handler) still fires normally.
+    TapHandler {
+        id: tap
+        enabled: root.interactive
+        gesturePolicy: TapHandler.WithinBounds
+        onPressedChanged: {
+            if (!pressed)
+                bounceAnim.restart()
+        }
+    }
+
+    SequentialAnimation {
+        id: bounceAnim
+        NumberAnimation { target: root; property: "bounce"; to: 1.06; duration: 90; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "bounce"; to: 1.0; duration: 130; easing.type: Easing.OutBack; easing.overshoot: 3 }
     }
 
     Rectangle {

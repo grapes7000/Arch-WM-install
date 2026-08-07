@@ -6,12 +6,10 @@ Item {
 
     required property string widgetId
     readonly property bool pillEnabled: root.surfaceKind === "bar"
-    // Inset between the widget content and its pill border so hover states
-    // never crowd the widget's glyphs. Horizontal padding is generous; the
-    // vertical inset keeps text clear of the top/bottom pill border while the
-    // pill itself fills the bar's content band.
+    // Extra horizontal room the pill reserves beyond the widget's natural
+    // content width, so the pill reads as a pill rather than a tight
+    // outline around the glyphs.
     readonly property real pillPadding: 10
-    readonly property real pillPadV: 4
     required property string surfaceKind
     required property string instanceId
     property string variant: "standard"
@@ -78,12 +76,17 @@ Item {
         }
 
         root.loadedItem = item
-        const insetX = root.pillEnabled ? root.pillPadding : 0
-        const insetY = root.pillEnabled ? root.pillPadV : 0
-        item.width = Qt.binding(function() { return Math.max(0, container.width - insetX * 2) })
-        item.height = Qt.binding(function() { return Math.max(0, container.height - insetY * 2) })
-        item.x = Qt.binding(function() { return (container.width - item.width) / 2 })
-        item.y = Qt.binding(function() { return (container.height - item.height) / 2 })
+        // Fill the pill completely rather than inset by the padding: the
+        // widget's own root Item is what carries its click MouseArea, so
+        // shrinking it here would leave the pill's padding band dead to
+        // clicks even though it bounces (PillBox's tap tracking is passive
+        // and covers the full pill). Widgets already center their content
+        // via anchors.centerIn, so filling the larger area doesn't shift
+        // anything visually.
+        item.width = Qt.binding(function() { return container.width })
+        item.height = Qt.binding(function() { return container.height })
+        item.x = 0
+        item.y = 0
         root.loadError = ""
     }
 
