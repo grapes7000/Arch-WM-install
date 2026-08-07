@@ -57,11 +57,12 @@ def init_palette() -> Palette:
 
 
 def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int | None = None) -> None:
-    """Safely draw text and show literal hex colors using the terminal palette.
+    """Safely draw text and turn literal hex colors into visible color chips.
 
-    Any #RRGGBB substring is rendered in an xterm-256 approximation of itself.
-    Selected/highlighted rows keep their selection styling so navigation remains
-    obvious; the unselected rows and detail panel provide the color preview.
+    Unselected text containing #RRGGBB is rendered as a small colored block plus
+    the original hex value. This makes Palette Studio visually scannable instead
+    of showing a wall of nearly identical white strings. Selected/highlighted
+    rows keep the selection styling so keyboard navigation remains obvious.
     """
     try:
         h, w = win.getmaxyx()
@@ -70,7 +71,7 @@ def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int |
         room = max(0, w - x - 1)
         if width is not None:
             room = min(room, max(0, width))
-        rendered = str(text)[:room]
+        rendered = str(text)
         matches = list(_HEX_COLOR_RE.finditer(rendered))
         if not matches or attr:
             win.addnstr(y, x, rendered, room, attr)
@@ -78,19 +79,40 @@ def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int |
 
         cursor = 0
         column = x
+        used = 0
         for match in matches:
+            if used >= room:
+                break
             prefix = rendered[cursor:match.start()]
             if prefix:
-                win.addnstr(y, column, prefix, max(0, room - (column - x)), attr)
-                column += len(prefix)
+                chunk = prefix[: max(0, room - used)]
+                win.addnstr(y, column, chunk, max(0, room - used), attr)
+                column += len(chunk)
+                used += len(chunk)
+            if used >= room:
+                break
+
             value = match.group(0)
             color_attr = color_swatch_attr(value)
-            win.addnstr(y, column, value, max(0, room - (column - x)), color_attr or attr)
-            column += len(value)
+            chip = "███ " if color_attr else "■ "
+            chip = chip[: max(0, room - used)]
+            if chip:
+                win.addnstr(y, column, chip, max(0, room - used), color_attr or attr)
+                column += len(chip)
+                used += len(chip)
+            if used >= room:
+                break
+
+            hex_text = value[: max(0, room - used)]
+            if hex_text:
+                win.addnstr(y, column, hex_text, max(0, room - used), color_attr or attr)
+                column += len(hex_text)
+                used += len(hex_text)
             cursor = match.end()
+
         suffix = rendered[cursor:]
-        if suffix and column - x < room:
-            win.addnstr(y, column, suffix, room - (column - x), attr)
+        if suffix and used < room:
+            win.addnstr(y, column, suffix, room - used, attr)
     except curses.error:
         pass
 
