@@ -60,6 +60,7 @@ Singleton {
                 console.warn("Bar layout rejected; keeping last known-good layout:", error)
             }
         }
+        onFileChanged: barFile.reload()
     }
 
     FileView {
@@ -74,6 +75,7 @@ Singleton {
                 console.warn("Desktop layout rejected; keeping last known-good layout:", error)
             }
         }
+        onFileChanged: desktopFile.reload()
     }
 
     Component.onCompleted: {

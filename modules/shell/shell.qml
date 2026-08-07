@@ -5,6 +5,7 @@ import "core" as Core
 import "services" as Services
 import "surfaces/bar"
 import "surfaces/desktop"
+import "surfaces/homepage"
 
 ShellRoot {
     Binding {
@@ -39,8 +40,12 @@ ShellRoot {
     }
 
     BarSurface {}
-    DesktopSurface {}
+    HomepageSurface {}
     TaskDockSurface {}
+
+    // The legacy DesktopSurface is intentionally disabled while the homepage
+    // provides the desktop dashboard. Running both creates duplicate clock and
+    // system cards layered over the homepage.
 
     // The custom Quickshell lock surface remains intentionally disabled.
     // Hyprlock is the verified authentication boundary for the VM milestone.

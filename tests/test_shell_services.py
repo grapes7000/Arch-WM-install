@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import pathlib
 import re
+import shutil
 import subprocess
 import unittest
 from collections.abc import Mapping
@@ -149,6 +150,9 @@ class ShellServiceContractTests(unittest.TestCase):
         self.assertNotRegex(source, r"console\.(log|warn|error)[^\n]*(password|passphrase)")
 
     def test_malformed_parser_input_clears_seeded_state_and_sets_error(self) -> None:
+        if shutil.which("node") is None:
+            self.skipTest("Node.js is optional and is not installed on a fresh preflight VM")
+
         cases: dict[str, tuple[tuple[str, ...], str, dict[str, JsonValue], str, tuple[str, ...]]] = {
             "Audio": (("clear", "parse"), "parse", {"volume": 75, "muted": True, "sinks": [{"id": 1}], "sources": [], "streams": [], "error": ""}, "not wpctl", ("volume", "muted", "sinks", "error")),
             "Network": (("splitEscaped", "clearActive", "parseStatus"), "parseStatus", {"connected": True, "ssid": "stale", "type": "wifi", "strength": 80, "ipAddress": "stale", "security": "WPA2", "downloadRate": "1 KiB/s", "uploadRate": "1 KiB/s", "activeConnection": {"name": "stale"}, "error": ""}, "malformed", ("connected", "ssid", "activeConnection", "error")),
