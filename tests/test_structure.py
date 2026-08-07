@@ -113,7 +113,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.06.5")
+        self.assertEqual(version, "2026.08.06.6")
 
 
 if __name__ == "__main__":
