@@ -2,6 +2,7 @@
 """Installed `theme` command: Theme Studio UI plus backward-compatible CLI."""
 from __future__ import annotations
 
+import colorsys
 import json
 import os
 from pathlib import Path
@@ -9,7 +10,7 @@ import subprocess
 import sys
 
 import theme_runtime
-from theme_schema import validation_summary, validate_theme
+from theme_schema import contrast_ratio, resolve_roles, validation_summary, validate_theme
 
 
 def usage() -> str:
@@ -59,6 +60,65 @@ def launch(name: str | None = None) -> int:
         return run_legacy([])
 
 
+def _saturation(value: str) -> float:
+    value = value.lstrip("#")
+    red, green, blue = (int(value[index:index + 2], 16) / 255.0 for index in (0, 2, 4))
+    return colorsys.rgb_to_hsv(red, green, blue)[1]
+
+
+def palette_quality_issues(theme: dict) -> list[dict[str, str]]:
+    """Advisory design checks for themes that tend to look flat or washed out."""
+    roles = resolve_roles(theme.get("roles", {}))
+    style = theme.get("style", {})
+    issues: list[dict[str, str]] = []
+
+    try:
+        bg = roles["bg"]
+        surface = roles.get("surface_1", roles.get("bg_alt", bg))
+        border = roles.get("border_subtle", roles.get("border_normal", surface))
+        accent = roles["accent"]
+        accent2 = roles.get("accent2", accent)
+
+        if contrast_ratio(bg, surface) < 1.08:
+            issues.append({
+                "level": "warning",
+                "path": "roles.surface_1",
+                "message": "Raised surfaces are almost the same luminance as the background; cards may look flat.",
+            })
+        if contrast_ratio(surface, border) < 1.10:
+            issues.append({
+                "level": "warning",
+                "path": "roles.border_subtle",
+                "message": "The subtle border barely separates from the surface; edges may disappear.",
+            })
+        if max(_saturation(accent), _saturation(accent2)) < 0.42:
+            issues.append({
+                "level": "warning",
+                "path": "roles.accent",
+                "message": "Both accent colors are low-saturation; the palette may look washed out.",
+            })
+    except (KeyError, TypeError, ValueError):
+        pass
+
+    surface_opacity = float(style.get("surface_opacity", 0.96) or 0.96)
+    if surface_opacity < 0.82:
+        issues.append({
+            "level": "warning",
+            "path": "style.surface_opacity",
+            "message": "Very low panel opacity can mix surfaces into a gray, washed-out look.",
+        })
+
+    bar_height = int(style.get("bar_height", 48) or 48)
+    bar_padding = int(style.get("bar_padding", 8) or 0)
+    if bar_padding * 2 > max(0, bar_height - 16):
+        issues.append({
+            "level": "warning",
+            "path": "style.bar_padding",
+            "message": "Bar padding leaves less than 16px for content; Quickshell will clamp it safely.",
+        })
+    return issues
+
+
 def validate(name: str | None) -> int:
     target = name or theme_runtime.active_theme()
     if not target:
@@ -70,6 +130,7 @@ def validate(name: str | None) -> int:
         print(f"theme validate: {exc}", file=sys.stderr)
         return 2
     issues = validate_theme(theme)
+    issues.extend(palette_quality_issues(theme))
     errors, warnings = validation_summary(issues)
     print(f"{target}: {errors} error(s), {warnings} suggestion(s)")
     for issue in issues:
