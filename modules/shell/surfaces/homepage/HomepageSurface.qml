@@ -108,7 +108,9 @@ Scope {
                     spacing: root.outerGap
 
                     ColumnLayout {
+                        Layout.minimumWidth: root.railWidth
                         Layout.preferredWidth: root.railWidth
+                        Layout.maximumWidth: root.railWidth
                         Layout.fillHeight: true
                         spacing: root.innerGap
                         ClockCard {}
@@ -119,10 +121,16 @@ Scope {
                         Item { Layout.fillHeight: true }
                     }
 
-                    CenterColumn {}
+                    CenterColumn {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumWidth: 360
+                    }
 
                     ColumnLayout {
+                        Layout.minimumWidth: root.rightRailWidth
                         Layout.preferredWidth: root.rightRailWidth
+                        Layout.maximumWidth: root.rightRailWidth
                         Layout.fillHeight: true
                         spacing: root.innerGap
                         NavCard {
@@ -255,6 +263,8 @@ Scope {
             }
 
             component CenterColumn: ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 spacing: root.innerGap
                 GlassCard {
                     Layout.fillWidth: true
