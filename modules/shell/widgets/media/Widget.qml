@@ -62,6 +62,13 @@ Item {
         ColumnLayout {
             spacing: 0
 
+            MouseArea {
+                anchors.fill: parent
+                enabled: context.allows("drawer.open")
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: context.request("drawer.open", { kind: "media" })
+            }
+
             Text {
                 Layout.maximumWidth: context.variant === "compact" ? 120 : 200
                 text: Services.MprisService.title

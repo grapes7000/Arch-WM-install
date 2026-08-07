@@ -39,6 +39,13 @@ PanelWindow {
         }
     }
 
+    function openTo(kind) {
+        const definition = Core.WidgetRegistry.definition(kind)
+        menuOpen = true
+        currentWidget = kind
+        currentWidgetName = definition ? definition.name : kind
+    }
+
     MouseArea {
         id: backdrop
         anchors.fill: parent

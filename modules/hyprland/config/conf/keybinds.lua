@@ -3,7 +3,7 @@ local main = "SUPER"
 hl.bind(main .. " + Return", hl.dsp.exec_cmd(archwm.terminal), {
     description = "Open terminal",
 })
-hl.bind(main .. " + Space", hl.dsp.exec_cmd(archwm.menu), {
+hl.bind(main .. " + Space", hl.dsp.exec_cmd("qs -c arch-wm ipc call launcher toggle"), {
     description = "Open application launcher",
 })
 hl.bind(main .. " + E", hl.dsp.exec_cmd(archwm.file_manager), {

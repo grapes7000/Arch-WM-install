@@ -16,6 +16,13 @@ Item {
     implicitWidth: content.implicitWidth
     implicitHeight: content.implicitHeight
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: context.allows("drawer.open")
+        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: context.request("drawer.open", { kind: "network" })
+    }
+
     RowLayout {
         id: content
         anchors.centerIn: parent

@@ -13,6 +13,7 @@ local environment = {
     NIXOS_OZONE_WL = "1",
     SDL_VIDEODRIVER = "wayland",
     CLUTTER_BACKEND = "wayland",
+    QS_ICON_THEME = "char-white",
 }
 
 for name, value in pairs(environment) do

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Widgets
 import "../../core" as Core
 import "../../services" as Services
 
@@ -32,6 +33,23 @@ Scope {
             readonly property real leftWidth: compact ? 220 : Math.max(250, Math.min(310, width * 0.19))
             readonly property real rightWidth: compact ? 240 : Math.max(270, Math.min(330, width * 0.21))
 
+            // Quick Access apps shown on the homepage. Edit this list to change what shows up:
+            // - icon: fallback glyph used only if no matching .desktop entry is found
+            // - name: label under the icon
+            // - command: shell command used both to launch the app and to match it to a .desktop entry
+            property var quickAccessApps: [
+                { icon: "󰉋", name: "Files", command: "thunar" },
+                { icon: "󰆍", name: "Terminal", command: "kitty" },
+                { icon: "󰈹", name: "Browser", command: "firefox" },
+                { icon: "󰙯", name: "Discord", command: "discord" },
+                { icon: "󰓇", name: "Spotify", command: "spotify" },
+                { icon: "󰒓", name: "Settings", command: "nwg-look" },
+                { icon: "󰓓", name: "Steam", command: "steam" },
+                { icon: "󰖲", name: "Hyprland", command: "kitty -e sh -lc 'hyprctl clients; read'" },
+                { icon: "󰨞", name: "VS Code", command: "code" },
+                { icon: "󱓧", name: "Obsidian", command: "obsidian" }
+            ]
+
             screen: modelData
             anchors { top: true; bottom: true; left: true; right: true }
             margins {
@@ -54,6 +72,18 @@ Scope {
                 if (!command || launchProcess.running) return
                 launchProcess.command = ["sh", "-lc", command]
                 launchProcess.running = true
+            }
+
+            function desktopIconFor(command) {
+                if (!command) return ""
+                const bin = command.trim().split(" ")[0].split("/").pop().toLowerCase()
+                const entries = [...DesktopEntries.applications.values]
+                const match = entries.find(entry => {
+                    const id = String(entry.id || "").toLowerCase()
+                    const execBin = String(entry.execString || "").trim().split(" ")[0].split("/").pop().toLowerCase()
+                    return execBin === bin || id === bin || id === bin + ".desktop"
+                })
+                return match ? match.icon : ""
             }
 
             Process {
@@ -181,6 +211,7 @@ Scope {
                                         model: Services.CavaService.bars
                                         Rectangle {
                                             required property real modelData
+                                            required property int index
                                             width: Math.max(2, (parent.width - (Services.CavaService.bars.length - 1) * parent.spacing) / Math.max(1, Services.CavaService.bars.length))
                                             height: Math.max(3, parent.height * modelData)
                                             anchors.bottom: parent.bottom
@@ -255,35 +286,36 @@ Scope {
                                 columnSpacing: 9
 
                                 Repeater {
-                                    model: [
-                                        { icon: "󰉋", name: "Files", command: "thunar" },
-                                        { icon: "󰆍", name: "Terminal", command: "kitty" },
-                                        { icon: "󰈹", name: "Browser", command: "firefox" },
-                                        { icon: "󰙯", name: "Discord", command: "discord" },
-                                        { icon: "󰓇", name: "Spotify", command: "spotify" },
-                                        { icon: "󰒓", name: "Settings", command: "nwg-look" },
-                                        { icon: "󰓓", name: "Steam", command: "steam" },
-                                        { icon: "󰖲", name: "Hyprland", command: "kitty -e sh -lc 'hyprctl clients; read'" },
-                                        { icon: "󰨞", name: "VS Code", command: "code" },
-                                        { icon: "󱓧", name: "Obsidian", command: "obsidian" }
-                                    ]
+                                    model: root.quickAccessApps
 
-                                    Rectangle {
+                                    Item {
+                                        id: appTile
                                         required property var modelData
+                                        readonly property string desktopIcon: root.desktopIconFor(modelData.command)
                                         Layout.fillWidth: true
-                                        Layout.preferredHeight: root.compact ? 62 : 78
-                                        radius: Core.Theme.radius
-                                        color: appHover.hovered ? Core.Theme.surfaceHover : Core.Theme.surface
-                                        border.width: 1
-                                        border.color: appHover.hovered ? Core.Theme.accent : Core.Theme.accent2
-                                        opacity: 0.92
-                                        scale: appHover.hovered ? 1.025 : 1
-                                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                        Layout.preferredHeight: root.compact ? 68 : 86
 
                                         Column {
                                             anchors.centerIn: parent
                                             spacing: 4
-                                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.icon; color: Core.Theme.accent; font.pixelSize: root.compact ? 20 : 27 }
+                                            IconImage {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                visible: appTile.desktopIcon !== ""
+                                                implicitSize: root.compact ? 30 : 40
+                                                source: appTile.desktopIcon !== "" ? Quickshell.iconPath(appTile.desktopIcon, "") : ""
+                                                opacity: appHover.hovered ? 1.0 : 0.9
+                                                scale: appHover.hovered ? 1.08 : 1.0
+                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                            }
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                visible: appTile.desktopIcon === ""
+                                                text: modelData.icon
+                                                color: Core.Theme.accent
+                                                font.pixelSize: root.compact ? 26 : 34
+                                                scale: appHover.hovered ? 1.08 : 1.0
+                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                            }
                                             Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 9 }
                                         }
                                         HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
@@ -411,10 +443,24 @@ Scope {
                             anchors.margins: 15
                             spacing: 11
                             Text { text: "Quick Controls"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 12 }
-                            ControlRow { icon: "󰖩"; title: "Wi-Fi"; subtitle: Services.NetworkService.connected ? "Connected" : "Disconnected"; enabledState: Services.NetworkService.connected }
-                            ControlRow { icon: "󰂯"; title: "Bluetooth"; subtitle: "Quick toggle"; enabledState: true }
-                            ControlRow { icon: "󰖔"; title: "Night Light"; subtitle: "Display comfort"; enabledState: false }
-                            ControlRow { icon: "󰂛"; title: "Do Not Disturb"; subtitle: "Notifications"; enabledState: false }
+                            ControlRow {
+                                icon: "󰖩"; title: "Wi-Fi"
+                                subtitle: !Services.NetworkService.radioEnabled ? "Off" : (Services.NetworkService.connected ? "Connected" : "Disconnected")
+                                enabledState: Services.NetworkService.radioEnabled
+                                onToggled: Services.NetworkService.setWifiRadio(!Services.NetworkService.radioEnabled)
+                            }
+                            ControlRow {
+                                icon: "󰂯"; title: "Bluetooth"
+                                subtitle: Services.BluetoothService.powered ? "On" : "Off"
+                                enabledState: Services.BluetoothService.powered
+                                onToggled: Services.BluetoothService.setPower(!Services.BluetoothService.powered)
+                            }
+                            ControlRow { icon: "󰖔"; title: "Night Light"; subtitle: "Not available"; enabledState: false; interactive: false }
+                            ControlRow {
+                                icon: "󰂛"; title: "Do Not Disturb"; subtitle: "Notifications"
+                                enabledState: Services.NotificationService.dndEnabled
+                                onToggled: Services.NotificationService.toggleDnd()
+                            }
                         }
                     }
 
@@ -468,10 +514,13 @@ Scope {
             }
 
             component ControlRow: RowLayout {
+                id: controlRow
                 property string icon: ""
                 property string title: ""
                 property string subtitle: ""
                 property bool enabledState: false
+                property bool interactive: true
+                signal toggled()
                 Layout.fillWidth: true
                 spacing: 9
                 Text { text: icon; color: Core.Theme.accent; font.pixelSize: 18 }
@@ -485,7 +534,10 @@ Scope {
                     width: 34
                     height: 18
                     radius: 9
-                    color: enabledState ? Core.Theme.accent : Core.Theme.surfaceHover
+                    readonly property color mutedTint: Qt.color(Core.Theme.muted)
+                    color: enabledState ? Core.Theme.accent : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.22)
+                    border.width: 1
+                    border.color: enabledState ? Core.Theme.accent : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.6)
                     Rectangle {
                         width: 14
                         height: 14
@@ -494,6 +546,13 @@ Scope {
                         x: enabledState ? parent.width - width - 2 : 2
                         color: enabledState ? Core.Theme.background : Core.Theme.muted
                         Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        enabled: controlRow.interactive
+                        cursorShape: controlRow.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: controlRow.toggled()
                     }
                 }
             }

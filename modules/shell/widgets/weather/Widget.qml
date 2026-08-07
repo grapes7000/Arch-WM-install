@@ -18,6 +18,13 @@ Item {
 
     visible: Services.WeatherService.available
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: context.allows("drawer.open")
+        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: context.request("drawer.open", { kind: "weather" })
+    }
+
     RowLayout {
         id: content
         anchors.centerIn: parent

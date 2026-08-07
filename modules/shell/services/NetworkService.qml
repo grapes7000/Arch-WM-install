@@ -8,6 +8,7 @@ Singleton {
     id: root
 
     property bool connected: false
+    property bool radioEnabled: true
     property string ssid: ""
     property string type: ""
     property int strength: 0
@@ -127,6 +128,11 @@ Singleton {
         return true
     }
 
+    function parseRadio(contents) {
+        radioEnabled = contents.trim() === "enabled"
+        return true
+    }
+
     function run(command, operation) {
         if (serviceProcess.running) return false
         _operation = operation
@@ -134,6 +140,14 @@ Singleton {
         serviceProcess.running = true
         watchdog.restart()
         return true
+    }
+
+    function refreshRadio() {
+        return run(["nmcli", "radio", "wifi"], "radio")
+    }
+
+    function setWifiRadio(enabled) {
+        return run(["nmcli", "radio", "wifi", enabled ? "on" : "off"], "radioSet")
     }
 
     function refresh() {
@@ -167,6 +181,7 @@ Singleton {
                 if (root._operation === "status") root.parseStatus(text)
                 else if (root._operation === "scan") root.parseScan(text)
                 else if (root._operation === "details") root.parseDetails(text)
+                else if (root._operation === "radio") root.parseRadio(text)
             }
         }
         onExited: (exitCode, exitStatus) => {
@@ -187,7 +202,11 @@ Singleton {
                 } else Qt.callLater(root.scan)
             } else if (operation === "details") {
                 Qt.callLater(root.scan)
+            } else if (operation === "scan") {
+                Qt.callLater(root.refreshRadio)
             } else if (operation === "connect") {
+                Qt.callLater(root.refresh)
+            } else if (operation === "radioSet") {
                 Qt.callLater(root.refresh)
             }
         }

@@ -7,7 +7,7 @@
   "variants": ["compact", "standard"],
   "lockSafe": true,
   "services": ["mpris"],
-  "capabilities": ["media.control"],
+  "capabilities": ["media.control", "drawer.open"],
   "constraints": {
     "compact": {"minWidth": 80, "minHeight": 24},
     "standard": {"minWidth": 200, "minHeight": 48}

@@ -18,6 +18,25 @@ Scope {
         id: menuPopup
     }
 
+    QtObject {
+        id: drawerAdapter
+        function open(kind, anchorItem, screen) {
+            menuPopup.openTo(kind)
+            return true
+        }
+        function close() {
+            menuPopup.close()
+            return true
+        }
+    }
+
+    Binding {
+        target: Core.InteractiveShellController
+        property: "drawerController"
+        value: drawerAdapter
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
     Connections {
         target: Services.LockStateService
         function onLockedChanged() {

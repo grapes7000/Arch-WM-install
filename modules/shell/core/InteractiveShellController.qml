@@ -14,10 +14,11 @@ QtObject {
         "calendar",
         "audio",
         "network",
-        "system",
+        "system-stats",
         "notifications",
         "session",
-        "weather"
+        "weather",
+        "media"
     ]
 
     function invoke(controller, action, args) {

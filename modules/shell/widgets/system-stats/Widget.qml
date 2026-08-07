@@ -17,6 +17,13 @@ Item {
     implicitHeight: context.variant === "compact" ? compactText.implicitHeight
         : context.variant === "standard" ? 92 : 170
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: context.allows("drawer.open")
+        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: context.request("drawer.open", { kind: "system-stats" })
+    }
+
     Text {
         id: compactText
         anchors.centerIn: parent

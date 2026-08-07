@@ -39,7 +39,7 @@
       "variants": ["compact", "standard", "expanded"],
       "lockSafe": false,
       "services": ["system-stats"],
-      "capabilities": [],
+      "capabilities": ["drawer.open"],
       "panel": true
     },
     {
@@ -60,7 +60,7 @@
       "variants": ["compact", "standard"],
       "lockSafe": true,
       "services": ["mpris"],
-      "capabilities": ["media.control"],
+      "capabilities": ["media.control", "drawer.open"],
       "panel": true
     },
     {
@@ -81,7 +81,7 @@
       "variants": ["compact", "standard"],
       "lockSafe": true,
       "services": ["network"],
-      "capabilities": [],
+      "capabilities": ["drawer.open"],
       "panel": true
     },
     {
@@ -112,7 +112,7 @@
       "variants": ["compact", "standard"],
       "lockSafe": true,
       "services": ["weather"],
-      "capabilities": [],
+      "capabilities": ["drawer.open"],
       "panel": true
     }
   ]

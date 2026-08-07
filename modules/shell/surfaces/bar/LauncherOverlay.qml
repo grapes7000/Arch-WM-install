@@ -13,8 +13,21 @@ Scope {
     property string query: ""
     property string category: "All"
     property int selectedIndex: 0
-    readonly property var categories: ["All", "Favorites", "Recent", "Internet", "Development", "Utilities", "System", "Multimedia", "Office", "Games", "Other"]
-    property var results: buildResults()
+    property int appsRevision: 0
+    readonly property var categories: [
+        { name: "All", icon: "applications-all" },
+        { name: "Favorites", icon: "starred" },
+        { name: "Recent", icon: "document-open-recent" },
+        { name: "Internet", icon: "applications-internet" },
+        { name: "Development", icon: "applications-development" },
+        { name: "Utilities", icon: "applications-utilities" },
+        { name: "System", icon: "applications-system" },
+        { name: "Multimedia", icon: "applications-multimedia" },
+        { name: "Office", icon: "applications-office" },
+        { name: "Games", icon: "applications-games" },
+        { name: "Other", icon: "applications-other" }
+    ]
+    readonly property var results: buildResults()
 
     function entryCategory(entry) {
         const values = entry.categories || []
@@ -39,6 +52,7 @@ Scope {
     }
 
     function buildResults() {
+        const _entriesVersion = root.appsRevision // re-run this binding when the app list changes
         const needle = root.query.trim().toLowerCase()
         const favorites = Services.LauncherStateService.favorites
         const recents = Services.LauncherStateService.recents
@@ -92,7 +106,7 @@ Scope {
     }
     Connections {
         target: DesktopEntries
-        function onApplicationsChanged() { root.results = root.buildResults() }
+        function onApplicationsChanged() { root.appsRevision++ }
     }
 
     PanelWindow {
@@ -154,13 +168,19 @@ Scope {
                         model: root.categories
                         clip: true
                         delegate: Rectangle {
-                            required property string modelData
-                            width: categoryLabel.implicitWidth + Core.Theme.gap * 3
+                            required property var modelData
+                            width: categoryRow.implicitWidth + Core.Theme.gap * 3
                             height: 32
                             radius: Core.Theme.radius
-                            color: root.category === modelData ? Core.Theme.accent2 : Core.Theme.background
-                            Text { id: categoryLabel; anchors.centerIn: parent; text: modelData; color: Core.Theme.foreground }
-                            MouseArea { anchors.fill: parent; onClicked: { root.category = modelData; root.selectedIndex = 0; searchField.forceActiveFocus() } }
+                            color: root.category === modelData.name ? Core.Theme.accent2 : Core.Theme.background
+                            RowLayout {
+                                id: categoryRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                IconImage { Layout.preferredWidth: 16; Layout.preferredHeight: 16; source: Quickshell.iconPath(modelData.icon, "") }
+                                Text { text: modelData.name; color: Core.Theme.foreground }
+                            }
+                            MouseArea { anchors.fill: parent; onClicked: { root.category = modelData.name; root.selectedIndex = 0; searchField.forceActiveFocus() } }
                         }
                     }
                     ListView {
@@ -171,6 +191,15 @@ Scope {
                         currentIndex: root.selectedIndex
                         clip: true
                         spacing: Math.max(2, Core.Theme.gap / 2)
+                        ScrollBar.vertical: ScrollBar {
+                            policy: ScrollBar.AsNeeded
+                            contentItem: Rectangle {
+                                implicitWidth: 6
+                                radius: 3
+                                color: Core.Theme.accent2
+                                opacity: parent.pressed ? 0.9 : 0.5
+                            }
+                        }
                         delegate: Rectangle {
                             required property var modelData
                             required property int index
