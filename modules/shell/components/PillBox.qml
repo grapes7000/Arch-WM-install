@@ -16,8 +16,9 @@ Rectangle {
     property bool scaleEnabled: true
     property real growScale: 1.02
     property real pressScale: 0.97
-    // Slow, eased target for hover/active state changes.
-    readonly property real stateScale: root.scaleEnabled
+    // Slow, eased target for hover/active state changes. This must be writable
+    // because QML Behavior animates the property's intermediate values.
+    property real stateScale: root.scaleEnabled
         ? (root.active ? pressScale : (hover.hovered ? growScale : 1.0))
         : 1.0
     // Fast, un-eased press/release pop, driven directly off the tap so it
@@ -104,9 +105,16 @@ Rectangle {
         easing.type: Easing.OutQuad
     }
 
-    SequentialAnimation {
+    // Settles back to exactly 1.0 (regular size) rather than overshooting
+    // past it; the bounce comes from OutBack's own overshoot-and-settle
+    // curve, not from an inflated peak value.
+    NumberAnimation {
         id: bounceAnim
-        NumberAnimation { target: root; property: "pressPop"; to: 1.05; duration: 70; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "pressPop"; to: 1.0; duration: 110; easing.type: Easing.OutBack; easing.overshoot: 3 }
+        target: root
+        property: "pressPop"
+        to: 1.0
+        duration: 140
+        easing.type: Easing.OutBack
+        easing.overshoot: 2.2
     }
 }

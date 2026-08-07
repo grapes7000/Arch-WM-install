@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 Item {
     id: panel
@@ -185,6 +186,7 @@ Item {
                     implicitHeight: headerRow.implicitHeight
 
                     MouseArea {
+                        id: networksExpandArea
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
@@ -192,6 +194,7 @@ Item {
                             if (panel.networksExpanded) Services.NetworkService.scan()
                         }
                     }
+                    Components.PressBounce { pressed: networksExpandArea.pressed }
 
                     RowLayout {
                         id: headerRow
@@ -220,12 +223,14 @@ Item {
                             font.pixelSize: 14
 
                             MouseArea {
+                                id: networkRescanArea
                                 anchors.fill: parent
                                 anchors.margins: -6
                                 cursorShape: Qt.PointingHandCursor
                                 enabled: !Services.NetworkService.scanning
                                 onClicked: Services.NetworkService.scan()
                             }
+                            Components.PressBounce { pressed: networkRescanArea.pressed }
                         }
                     }
                 }
@@ -270,6 +275,7 @@ Item {
                             }
 
                             MouseArea {
+                                id: apRowArea
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
                                 enabled: !modelData.active && !Services.NetworkService.connecting
@@ -283,6 +289,7 @@ Item {
                                     }
                                 }
                             }
+                            Components.PressBounce { pressed: apRowArea.pressed }
                         }
 
                         RowLayout {
@@ -325,6 +332,7 @@ Item {
                                 font.bold: true
 
                                 MouseArea {
+                                    id: connectDraftArea
                                     anchors.fill: parent
                                     anchors.margins: -6
                                     cursorShape: Qt.PointingHandCursor
@@ -335,6 +343,7 @@ Item {
                                         panel.passwordDraft = ""
                                     }
                                 }
+                                Components.PressBounce { pressed: connectDraftArea.pressed }
                             }
                         }
                     }
@@ -460,6 +469,7 @@ Item {
             opacity: Services.TailscaleService.connected ? 1.0 : 0.4
 
             MouseArea {
+                id: tailscaleExpandArea
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
@@ -467,6 +477,7 @@ Item {
                     if (panel.tailscaleExpanded) Services.TailscaleService.refreshStatusText()
                 }
             }
+            Components.PressBounce { pressed: tailscaleExpandArea.pressed }
 
             ColumnLayout {
                 id: tsCol

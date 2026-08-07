@@ -30,13 +30,14 @@ Item {
             color: Services.NotificationService.count > 0 ? Core.Theme.accent : Core.Theme.muted
             font.pixelSize: context.variant === "compact" ? 16 : 20
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: dismissArea
                 anchors.fill: parent
                 enabled: context.allows("notification.dismiss")
                 onClicked: Services.NotificationService.dismiss()
             }
+
+            Components.PressBounce { pressed: dismissArea.pressed }
         }
 
         Text {
@@ -55,13 +56,14 @@ Item {
             color: Core.Theme.muted
             font.pixelSize: 11
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: dndArea
                 anchors.fill: parent
                 enabled: context.allows("notification.dismiss")
                 onClicked: Services.NotificationService.toggleDnd()
             }
+
+            Components.PressBounce { pressed: dndArea.pressed }
         }
     }
 }

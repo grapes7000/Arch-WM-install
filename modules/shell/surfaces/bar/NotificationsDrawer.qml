@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../../core" as Core
 import "../../services" as Services
+import "../../components" as Components
 
 ColumnLayout {
     implicitHeight: 380
@@ -11,8 +12,8 @@ ColumnLayout {
         Layout.fillWidth: true
         Text { font.family: Core.Theme.fontFamily; text: "Notifications"; color: Core.Theme.foreground; font.pixelSize: 18; font.bold: true }
         Item { Layout.fillWidth: true }
-        Text { font.family: Core.Theme.fontFamily; text: Services.NotificationService.dndEnabled ? "Resume" : "Pause"; color: Core.Theme.accent; MouseArea { anchors.fill: parent; onClicked: Services.NotificationService.toggleDnd() } }
-        Text { font.family: Core.Theme.fontFamily; text: "Clear"; color: Core.Theme.muted; MouseArea { anchors.fill: parent; onClicked: Services.NotificationService.dismiss() } }
+        Text { font.family: Core.Theme.fontFamily; text: Services.NotificationService.dndEnabled ? "Resume" : "Pause"; color: Core.Theme.accent; MouseArea { id: dndDrawerArea; anchors.fill: parent; onClicked: Services.NotificationService.toggleDnd() } Components.PressBounce { pressed: dndDrawerArea.pressed } }
+        Text { font.family: Core.Theme.fontFamily; text: "Clear"; color: Core.Theme.muted; MouseArea { id: clearDrawerArea; anchors.fill: parent; onClicked: Services.NotificationService.dismiss() } Components.PressBounce { pressed: clearDrawerArea.pressed } }
     }
 
     Text { font.family: Core.Theme.fontFamily; visible: Services.NotificationService.recent.length === 0; text: "No recent notifications"; color: Core.Theme.muted; Layout.alignment: Qt.AlignHCenter }

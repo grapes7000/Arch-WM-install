@@ -289,22 +289,22 @@ Scope {
                                     text: "󰒮"
                                     color: Core.Theme.muted
                                     font.pixelSize: 20
-                                    Components.PressBounce {}
-                                    MouseArea { anchors.fill: parent; onClicked: Services.MprisService.previous() }
+                                    MouseArea { id: hpPrevArea; anchors.fill: parent; onClicked: Services.MprisService.previous() }
+                                    Components.PressBounce { pressed: hpPrevArea.pressed }
                                 }
                                 Text {
                                     text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
                                     color: Core.Theme.accent
                                     font.pixelSize: 28
-                                    Components.PressBounce {}
-                                    MouseArea { anchors.fill: parent; onClicked: Services.MprisService.playPause() }
+                                    MouseArea { id: hpPlayPauseArea; anchors.fill: parent; onClicked: Services.MprisService.playPause() }
+                                    Components.PressBounce { pressed: hpPlayPauseArea.pressed }
                                 }
                                 Text {
                                     text: "󰒭"
                                     color: Core.Theme.muted
                                     font.pixelSize: 20
-                                    Components.PressBounce {}
-                                    MouseArea { anchors.fill: parent; onClicked: Services.MprisService.next() }
+                                    MouseArea { id: hpNextArea; anchors.fill: parent; onClicked: Services.MprisService.next() }
+                                    Components.PressBounce { pressed: hpNextArea.pressed }
                                 }
                             }
                         }
@@ -408,8 +408,8 @@ Scope {
                                                     Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 9 }
                                                 }
                                                 HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
-                                                TapHandler { onTapped: root.launch(modelData.command) }
-                                                Components.PressBounce { target: appTile }
+                                                TapHandler { id: appTap; onTapped: root.launch(modelData.command) }
+                                                Components.PressBounce { target: appTile; pressed: appTap.pressed }
                                             }
                                         }
                                     }
@@ -689,15 +689,16 @@ Scope {
                         color: enabledState ? Core.Theme.background : Core.Theme.muted
                         Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
                     }
-                    Components.PressBounce {}
-
                     MouseArea {
+                        id: toggleArea
                         anchors.fill: parent
                         anchors.margins: -4
                         enabled: controlRow.interactive
                         cursorShape: controlRow.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: controlRow.toggled()
                     }
+
+                    Components.PressBounce { pressed: toggleArea.pressed }
                 }
             }
 

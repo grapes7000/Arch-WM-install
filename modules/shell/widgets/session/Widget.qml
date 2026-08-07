@@ -30,13 +30,14 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 16 : 20
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: lockArea
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
                 onClicked: Services.SessionService.lock()
             }
+
+            Components.PressBounce { pressed: lockArea.pressed }
         }
 
         Text {
@@ -46,13 +47,14 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: 18
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: logoutArea
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
                 onClicked: Services.SessionService.logout()
             }
+
+            Components.PressBounce { pressed: logoutArea.pressed }
         }
 
         Text {
@@ -62,13 +64,14 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: 18
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: suspendArea
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
                 onClicked: Services.SessionService.suspend()
             }
+
+            Components.PressBounce { pressed: suspendArea.pressed }
         }
 
         Text {
@@ -78,13 +81,14 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: 18
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: rebootArea
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
                 onClicked: Services.SessionService.reboot()
             }
+
+            Components.PressBounce { pressed: rebootArea.pressed }
         }
 
         Text {
@@ -94,13 +98,14 @@ Item {
             color: Core.Theme.urgent
             font.pixelSize: 18
 
-            Components.PressBounce {}
-
             MouseArea {
+                id: poweroffArea
                 anchors.fill: parent
                 enabled: context.allows("session.lock")
                 onClicked: Services.SessionService.poweroff()
             }
+
+            Components.PressBounce { pressed: poweroffArea.pressed }
         }
     }
 }

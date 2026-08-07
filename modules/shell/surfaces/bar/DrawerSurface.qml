@@ -59,36 +59,54 @@ Scope {
                 id: card
 
                 function anchoredX() {
+                    const edge = Math.max(Core.Theme.drawerOffset, Core.Theme.barOuterMargin)
                     if (!controller.anchorItem)
-                        return drawerWindow.width - width - Core.Theme.gap * 2
+                        return drawerWindow.width - width - edge
                     const point = controller.anchorItem.mapToItem(
                         null,
                         controller.anchorItem.width / 2,
                         controller.anchorItem.height
                     )
                     return Math.max(
-                        Core.Theme.gap,
-                        Math.min(drawerWindow.width - width - Core.Theme.gap, point.x - width / 2)
+                        edge,
+                        Math.min(drawerWindow.width - width - edge, point.x - width / 2)
                     )
                 }
 
-                x: anchoredX()
-                y: Core.Theme.barHeight + Core.Theme.gap * 3
-                width: Math.min(drawerWindow.width - Core.Theme.gap * 2, 420)
-                height: Math.min(
-                    contentLoader.implicitHeight + Core.Theme.gap * 4,
-                    drawerWindow.height - y - Core.Theme.gap * 2
+                readonly property real availableHeight: Math.max(
+                    120,
+                    drawerWindow.height
+                        - Core.Theme.barHeight
+                        - Core.Theme.barOuterMargin * 2
+                        - Core.Theme.drawerOffset * 2
                 )
-                radius: Core.Theme.radius
-                color: Core.Theme.surface
-                border.width: Core.Theme.borderWidth
-                border.color: Core.Theme.accent2
+
+                x: anchoredX()
+                y: Core.Theme.barPosition === "top"
+                    ? Core.Theme.barHeight + Core.Theme.barOuterMargin * 2 + Core.Theme.drawerOffset
+                    : drawerWindow.height - height - Core.Theme.barHeight
+                        - Core.Theme.barOuterMargin * 2 - Core.Theme.drawerOffset
+                width: Math.min(
+                    drawerWindow.width - Math.max(8, Core.Theme.drawerOffset) * 2,
+                    Core.Theme.drawerWidth
+                )
+                height: Math.min(
+                    contentLoader.implicitHeight + Core.Theme.drawerPadding * 2,
+                    availableHeight
+                )
+                radius: Core.Theme.drawerRadius
+                color: Core.Theme.alphaColor(Core.Theme.drawerSurfaceColor, Core.Theme.drawerOpacity)
+                border.width: Core.Theme.drawerOutlineWidth
+                border.color: Core.Theme.alphaColor(
+                    Core.Theme.drawerOutlineColor,
+                    Core.Theme.drawerOutlineOpacity
+                )
                 MouseArea { anchors.fill: parent }
 
                 Loader {
                     id: contentLoader
                     anchors.fill: parent
-                    anchors.margins: Core.Theme.gap * 2
+                    anchors.margins: Core.Theme.drawerPadding
                     source: root.drawerSources[controller.activeKind] || ""
                     onLoaded: {
                         if (item && item.hasOwnProperty("closeDrawer"))
