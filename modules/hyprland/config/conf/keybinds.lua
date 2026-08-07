@@ -67,12 +67,25 @@ for workspace = 1, 10 do
     }))
 end
 
-hl.bind(main .. " + Z", hl.dsp.workspace.toggle_special("scratch"), {
-    description = "Toggle scratch workspace",
-})
-hl.bind(main .. " + SHIFT + Z", hl.dsp.window.move({
-    workspace = "special:scratch",
-}))
+-- Dedicated special workspaces keep frequently-used apps close without
+-- consuming the numbered workspace strip. The shell can call the same
+-- special-workspace names through hyprctl later without duplicating policy.
+local special_workspaces = {
+    Z = "scratch",
+    N = "music",
+    C = "comms",
+}
+
+for key, workspace in pairs(special_workspaces) do
+    hl.bind(main .. " + " .. key, hl.dsp.workspace.toggle_special(workspace), {
+        description = "Toggle " .. workspace .. " special workspace",
+    })
+    hl.bind(main .. " + SHIFT + " .. key, hl.dsp.window.move({
+        workspace = "special:" .. workspace,
+    }), {
+        description = "Move window to " .. workspace .. " special workspace",
+    })
+end
 
 hl.bind(main .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(main .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
