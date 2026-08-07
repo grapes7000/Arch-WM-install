@@ -8,6 +8,7 @@ Item {
 
     property string selectedSsid: ""
     property string passwordDraft: ""
+    property bool networksExpanded: false
 
     implicitHeight: layout.implicitHeight
 
@@ -172,35 +173,58 @@ Item {
                 anchors.margins: 12
                 spacing: 8
 
-                RowLayout {
+                Item {
                     Layout.fillWidth: true
-                    spacing: 8
+                    implicitHeight: headerRow.implicitHeight
 
-                    Text {
-                        Layout.fillWidth: true
-                        text: "Available Networks"
-                        color: Core.Theme.foreground
-                        font.pixelSize: 12
-                        font.bold: true
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            panel.networksExpanded = !panel.networksExpanded
+                            if (panel.networksExpanded) Services.NetworkService.scan()
+                        }
                     }
 
-                    Text {
-                        text: Services.NetworkService.scanning ? "…" : "󰑐"
-                        color: Core.Theme.muted
-                        font.pixelSize: 14
+                    RowLayout {
+                        id: headerRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 8
 
-                        MouseArea {
-                            anchors.fill: parent
-                            anchors.margins: -6
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: !Services.NetworkService.scanning
-                            onClicked: Services.NetworkService.scan()
+                        Text {
+                            text: panel.networksExpanded ? "󰅀" : "󰅂"
+                            color: Core.Theme.muted
+                            font.pixelSize: 12
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Available Networks"
+                            color: Core.Theme.foreground
+                            font.pixelSize: 12
+                            font.bold: true
+                        }
+
+                        Text {
+                            visible: panel.networksExpanded
+                            text: Services.NetworkService.scanning ? "…" : "󰑐"
+                            color: Core.Theme.muted
+                            font.pixelSize: 14
+
+                            MouseArea {
+                                anchors.fill: parent
+                                anchors.margins: -6
+                                cursorShape: Qt.PointingHandCursor
+                                enabled: !Services.NetworkService.scanning
+                                onClicked: Services.NetworkService.scan()
+                            }
                         }
                     }
                 }
 
                 Repeater {
-                    model: Services.NetworkService.accessPoints
+                    model: panel.networksExpanded ? Services.NetworkService.accessPoints : []
 
                     delegate: ColumnLayout {
                         Layout.fillWidth: true
@@ -310,7 +334,7 @@ Item {
                 }
 
                 Text {
-                    visible: Services.NetworkService.accessPoints.length === 0
+                    visible: panel.networksExpanded && Services.NetworkService.accessPoints.length === 0
                     text: Services.NetworkService.scanning ? "Scanning…" : "No networks found"
                     color: Core.Theme.muted
                     font.pixelSize: 11
@@ -416,9 +440,11 @@ Item {
             Layout.fillWidth: true
             implicitHeight: tsCol.implicitHeight + 24
             radius: Math.max(6, Core.Theme.radius - 2)
-            color: Qt.rgba(1, 1, 1, 0.04)
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.06)
+            color: Services.TailscaleService.connected
+                ? Qt.rgba(0, 0, 0, 0.2) : Qt.rgba(1, 1, 1, 0.04)
+            border.width: Services.TailscaleService.connected ? 2 : 1
+            border.color: Services.TailscaleService.connected
+                ? Qt.rgba(0, 0, 0, 1.0) : Qt.rgba(1, 1, 1, 0.06)
             opacity: Services.TailscaleService.connected ? 1.0 : 0.4
 
             ColumnLayout {
@@ -466,6 +492,24 @@ Item {
                         text: Services.TailscaleService.peerCount + " peers"
                         color: Core.Theme.muted
                         font.pixelSize: 10
+                    }
+
+                    Rectangle {
+                        visible: Services.TailscaleService.connected
+                        width: tsPillText.implicitWidth + 20
+                        height: tsPillText.implicitHeight + 6
+                        radius: 999
+                        color: Qt.rgba(0, 0, 0, 1.0)
+
+                        Text {
+                            id: tsPillText
+                            anchors.centerIn: parent
+                            text: "CONNECTED"
+                            color: "white"
+                            font.pixelSize: 8
+                            font.bold: true
+                            font.letterSpacing: 0.5
+                        }
                     }
                 }
             }
