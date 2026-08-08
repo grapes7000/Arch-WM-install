@@ -11,11 +11,11 @@ Scope {
     readonly property var drawerSources: ({
         calendar: Qt.resolvedUrl("CalendarDrawer.qml"),
         audio: Qt.resolvedUrl("AudioDrawer.qml"),
-        network: Qt.resolvedUrl("NetworkDrawer.qml"),
-        system: Qt.resolvedUrl("SystemDrawer.qml"),
+        network: Qt.resolvedUrl("../../widgets/network/Panel.qml"),
+        system: Qt.resolvedUrl("../../widgets/system-stats/Panel.qml"),
         notifications: Qt.resolvedUrl("NotificationsDrawer.qml"),
         session: Qt.resolvedUrl("SessionDrawer.qml"),
-        weather: Qt.resolvedUrl("WeatherDrawer.qml")
+        weather: Qt.resolvedUrl("../../widgets/weather/Panel.qml")
     })
 
     DrawerController {
