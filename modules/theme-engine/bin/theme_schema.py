@@ -365,6 +365,16 @@ BASE_COMPONENTS: dict[str, Any] = {
         "gtk_radius": 10, "button_role": "bg_alt", "button_hover_role": "hover",
         "selection_role": "selected", "link_role": "accent2", "scrollbar_role": "border_strong",
     },
+    "neovim": {
+        "transparent_background": False,
+        "italic_comments": True,
+        "cursorline": True,
+        "cursorline_role": "surface_1",
+        "string_role": "success",
+        "function_role": "accent2",
+        "error_role": "urgent",
+        "warning_role": "warning",
+    },
 }
 
 STYLE_DEFAULTS = {
@@ -541,11 +551,22 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.apps.link_role", "Link role", "role"),
         FieldSpec("components.apps.scrollbar_role", "Scrollbar role", "role"),
     ),
+    "neovim": (
+        FieldSpec("components.neovim.transparent_background", "Transparent background", "bool", help="Let the terminal background show through instead of Neovim's own bg color."),
+        FieldSpec("components.neovim.italic_comments", "Italic comments", "bool"),
+        FieldSpec("components.neovim.cursorline", "Highlight cursor line", "bool"),
+        FieldSpec("components.neovim.cursorline_role", "Cursor line role", "role"),
+        FieldSpec("components.neovim.string_role", "String color role", "role"),
+        FieldSpec("components.neovim.function_role", "Function color role", "role"),
+        FieldSpec("components.neovim.error_role", "Diagnostic error role", "role"),
+        FieldSpec("components.neovim.warning_role", "Diagnostic warning role", "role"),
+    ),
 }
 
 COMPONENT_LABELS = {
     "windows": "Windows", "notifications": "Notifications", "terminal": "Terminal",
     "prompt": "Prompt", "lock_screen": "Lock Screen", "homepage": "Shell", "apps": "Apps",
+    "neovim": "Neovim",
 }
 
 def _rgb(hex_color: str) -> tuple[int, int, int]:

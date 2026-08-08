@@ -460,7 +460,8 @@ class ThemeStudio:
                 "prompt": "Starship layout, separators, modules, status roles.",
                 "lock_screen": "Hyprlock clock, password field, avatar, colors.",
                 "homepage": "Cards, alignment, visibility, density, glass.",
-                "apps": "GTK, Qt, Firefox, VS Code and common UI states.",
+                "apps": "GTK button, selection, link, and scrollbar colors.",
+                "neovim": "Highlight groups, transparency, cursor line, diagnostics.",
             }
             safe_addstr(stdscr, 7, x + 2, descriptions[name], 0, width - x - 5)
             preview = component_preview(self.editor.draft, name, min(44, width - x - 5), min(14, height - 13))
