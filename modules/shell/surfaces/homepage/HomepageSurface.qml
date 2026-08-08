@@ -710,7 +710,7 @@ Scope {
                     case "system": return Qt.resolvedUrl("../../widgets/system-stats/Panel.qml")
                     case "media": return Qt.resolvedUrl("../../widgets/media/Panel.qml")
                     case "audio": return Qt.resolvedUrl("../../widgets/volume/Panel.qml")
-                    case "calendar": return Qt.resolvedUrl("../../surfaces/bar/CalendarDrawer.qml")
+                    case "calendar": return Qt.resolvedUrl("../../widgets/clock/Panel.qml")
                 }
                 return ""
             }

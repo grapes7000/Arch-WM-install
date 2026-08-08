@@ -18,7 +18,8 @@ QtObject {
         "system",
         "notifications",
         "session",
-        "weather"
+        "weather",
+        "battery"
     ]
 
     function invoke(controller, action, args) {

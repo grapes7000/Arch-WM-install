@@ -18,6 +18,8 @@ Item {
 
     visible: Services.PowerService.available
 
+    MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "battery", anchorItem: root }) }
+
     RowLayout {
         id: content
         anchors.centerIn: parent
