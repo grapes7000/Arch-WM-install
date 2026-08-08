@@ -20,19 +20,6 @@ Item {
 
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "weather", anchorItem: root }) }
 
-    Rectangle {
-        visible: context.variant === "compact"
-        anchors.centerIn: content
-        width: content.width + 10
-        height: content.height + 6
-        radius: Core.Theme.radius
-        color: hoverHandler.hovered
-            ? Qt.rgba(Qt.color(Core.Theme.surface).r, Qt.color(Core.Theme.surface).g, Qt.color(Core.Theme.surface).b, 0.5)
-            : "transparent"
-        Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
-    }
-    HoverHandler { id: hoverHandler }
-
     RowLayout {
         id: content
         anchors.centerIn: parent

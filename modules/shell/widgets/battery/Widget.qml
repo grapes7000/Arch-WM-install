@@ -20,23 +20,6 @@ Item {
 
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "battery", anchorItem: root }) }
 
-    Rectangle {
-        visible: context.variant === "compact"
-        anchors.centerIn: content
-        width: content.width + 10
-        height: content.height + 6
-        radius: Core.Theme.radius
-        color: hoverHandler.hovered
-            ? Qt.rgba(Qt.color(Core.Theme.surface).r, Qt.color(Core.Theme.surface).g, Qt.color(Core.Theme.surface).b, 0.5)
-            : "transparent"
-        border.width: (Services.PowerService.charging
-            || (Services.PowerService.percent <= 15 && !Services.PowerService.charging)) ? 1 : 0
-        border.color: Services.PowerService.percent <= 15 && !Services.PowerService.charging
-            ? Core.Theme.urgent : Core.Theme.accent
-        Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
-    }
-    HoverHandler { id: hoverHandler }
-
     RowLayout {
         id: content
         anchors.centerIn: parent

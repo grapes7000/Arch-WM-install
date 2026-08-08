@@ -19,22 +19,6 @@ Item {
 
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "system", anchorItem: root }) }
 
-    Rectangle {
-        visible: context.variant === "compact"
-        anchors.centerIn: compactText
-        width: compactText.width + 10
-        height: compactText.height + 6
-        radius: Core.Theme.radius
-        color: hoverHandler.hovered
-            ? Qt.rgba(Qt.color(Core.Theme.surface).r, Qt.color(Core.Theme.surface).g, Qt.color(Core.Theme.surface).b, 0.5)
-            : "transparent"
-        border.width: Math.max(Services.SystemStatsService.cpuPercent, Services.SystemStatsService.memoryPercent,
-            Services.SystemStatsService.diskPercent) >= 90 ? 1 : 0
-        border.color: Core.Theme.urgent
-        Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
-    }
-    HoverHandler { id: hoverHandler }
-
     Text {
         font.family: Core.Theme.fontFamily
         id: compactText
