@@ -235,7 +235,120 @@ ANIMS = {
             "animation = border, 1, 3, spike",
         ],
     },
+    # Placeholder entry only so validate_anim()/list_anims() see "custom" as a
+    # real name; _resolve_anim() special-cases it and builds real lines from
+    # the theme's custom_bezier_* style fields instead of using this list.
+    "custom": {
+        "enabled": True,
+        "lines": [],
+    },
 }
+
+# ── Fine-tune overlays: speed multiplier, workspace style, layer anim ──
+
+WORKSPACE_STYLE_TOKENS = {
+    "slide": "slide",
+    "slidevert": "slidevert",
+    "fade": "",
+    "slidefade": "slidefade 50%",
+    "slidefadevert": "slidefadevert 40%",
+}
+
+
+def _custom_bezier_lines(style: dict) -> list[str]:
+    x1 = style.get("custom_bezier_x1", 0.16)
+    y1 = style.get("custom_bezier_y1", 1.0)
+    x2 = style.get("custom_bezier_x2", 0.3)
+    y2 = style.get("custom_bezier_y2", 1.0)
+    return [
+        f"bezier = custom, {x1}, {y1}, {x2}, {y2}",
+        "animation = windowsIn, 1, 6, custom, slide",
+        "animation = windowsOut, 1, 5, custom, slide",
+        "animation = windowsMove, 1, 5, custom, slide",
+        "animation = fade, 1, 5, custom",
+        "animation = fadeDim, 1, 5, custom",
+        "animation = workspaces, 1, 6, custom, slide",
+        "animation = border, 1, 6, custom",
+    ]
+
+
+def _scale_speed(token: str, multiplier: float) -> str:
+    try:
+        value = float(token)
+    except ValueError:
+        return token
+    return str(max(1, round(value * multiplier)))
+
+
+def _apply_speed_multiplier(lines: list[str], multiplier: float) -> list[str]:
+    if multiplier == 1.0:
+        return lines
+    out = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("animation ="):
+            prefix, rest = line.split("=", 1)
+            parts = [part.strip() for part in rest.split(",")]
+            if len(parts) >= 3:
+                parts[2] = _scale_speed(parts[2], multiplier)
+            out.append(f"{prefix}= " + ", ".join(parts))
+        else:
+            out.append(line)
+    return out
+
+
+def _apply_workspace_style(lines: list[str], workspace_style: str | None) -> list[str]:
+    if not workspace_style or workspace_style == "preset":
+        return lines
+    token = WORKSPACE_STYLE_TOKENS.get(workspace_style)
+    if token is None:
+        return lines
+    out = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("animation = workspaces,") or stripped.startswith("animation = specialWorkspace,"):
+            prefix, rest = line.split("=", 1)
+            parts = [part.strip() for part in rest.split(",")]
+            if len(parts) >= 4:
+                parts = parts[:4]
+                if token:
+                    parts.append(token)
+                out.append(f"{prefix}= " + ", ".join(parts))
+                continue
+        out.append(line)
+    return out
+
+
+def _layer_animation_line(multiplier: float, enabled: bool, layer_style: str) -> str:
+    if not enabled:
+        return "animation = layers, 0, 1, default"
+    speed = max(1, round(6 * multiplier))
+    style = layer_style if layer_style in ("fade", "slide") else "fade"
+    return f"animation = layers, 1, {speed}, default, {style}"
+
+
+def _resolve_anim(anim_name: str | None, style: dict | None = None) -> tuple[bool, list[str]]:
+    """Resolve an animation preset (or 'custom') into final Hyprland lines,
+    with the fine-tune style overrides (speed multiplier, workspace-style
+    override, layer animation) applied on top."""
+    style = style or {}
+    if anim_name is None or anim_name not in ANIMS:
+        return False, []
+    if anim_name == "custom":
+        lines = _custom_bezier_lines(style)
+    else:
+        anim = ANIMS[anim_name]
+        if not anim["enabled"]:
+            return False, []
+        lines = list(anim["lines"])
+    lines = _apply_workspace_style(lines, style.get("workspace_style"))
+    lines = _apply_speed_multiplier(lines, float(style.get("animation_speed_multiplier", 1.0)))
+    lines.append(_layer_animation_line(
+        float(style.get("animation_speed_multiplier", 1.0)),
+        bool(style.get("layer_animation_enabled", True)),
+        str(style.get("layer_style", "fade")),
+    ))
+    return True, lines
 
 # ── Offset keys applied to theme base values ─────────────────────────
 
@@ -428,13 +541,11 @@ def resolve(style, shape_name=None, texture_name=None):
 
 # ── Animation rendering ──────────────────────────────────────────────
 
-def render_animations(anim_name):
+def render_animations(anim_name, style=None):
     if anim_name is None:
         return []
-    if anim_name not in ANIMS:
-        return []
-    anim = ANIMS[anim_name]
-    if not anim["enabled"]:
+    enabled, resolved = _resolve_anim(anim_name, style)
+    if not enabled:
         return [
             "",
             "animations {",
@@ -446,13 +557,13 @@ def render_animations(anim_name):
         "animations {",
         "    enabled = true",
     ]
-    for anim_line in anim["lines"]:
+    for anim_line in resolved:
         lines.append(f"    {anim_line}")
     lines.append("}")
     return lines
 
 
-def render_animations_lua(anim_name):
+def render_animations_lua(anim_name, style=None):
     """Lua equivalent of render_animations() for generated/theme.lua.
 
     Hyprland's Lua config defines animation curves and leaves with
@@ -463,13 +574,11 @@ def render_animations_lua(anim_name):
     """
     if anim_name is None:
         return []
-    if anim_name not in ANIMS:
-        return []
-    anim = ANIMS[anim_name]
-    if not anim["enabled"]:
+    enabled, resolved = _resolve_anim(anim_name, style)
+    if not enabled:
         return ["hl.config({ animations = { enabled = false } })"]
     lines = ["hl.config({ animations = { enabled = true } })"]
-    for raw in anim["lines"]:
+    for raw in resolved:
         line = raw.strip()
         if line.startswith("bezier ="):
             parts = [part.strip() for part in line.split("=", 1)[1].split(",")]

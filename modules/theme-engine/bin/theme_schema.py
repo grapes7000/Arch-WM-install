@@ -266,7 +266,7 @@ WINDOW_PRESETS = {
     "minimal_dark": {"shape": "sharp", "texture": "clear", "border": "minimal", "shadow": "soft"},
 }
 
-ANIMATION_PRESETS = ("none", "subtle", "smooth", "snappy", "bouncy", "dramatic", "glitch")
+ANIMATION_PRESETS = ("none", "subtle", "smooth", "snappy", "bouncy", "dramatic", "glitch", "custom")
 
 BASE_COMPONENTS: dict[str, Any] = {
     "windows": {
@@ -384,6 +384,14 @@ STYLE_DEFAULTS = {
     "border_preset": "defined",
     "density_preset": "comfortable",
     "animation_preset": "smooth",
+    "workspace_style": "preset",
+    "animation_speed_multiplier": 1.0,
+    "layer_animation_enabled": True,
+    "layer_style": "fade",
+    "custom_bezier_x1": 0.16,
+    "custom_bezier_y1": 1.0,
+    "custom_bezier_x2": 0.3,
+    "custom_bezier_y2": 1.0,
     "font_family": "JetBrainsMono Nerd Font",
     "gaps": 10,
     "border_width": 2,
@@ -452,6 +460,14 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.windows.glow_role", "Glow color role", "role", help="Palette role used by the glow."),
         FieldSpec("components.windows.glow_render_power", "Glow falloff", "int", 1, 4, 1, advanced=True, help="Higher values make glow fall off faster."),
         FieldSpec("components.windows.glow_inactive_opacity", "Inactive glow opacity", "float", 0.0, 1.0, 0.01, advanced=True, help="Usually keep this at zero so only the focused window glows."),
+        FieldSpec("style.animation_speed_multiplier", "Animation speed", "float", 0.25, 3.0, 0.05, help="Scales every animation's duration. Below 1.0 is faster, above 1.0 is slower."),
+        FieldSpec("style.workspace_style", "Workspace transition", "choice", choices=("preset", "slide", "slidevert", "fade", "slidefade", "slidefadevert"), help="Override the workspace-switch animation independent of the Animation preset. 'preset' keeps whatever the preset defines."),
+        FieldSpec("style.layer_animation_enabled", "Animate popups/launchers", "bool", help="Animate layer-shell surfaces such as the app launcher and on-screen overlays."),
+        FieldSpec("style.layer_style", "Popup/launcher style", "choice", choices=("fade", "slide"), advanced=True),
+        FieldSpec("style.custom_bezier_x1", "Custom curve X1", "float", 0.0, 1.0, 0.01, advanced=True, help="Only used when the Animation preset is set to Custom."),
+        FieldSpec("style.custom_bezier_y1", "Custom curve Y1", "float", -1.0, 2.0, 0.01, advanced=True, help="Values above 1 or below 0 create overshoot/bounce. Only used when Animation preset is Custom."),
+        FieldSpec("style.custom_bezier_x2", "Custom curve X2", "float", 0.0, 1.0, 0.01, advanced=True, help="Only used when the Animation preset is set to Custom."),
+        FieldSpec("style.custom_bezier_y2", "Custom curve Y2", "float", -1.0, 2.0, 0.01, advanced=True, help="Values above 1 or below 0 create overshoot/bounce. Only used when Animation preset is Custom."),
     ),
     "notifications": (
         FieldSpec("components.notifications.width", "Width", "int", 220, 900, 10),

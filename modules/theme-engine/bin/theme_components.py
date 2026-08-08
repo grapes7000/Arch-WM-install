@@ -175,10 +175,11 @@ hl.config({{
     }},
 }})
 """
-    animation = str(theme.get("style", {}).get("animation_preset", "smooth"))
+    style = theme.get("style", {})
+    animation = str(style.get("animation_preset", "smooth"))
     try:
         import theme_effects
-        anim_lines = theme_effects.render_animations_lua(animation)
+        anim_lines = theme_effects.render_animations_lua(animation, style)
     except Exception:
         anim_lines = []
     return body + "\n".join(anim_lines) + ("\n" if anim_lines else "")
@@ -265,10 +266,11 @@ def render_hypr(theme: dict[str, Any]) -> str:
         "}",
     ])
 
-    animation = str(theme.get("style", {}).get("animation_preset", "smooth"))
+    style = theme.get("style", {})
+    animation = str(style.get("animation_preset", "smooth"))
     try:
         import theme_effects
-        lines.extend(theme_effects.render_animations(animation))
+        lines.extend(theme_effects.render_animations(animation, style))
     except Exception:
         curves = {
             "subtle": "bezier = studio, 0.25, 0.1, 0.25, 1.0",
