@@ -51,9 +51,6 @@ class StructureTests(unittest.TestCase):
         content = (
             ROOT / "modules/shell/components/WidgetHost.qml"
         ).read_text(encoding="utf-8")
-        # Widget content is created inside the animated pill container on the
-        # bar so hover/press state bubbles up; the context is still passed at
-        # construction time either way.
         self.assertIn(
             "component.createObject(container, { context: widgetContext })",
             content,
@@ -141,6 +138,16 @@ class StructureTests(unittest.TestCase):
         self.assertIn("workspace_animation", hypr_sync)
         self.assertIn("motion_scale", hypr_sync)
 
+    def test_shell_interactive_chrome_uses_theme_roles(self) -> None:
+        pill = (ROOT / "modules/shell/components/PillBox.qml").read_text(encoding="utf-8")
+        card = (ROOT / "modules/shell/surfaces/homepage/GlassCard.qml").read_text(encoding="utf-8")
+        self.assertIn("Core.Theme.surfaceRaised", pill)
+        self.assertIn("Core.Theme.surfaceHover", pill)
+        self.assertIn("Core.Theme.barOutlineColor", pill)
+        self.assertNotIn("Qt.rgba(1, 1, 1", pill)
+        self.assertIn("Core.Theme.roles.border_subtle", card)
+        self.assertNotIn("Qt.rgba(1, 1, 1", card)
+
     def test_modern_reference_themes_exist(self) -> None:
         for name, dark in (
             ("obsidian", True),
@@ -217,7 +224,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.07.19")
+        self.assertEqual(version, "2026.08.07.20")
 
 
 if __name__ == "__main__":
