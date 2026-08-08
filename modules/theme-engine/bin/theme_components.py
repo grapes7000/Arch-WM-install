@@ -17,6 +17,32 @@ from theme_schema import (
 )
 
 CFG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+GENERATED_THEME_JSON = CFG / "theme-engine" / "generated" / "theme.json"
+
+
+def _merge_into_generated_theme(component: str, value: dict[str, Any]) -> Path | None:
+    """Merge a Studio component's data into the generated theme.json that
+    Quickshell (Theme.qml) actually reads. The legacy generator writes this
+    file's roles/style but has no concept of Studio components, so without
+    this merge Quickshell silently falls back to hardcoded defaults no
+    matter what a user sets in the Shell/Apps rooms. Only merges when the
+    legacy generator has already produced a valid theme.json (it always
+    runs first in theme_runtime.apply_theme); otherwise there is nothing
+    safe to merge into and the write is skipped."""
+    path = GENERATED_THEME_JSON
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict) or "roles" not in data or "style" not in data:
+        return None
+    components = data.get("components")
+    if not isinstance(components, dict):
+        components = {}
+    components[component] = value
+    data["components"] = components
+    atomic_text(path, json.dumps(data, indent=2) + "\n")
+    return path
 
 
 def h(color: str) -> str:
@@ -367,6 +393,15 @@ def apply_prompt(theme: dict[str, Any]) -> list[Path]:
     settings["battery_enabled"] = bool(c.get("show_battery", False))
     settings["memory_enabled"] = bool(c.get("show_memory", False))
     settings["time_enabled"] = bool(c.get("show_time", False))
+    settings["cmd_status_enabled"] = bool(c.get("show_cmd_status", True))
+    settings["os_enabled"] = bool(c.get("show_os", True))
+    settings["dev_enabled"] = bool(c.get("show_dev", True))
+    settings["container_enabled"] = bool(c.get("show_container", True))
+    settings["cloud_enabled"] = bool(c.get("show_cloud", True))
+    settings["path_length"] = int(c.get("path_length", 6))
+    settings["path_repo_root"] = bool(c.get("path_repo_root", True))
+    settings["duration_min_ms"] = int(c.get("duration_min_ms", 2000))
+    settings["memory_threshold"] = int(c.get("memory_threshold", 75))
     separator = str(c.get("separator", "powerline"))
     settings.update(SEPARATOR_GLYPHS.get(separator, SEPARATOR_GLYPHS["powerline"]))
     settings["one_line"] = str(c.get("layout", "two_line")) == "one_line"
@@ -430,7 +465,11 @@ def apply_homepage(theme: dict[str, Any]) -> list[Path]:
     c = ensure_theme_schema(theme)["components"]["homepage"]
     path = CFG / "theme-engine" / "homepage-studio.json"
     atomic_text(path, json.dumps(c, indent=2) + "\n")
-    return [path]
+    paths = [path]
+    merged = _merge_into_generated_theme("homepage", c)
+    if merged:
+        paths.append(merged)
+    return paths
 
 
 @register("apps", "Apps", "Shared GTK, Qt, VS Code, and Firefox role overrides")
@@ -463,6 +502,9 @@ scrollbar slider {{ background-color: @studio_scrollbar; border-radius: {int(c.g
     manifest = CFG / "theme-engine" / "apps-studio.json"
     atomic_text(manifest, json.dumps(c, indent=2) + "\n")
     paths.append(manifest)
+    merged = _merge_into_generated_theme("apps", c)
+    if merged:
+        paths.append(merged)
     return paths
 
 

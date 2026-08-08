@@ -217,7 +217,6 @@ ANIMS = {
             "animation = workspaces, 1, 7, cinematic, slidefade 60%",
             "animation = specialWorkspace, 1, 6, cinematic, slidefadevert 40%",
             "animation = border, 1, 8, cinematic",
-            "animation = borderangle, 1, 40, cinematic, loop",
         ],
     },
     "glitch": {
@@ -234,7 +233,6 @@ ANIMS = {
             "animation = workspaces, 1, 2, spike, slidefade 80%",
             "animation = specialWorkspace, 1, 2, spike, slidefadevert 80%",
             "animation = border, 1, 3, spike",
-            "animation = borderangle, 1, 20, spike, loop",
         ],
     },
 }

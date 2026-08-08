@@ -314,6 +314,9 @@ BASE_COMPONENTS: dict[str, Any] = {
         "layout": "two_line", "separator": "powerline", "directory_role": "accent",
         "git_role": "accent2", "status_role": "urgent", "show_duration": True,
         "show_jobs": True, "show_battery": False, "show_memory": False, "show_time": False,
+        "show_os": True, "show_dev": True, "show_container": True, "show_cloud": True,
+        "show_cmd_status": True, "path_length": 6, "path_repo_root": True,
+        "duration_min_ms": 2000, "memory_threshold": 75,
     },
     "lock_screen": {
         "clock_size": 64, "clock_role": "accent", "field_width": 280,
@@ -361,7 +364,6 @@ BASE_COMPONENTS: dict[str, Any] = {
     "apps": {
         "gtk_radius": 10, "button_role": "bg_alt", "button_hover_role": "hover",
         "selection_role": "selected", "link_role": "accent2", "scrollbar_role": "border_strong",
-        "qt_match_gtk": True, "vscode_match_theme": True, "firefox_match_theme": True,
     },
 }
 
@@ -472,6 +474,15 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.prompt.show_battery", "Show battery", "bool", help="Show battery percentage on the right side of the prompt."),
         FieldSpec("components.prompt.show_memory", "Show memory", "bool", help="Show memory usage once it passes a threshold."),
         FieldSpec("components.prompt.show_time", "Show time", "bool", help="Show the current time on the right side."),
+        FieldSpec("components.prompt.show_cmd_status", "Show command status", "bool", help="Show a marker on the right side when the last command failed."),
+        FieldSpec("components.prompt.show_os", "Show OS/host", "bool", help="Show the OS icon, username, and (over SSH) hostname on the left."),
+        FieldSpec("components.prompt.show_dev", "Show language versions", "bool", help="Show detected language runtime versions (Python, Node.js, Rust, Go, Java, Lua, PHP, Ruby, package)."),
+        FieldSpec("components.prompt.show_container", "Show container/k8s", "bool", help="Show Docker context and Kubernetes context when detected."),
+        FieldSpec("components.prompt.show_cloud", "Show cloud/infra", "bool", help="Show Terraform, Nix shell, Conda, AWS, GCloud, and Azure context when detected."),
+        FieldSpec("components.prompt.path_length", "Directory segments", "int", 1, 10, 1, advanced=True, help="How many trailing path segments to show before truncating."),
+        FieldSpec("components.prompt.path_repo_root", "Truncate to repo root", "bool", advanced=True, help="Stop truncation at the root of the current git repository."),
+        FieldSpec("components.prompt.duration_min_ms", "Duration threshold (ms)", "int", 0, 10000, 100, advanced=True, help="Only show command duration once it exceeds this many milliseconds."),
+        FieldSpec("components.prompt.memory_threshold", "Memory threshold (%)", "int", 0, 100, 1, advanced=True, help="Only show memory usage once it exceeds this percentage."),
     ),
     "lock_screen": (
         FieldSpec("components.lock_screen.clock_size", "Clock size", "int", 16, 160, 1),
@@ -529,9 +540,6 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.apps.selection_role", "Selection role", "role"),
         FieldSpec("components.apps.link_role", "Link role", "role"),
         FieldSpec("components.apps.scrollbar_role", "Scrollbar role", "role"),
-        FieldSpec("components.apps.qt_match_gtk", "Match Qt to GTK", "bool"),
-        FieldSpec("components.apps.vscode_match_theme", "Theme VS Code", "bool"),
-        FieldSpec("components.apps.firefox_match_theme", "Theme Firefox", "bool"),
     ),
 }
 
