@@ -6,14 +6,8 @@ Rectangle {
 
     property bool active: false
     property bool interactive: false
-    // Extra fill opacity above the theme's configured homepage-card opacity.
-    // Content cards that sit directly over the hero wallpaper use this so
-    // their panel box reads as a solid background rather than a faint tint.
     property real fillAlphaBoost: 0
     property alias hoverHandler: hover
-    // Multiplies the hover scale below; dips on press and settles back to
-    // exactly 1.0 (the card's regular size) on release. Only driven when
-    // interactive (clickable cards).
     property real bounce: 1.0
     signal clicked()
 
@@ -48,10 +42,6 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
     }
 
-    // The card's one and only tap handler: a second TapHandler/MouseArea
-    // layered on top of this can grab-conflict with this one in Qt6 and
-    // silently stop the bounce (or the click) from firing. Subclasses should
-    // use clicked() instead of adding their own handler.
     TapHandler {
         id: tap
         enabled: root.interactive
@@ -91,10 +81,15 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 1
         radius: Math.max(0, parent.radius - 1)
-        color: interactive && hover.hovered ? Core.Theme.surfaceHover : "transparent"
-        opacity: interactive && hover.hovered ? 0.22 : 0
+        color: interactive && hover.hovered
+            ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.24)
+            : "transparent"
+        opacity: interactive && hover.hovered ? 1 : 0
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, hover.hovered ? 0.12 : 0.06)
+        border.color: Core.Theme.alphaColor(
+            Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor,
+            hover.hovered ? 0.42 : 0.22
+        )
         Behavior on opacity {
             NumberAnimation { duration: Math.round(Core.Theme.homepageTransitionMs * Core.Theme.motionScale) }
         }
