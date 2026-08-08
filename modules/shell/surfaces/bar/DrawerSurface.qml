@@ -10,7 +10,7 @@ Scope {
 
     readonly property var drawerSources: ({
         calendar: Qt.resolvedUrl("CalendarDrawer.qml"),
-        audio: Qt.resolvedUrl("AudioDrawer.qml"),
+        audio: Qt.resolvedUrl("../../widgets/volume/Panel.qml"),
         network: Qt.resolvedUrl("../../widgets/network/Panel.qml"),
         system: Qt.resolvedUrl("../../widgets/system-stats/Panel.qml"),
         notifications: Qt.resolvedUrl("NotificationsDrawer.qml"),
