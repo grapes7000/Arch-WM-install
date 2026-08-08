@@ -16,7 +16,8 @@ QtObject {
         "system",
         "notifications",
         "session",
-        "weather"
+        "weather",
+        "battery"
     ]
 
     function open(kind, targetAnchor, targetScreen) {

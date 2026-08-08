@@ -9,13 +9,14 @@ Scope {
     id: root
 
     readonly property var drawerSources: ({
-        calendar: Qt.resolvedUrl("CalendarDrawer.qml"),
-        audio: Qt.resolvedUrl("AudioDrawer.qml"),
-        network: Qt.resolvedUrl("NetworkDrawer.qml"),
-        system: Qt.resolvedUrl("SystemDrawer.qml"),
-        notifications: Qt.resolvedUrl("NotificationsDrawer.qml"),
-        session: Qt.resolvedUrl("SessionDrawer.qml"),
-        weather: Qt.resolvedUrl("WeatherDrawer.qml")
+        calendar: Qt.resolvedUrl("../../widgets/clock/Panel.qml"),
+        audio: Qt.resolvedUrl("../../widgets/volume/Panel.qml"),
+        network: Qt.resolvedUrl("../../widgets/network/Panel.qml"),
+        system: Qt.resolvedUrl("../../widgets/system-stats/Panel.qml"),
+        notifications: Qt.resolvedUrl("../../widgets/notifications/Panel.qml"),
+        session: Qt.resolvedUrl("../../widgets/session/Panel.qml"),
+        weather: Qt.resolvedUrl("../../widgets/weather/Panel.qml"),
+        battery: Qt.resolvedUrl("../../widgets/battery/Panel.qml")
     })
 
     DrawerController {

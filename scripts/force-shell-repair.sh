@@ -14,6 +14,7 @@ trap 'rm -rf "$TMP"' EXIT
 # stages), never from a remote branch: stale branches were the cause of
 # reverting newer shell work.
 SOURCE="$ROOT/modules/shell"
+REF="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "$ROOT")"
 
 if grep -R -n -F 'required property var context' "$SOURCE/widgets"; then
     echo 'Repair aborted: remote branch still contains required widget contexts.' >&2

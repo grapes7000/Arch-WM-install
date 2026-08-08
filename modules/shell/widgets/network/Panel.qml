@@ -20,13 +20,9 @@ Item {
         anchors.right: parent.right
         spacing: 10
 
-        Rectangle {
+        Components.TintedCard {
             Layout.fillWidth: true
             implicitHeight: wifiCol.implicitHeight + 24
-            radius: Math.max(6, Core.Theme.radius - 2)
-            color: Qt.rgba(1, 1, 1, 0.04)
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.06)
             opacity: Services.NetworkService.connected ? 1.0 : 0.4
 
             ColumnLayout {
@@ -85,51 +81,11 @@ Item {
                         }
                     }
 
-                    Item {
+                    Components.ProgressRing {
                         visible: Services.NetworkService.connected
                             && Services.NetworkService.type === "wifi"
-                        width: 42
-                        height: 42
-
-                        Canvas {
-                            id: signalRing
-                            anchors.fill: parent
-                            property real percent: Services.NetworkService.strength / 100
-                            onPercentChanged: requestPaint()
-
-                            onPaint: {
-                                var ctx = getContext("2d")
-                                var cx = width / 2
-                                var cy = height / 2
-                                var r = (Math.min(width, height) - 6) / 2
-                                ctx.clearRect(0, 0, width, height)
-
-                                ctx.beginPath()
-                                ctx.arc(cx, cy, r, 0, 2 * Math.PI)
-                                ctx.lineWidth = 4
-                                ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.06)
-                                ctx.stroke()
-
-                                if (percent > 0) {
-                                    ctx.beginPath()
-                                    var start = -Math.PI / 2
-                                    ctx.arc(cx, cy, r, start, start + 2 * Math.PI * percent)
-                                    ctx.lineWidth = 4
-                                    ctx.strokeStyle = Core.Theme.accent
-                                    ctx.lineCap = "round"
-                                    ctx.stroke()
-                                }
-                            }
-                        }
-
-                        Text {
-                            font.family: Core.Theme.fontFamily
-                            anchors.centerIn: parent
-                            text: Services.NetworkService.strength + "%"
-                            color: Core.Theme.foreground
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
+                        percent: Services.NetworkService.strength / 100
+                        label: Services.NetworkService.strength + "%"
                     }
                 }
 
@@ -165,13 +121,9 @@ Item {
             }
         }
 
-        Rectangle {
+        Components.TintedCard {
             Layout.fillWidth: true
             implicitHeight: selectorCol.implicitHeight + 24
-            radius: Math.max(6, Core.Theme.radius - 2)
-            color: Qt.rgba(1, 1, 1, 0.04)
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.06)
 
             ColumnLayout {
                 id: selectorCol
@@ -409,40 +361,11 @@ Item {
                         }
                     }
 
-                    Rectangle {
-                        width: pillText.implicitWidth + 20
-                        height: pillText.implicitHeight + 6
-                        radius: 999
-                        color: Services.TailscaleService.isMullvad
-                            ? Qt.rgba(0.2, 0.8, 0.4, 1.0) : Qt.rgba(1, 1, 1, 0.06)
-
-                        property bool pulseState: false
-
-                        Timer {
-                            running: Services.TailscaleService.isMullvad
-                            interval: 1500
-                            repeat: true
-                            onTriggered: parent.pulseState = !parent.pulseState
-                        }
-
-                        opacity: Services.TailscaleService.isMullvad
-                            ? (pulseState ? 1.0 : 0.6) : 1.0
-
-                        Behavior on opacity {
-                            NumberAnimation { duration: 750; easing.type: Easing.InOutQuad }
-                        }
-
-                        Text {
-                            font.family: Core.Theme.fontFamily
-                            id: pillText
-                            anchors.centerIn: parent
-                            text: Services.TailscaleService.isMullvad ? "CONNECTED" : "OFF"
-                            color: Services.TailscaleService.isMullvad
-                                ? Core.Theme.background : Core.Theme.muted
-                            font.pixelSize: 8
-                            font.bold: true
-                            font.letterSpacing: 0.5
-                        }
+                    Components.StatusPill {
+                        active: Services.TailscaleService.isMullvad
+                        activeLabel: "CONNECTED"
+                        inactiveLabel: "OFF"
+                        activeColor: Qt.rgba(0.2, 0.8, 0.4, 1.0)
                     }
                 }
 
