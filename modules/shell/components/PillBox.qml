@@ -1,57 +1,36 @@
 import QtQuick
 import "../core" as Core
 
-// Animated pill background used behind bar widgets and buttons. It observes
-// hover and press passively (blocking: false / non-exclusive tap) so the
-// widget's own mouse areas keep receiving clicks, and animates a subtle grow
-// on hover, a dip+dim on press, a snappy overshoot bounce back on release,
-// and a gentle accent tint per state. `active` forces the pressed look for
-// items whose popup is currently open.
+// Animated pill background used behind bar widgets and buttons. Colors come
+// entirely from the shared theme contract so Theme Studio changes are visible
+// on the shell instead of being washed out by hard-coded white overlays.
 Rectangle {
     id: root
 
     property bool active: false
-    // Widgets that animate their own elements on hover (e.g. workspaces)
-    // disable the container scale so the whole group doesn't move together.
     property bool scaleEnabled: true
     property real growScale: 1.02
     property real pressScale: 0.97
-    // Slow, eased target for hover/active state changes. This must be writable
-    // because QML Behavior animates the property's intermediate values.
     property real stateScale: root.scaleEnabled
         ? (root.active ? pressScale : (hover.hovered ? growScale : 1.0))
         : 1.0
-    // Fast, un-eased press/release pop, driven directly off the tap so it
-    // tracks the actual mouse-down/mouse-up timing instead of riding the
-    // slower hover Behavior below. Multiplies into the final scale.
     property real pressPop: 1.0
 
-    // String -> color conversion is implicit on color-typed properties.
-    readonly property color _accent: Core.Theme.accent
-    readonly property color _accent2: Core.Theme.accent2
+    readonly property color idleColor: Core.Theme.alphaColor(Core.Theme.surfaceRaised, 0.72)
+    readonly property color hoverColor: Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.94)
+    readonly property color pressColor: Core.Theme.alphaColor(Core.Theme.selected, 0.34)
+    readonly property color idleBorder: Core.Theme.alphaColor(
+        Core.Theme.barOutlineColor,
+        Math.max(0.24, Core.Theme.barOutlineOpacity * 0.72)
+    )
+    readonly property color hoverBorder: Core.Theme.alphaColor(Core.Theme.accent, 0.62)
+    readonly property color pressBorder: Core.Theme.alphaColor(Core.Theme.selected, 0.90)
 
-    // Idle state is deliberately visible: a filled pill with a soft outline so
-    // the boxes read clearly on the bar even before any interaction.
-    readonly property color idleColor: Qt.rgba(1, 1, 1, 0.10)
-    readonly property color hoverColor: Qt.rgba(
-        _accent.r * 0.16 + 0.12,
-        _accent.g * 0.16 + 0.12,
-        _accent.b * 0.16 + 0.12,
-        0.20)
-    readonly property color pressColor: Qt.rgba(
-        _accent2.r * 0.20 + 0.12,
-        _accent2.g * 0.20 + 0.12,
-        _accent2.b * 0.20 + 0.12,
-        0.26)
-    readonly property color idleBorder: Qt.rgba(1, 1, 1, 0.28)
-    readonly property color hoverBorder: Qt.rgba(_accent.r, _accent.g, _accent.b, 0.55)
-    readonly property color pressBorder: Qt.rgba(_accent2.r, _accent2.g, _accent2.b, 0.85)
-
-    radius: Math.max(6, Core.Theme.radius - 2)
+    radius: Math.max(6, Core.Theme.barRadius - 2)
     color: root.active ? pressColor
         : (hover.hovered ? (tap.pressed ? pressColor : hoverColor) : idleColor)
-    opacity: tap.pressed ? 0.85 : 1.0
-    border.width: Core.Theme.borderWidth
+    opacity: tap.pressed ? 0.88 : 1.0
+    border.width: Math.max(1, Core.Theme.barOutlineWidth)
     border.color: root.active ? pressBorder
         : (hover.hovered ? (tap.pressed ? pressBorder : hoverBorder) : idleBorder)
     scale: root.stateScale * root.pressPop
@@ -74,8 +53,6 @@ Rectangle {
         blocking: false
     }
 
-    // Non-exclusive tap tracking: reports press state without grabbing the
-    // event, so the widget's own MouseArea underneath still gets the click.
     TapHandler {
         id: tap
         acceptedButtons: Qt.LeftButton
@@ -93,9 +70,6 @@ Rectangle {
         }
     }
 
-    // Snappy, direct animations tracking real mouse-down/mouse-up timing —
-    // no Behavior easing in between, so press feels immediate and the
-    // rebound fires right as the button releases.
     NumberAnimation {
         id: pressAnim
         target: root
@@ -105,9 +79,6 @@ Rectangle {
         easing.type: Easing.OutQuad
     }
 
-    // Settles back to exactly 1.0 (regular size) rather than overshooting
-    // past it; the bounce comes from OutBack's own overshoot-and-settle
-    // curve, not from an inflated peak value.
     NumberAnimation {
         id: bounceAnim
         target: root
