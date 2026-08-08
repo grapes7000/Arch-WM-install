@@ -428,20 +428,7 @@ Scope {
                                     anchors.margins: root.compact ? 10 : 16
                                     spacing: 0
 
-                                    GlassCard {
-                                        visible: root.selectedPage === "network"
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: networkPagePanel.implicitHeight > 0
-                                            ? networkPagePanel.implicitHeight + (root.compact ? 20 : 32) : 0
-                                        fillAlphaBoost: 0.28
-
-                                        PagePanel {
-                                            id: networkPagePanel
-                                            anchors.fill: parent
-                                            anchors.margins: root.compact ? 10 : 16
-                                            page: "network"
-                                        }
-                                    }
+                                    PagePanel { page: "network" }
                                     PagePanel { page: "system" }
                                     PagePanel { page: "media" }
                                     PagePanel { page: "audio" }
