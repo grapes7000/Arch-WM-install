@@ -99,7 +99,7 @@ def safe_addstr(win: Any, y: int, x: int, text: str, attr: int = 0, width: int |
                 break
 
             value = match.group(0)
-            color_attr = color_swatch_attr(value)
+            color_attr = color_swatch_attr(value, win)
             chip = "███ " if color_attr else "■ "
             chip = chip[: max(0, room - used)]
             if chip:
@@ -237,6 +237,9 @@ def _supports_true_color() -> bool:
     return _TRUE_COLOR_SUPPORTED
 
 
+_PALETTE_REPROGRAMMED = False
+
+
 def _true_color_pair(value: str) -> int:
     """Map a hex value onto a small reused pool of true-color palette slots.
 
@@ -247,8 +250,21 @@ def _true_color_pair(value: str) -> int:
     coarse xterm-256 cube approximation mid-drag, which reads as the color
     flashing correct and then reverting. Reusing a bounded LRU pool of slots
     (reprogramming the oldest one in place) keeps true color always active.
+
+    Reprogramming a slot number that's already visible elsewhere on screen is
+    itself risky: terminals recolor every on-screen glyph using that palette
+    index the instant it's redefined, but ncurses only re-sends a cell's
+    color-pair escape code when the cell's (char, pair-number) tuple differs
+    from what it last physically sent. A long-lived session that cycles
+    through many distinct colors (browsing themes, dragging sliders) reuses
+    slot numbers for unrelated hexes; any older on-screen cell that still
+    shows the same character with that same pair number - unchanged from
+    curses' point of view - silently inherits the new color underneath it
+    without ever being told to redraw, which reads as swatches going stale
+    or "wrong" over time. `_PALETTE_REPROGRAMMED` flags this so callers can
+    force a full window repaint (clearok) past that diff-based shortcut.
     """
-    global _RGB_SLOTS_USED
+    global _RGB_SLOTS_USED, _PALETTE_REPROGRAMMED
     if value in _RGB_PAIRS:
         _RGB_PAIRS.move_to_end(value)
         return curses.color_pair(_RGB_PAIRS[value])
@@ -272,16 +288,29 @@ def _true_color_pair(value: str) -> int:
     except curses.error:
         return 0
     _RGB_PAIRS[value] = slot
+    _PALETTE_REPROGRAMMED = True
     return curses.color_pair(slot)
 
 
-def color_swatch_attr(value: str) -> int:
+def _resync_palette(win: Any) -> None:
+    """Force a full repaint of `win` if any swatch slot was just reprogrammed."""
+    global _PALETTE_REPROGRAMMED
+    if _PALETTE_REPROGRAMMED and win is not None:
+        try:
+            win.clearok(True)
+        except curses.error:
+            pass
+        _PALETTE_REPROGRAMMED = False
+
+
+def color_swatch_attr(value: str, win: Any = None) -> int:
     """Return a curses attribute that renders close to the requested hex color."""
     global _NEXT_SWATCH_PAIR
     if not curses.has_colors() or getattr(curses, "COLORS", 0) < 256:
         return 0
     if _supports_true_color():
         attr = _true_color_pair(value)
+        _resync_palette(win)
         if attr:
             return attr
     color = _xterm256_from_hex(value)
@@ -305,7 +334,7 @@ def color_swatch_attr(value: str) -> int:
 
 def draw_color_swatch(win: Any, y: int, x: int, value: str, width: int = 3) -> None:
     """Draw a compact terminal color chip with a graceful monochrome fallback."""
-    attr = color_swatch_attr(value)
+    attr = color_swatch_attr(value, win)
     if attr:
         safe_addstr(win, y, x, "█" * max(1, width), attr, width)
     else:
