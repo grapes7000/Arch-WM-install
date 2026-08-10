@@ -126,6 +126,33 @@ def _hyprland_reachable() -> bool:
     return bool(proc.stdout and proc.stdout.strip())
 
 
+def _sync_quickshell_contract(theme: dict[str, Any]) -> None:
+    """Refresh the theme.json contract Quickshell watches during live preview.
+
+    Quickshell (Theme.qml) watches CFG/theme-engine/generated/theme.json for
+    "roles"/"style"/"components", which is normally (re)written only by the
+    legacy generator during a full apply. Live preview intentionally skips
+    that path - it can't round-trip Studio drafts - so without this,
+    Quickshell never saw Palette Studio color edits at all, only Hyprland did.
+    """
+    from theme_components import GENERATED_THEME_JSON, atomic_text
+    try:
+        existing = json.loads(GENERATED_THEME_JSON.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        existing = {}
+    if not isinstance(existing, dict):
+        existing = {}
+    payload = dict(existing)
+    payload["roles"] = theme["roles"]
+    payload["style"] = {**existing.get("style", {}), **theme["style"]}
+    payload["components"] = theme.get("components", existing.get("components", {}))
+    payload["dark"] = bool(theme.get("dark", existing.get("dark", True)))
+    payload.setdefault("schema_version", 1)
+    payload.setdefault("name", theme.get("name", PREVIEW_NAME))
+    GENERATED_THEME_JSON.parent.mkdir(parents=True, exist_ok=True)
+    atomic_text(GENERATED_THEME_JSON, json.dumps(payload, indent=2) + "\n")
+
+
 def preview_theme(data: dict[str, Any], reason: str = "Preview") -> dict[str, Any]:
     """Live-preview a draft by rendering the Hyprland theme files directly.
 
@@ -133,7 +160,9 @@ def preview_theme(data: dict[str, Any], reason: str = "Preview") -> dict[str, An
     matching rejects the preview name), so the old path never touched the
     file Hyprland actually loads. This renders generated/theme.conf and
     generated/theme.lua from the draft and reloads Hyprland on every change
-    - no full apply, no wallpaper regeneration.
+    - no full apply, no wallpaper regeneration. It also refreshes the
+    Quickshell contract file directly (see _sync_quickshell_contract) so
+    color/style edits show up live in the shell too, not just Hyprland.
     """
     from theme_components import atomic_text, render_hypr, render_hypr_lua
     write_preview(data)
@@ -142,6 +171,7 @@ def preview_theme(data: dict[str, Any], reason: str = "Preview") -> dict[str, An
     generated.mkdir(parents=True, exist_ok=True)
     atomic_text(generated / "theme.conf", render_hypr(theme))
     atomic_text(generated / "theme.lua", render_hypr_lua(theme))
+    _sync_quickshell_contract(theme)
     if _hyprland_reachable():
         try:
             subprocess.run(["hyprctl", "reload"], check=False, timeout=5,

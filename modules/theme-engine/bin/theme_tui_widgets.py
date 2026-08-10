@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import curses
+from collections import OrderedDict
 from dataclasses import dataclass
 import re
 from typing import Any, Iterable
@@ -24,9 +25,9 @@ _SWATCH_PAIRS: dict[int, int] = {}
 _NEXT_SWATCH_PAIR = 16
 _HEX_COLOR_RE = re.compile(r"#[0-9A-Fa-f]{6}")
 
-_RGB_PAIRS: dict[str, int] = {}
-_NEXT_RGB_COLOR = 16
-_NEXT_RGB_PAIR = 16
+_RGB_POOL_SIZE = 48
+_RGB_PAIRS: "OrderedDict[str, int]" = OrderedDict()
+_RGB_SLOTS_USED = 0
 _TRUE_COLOR_SUPPORTED: bool | None = None
 
 
@@ -237,27 +238,41 @@ def _supports_true_color() -> bool:
 
 
 def _true_color_pair(value: str) -> int:
-    global _NEXT_RGB_COLOR, _NEXT_RGB_PAIR
+    """Map a hex value onto a small reused pool of true-color palette slots.
+
+    Interactive widgets (the HSV picker sliders) redraw a new hex value on
+    every keystroke. Handing out a brand-new permanent terminal palette slot
+    per distinct hex exhausts the ~240 available slots within a second of
+    dragging a slider; once exhausted, swatches silently fell back to the
+    coarse xterm-256 cube approximation mid-drag, which reads as the color
+    flashing correct and then reverting. Reusing a bounded LRU pool of slots
+    (reprogramming the oldest one in place) keeps true color always active.
+    """
+    global _RGB_SLOTS_USED
     if value in _RGB_PAIRS:
+        _RGB_PAIRS.move_to_end(value)
         return curses.color_pair(_RGB_PAIRS[value])
     parsed = _parse_hex(value)
     if parsed is None:
         return 0
     color_limit = max(0, getattr(curses, "COLORS", 0) - 1)
     pair_limit = max(0, getattr(curses, "COLOR_PAIRS", 0) - 1)
-    if _NEXT_RGB_COLOR > color_limit or _NEXT_RGB_PAIR > pair_limit:
+    pool_size = min(_RGB_POOL_SIZE, color_limit - 15, pair_limit - 15)
+    if pool_size <= 0:
         return 0
-    slot, pair = _NEXT_RGB_COLOR, _NEXT_RGB_PAIR
+    if _RGB_SLOTS_USED < pool_size:
+        slot = 16 + _RGB_SLOTS_USED
+        _RGB_SLOTS_USED += 1
+    else:
+        _, slot = _RGB_PAIRS.popitem(last=False)
     red, green, blue = parsed
     try:
         curses.init_color(slot, round(red / 255 * 1000), round(green / 255 * 1000), round(blue / 255 * 1000))
-        curses.init_pair(pair, slot, -1)
+        curses.init_pair(slot, slot, -1)
     except curses.error:
         return 0
-    _NEXT_RGB_COLOR += 1
-    _NEXT_RGB_PAIR += 1
-    _RGB_PAIRS[value] = pair
-    return curses.color_pair(pair)
+    _RGB_PAIRS[value] = slot
+    return curses.color_pair(slot)
 
 
 def color_swatch_attr(value: str) -> int:
