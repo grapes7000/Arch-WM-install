@@ -25,7 +25,7 @@ _SWATCH_PAIRS: dict[int, int] = {}
 _NEXT_SWATCH_PAIR = 16
 _HEX_COLOR_RE = re.compile(r"#[0-9A-Fa-f]{6}")
 
-_RGB_POOL_SIZE = 48
+_RGB_POOL_SIZE = 200
 _RGB_PAIRS: "OrderedDict[str, int]" = OrderedDict()
 _RGB_SLOTS_USED = 0
 _TRUE_COLOR_SUPPORTED: bool | None = None
