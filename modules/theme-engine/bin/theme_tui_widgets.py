@@ -237,34 +237,21 @@ def _supports_true_color() -> bool:
     return _TRUE_COLOR_SUPPORTED
 
 
-_PALETTE_REPROGRAMMED = False
-
-
 def _true_color_pair(value: str) -> int:
     """Map a hex value onto a small reused pool of true-color palette slots.
 
     Interactive widgets (the HSV picker sliders) redraw a new hex value on
-    every keystroke. Handing out a brand-new permanent terminal palette slot
-    per distinct hex exhausts the ~240 available slots within a second of
-    dragging a slider; once exhausted, swatches silently fell back to the
-    coarse xterm-256 cube approximation mid-drag, which reads as the color
-    flashing correct and then reverting. Reusing a bounded LRU pool of slots
-    (reprogramming the oldest one in place) keeps true color always active.
-
-    Reprogramming a slot number that's already visible elsewhere on screen is
-    itself risky: terminals recolor every on-screen glyph using that palette
-    index the instant it's redefined, but ncurses only re-sends a cell's
-    color-pair escape code when the cell's (char, pair-number) tuple differs
-    from what it last physically sent. A long-lived session that cycles
-    through many distinct colors (browsing themes, dragging sliders) reuses
-    slot numbers for unrelated hexes; any older on-screen cell that still
-    shows the same character with that same pair number - unchanged from
-    curses' point of view - silently inherits the new color underneath it
-    without ever being told to redraw, which reads as swatches going stale
-    or "wrong" over time. `_PALETTE_REPROGRAMMED` flags this so callers can
-    force a full window repaint (clearok) past that diff-based shortcut.
+    every keystroke - dragging through a hue sweep alone touches hundreds of
+    distinct hexes in seconds. Handing out a brand-new permanent terminal
+    palette slot per distinct hex exhausts the ~240 available slots almost
+    immediately; once exhausted, swatches silently fell back to the coarse
+    xterm-256 cube approximation. Reusing a bounded LRU pool of slots
+    (reprogramming the oldest one in place) keeps true color always active,
+    at the cost of eventually reprogramming a slot that's still visible
+    elsewhere on screen (see `color_swatch_attr` for why that's handled by
+    always forcing a full repaint rather than trying to track it precisely).
     """
-    global _RGB_SLOTS_USED, _PALETTE_REPROGRAMMED
+    global _RGB_SLOTS_USED
     if value in _RGB_PAIRS:
         _RGB_PAIRS.move_to_end(value)
         return curses.color_pair(_RGB_PAIRS[value])
@@ -288,29 +275,36 @@ def _true_color_pair(value: str) -> int:
     except curses.error:
         return 0
     _RGB_PAIRS[value] = slot
-    _PALETTE_REPROGRAMMED = True
     return curses.color_pair(slot)
 
 
-def _resync_palette(win: Any) -> None:
-    """Force a full repaint of `win` if any swatch slot was just reprogrammed."""
-    global _PALETTE_REPROGRAMMED
-    if _PALETTE_REPROGRAMMED and win is not None:
-        try:
-            win.clearok(True)
-        except curses.error:
-            pass
-        _PALETTE_REPROGRAMMED = False
-
-
 def color_swatch_attr(value: str, win: Any = None) -> int:
-    """Return a curses attribute that renders close to the requested hex color."""
+    """Return a curses attribute that renders close to the requested hex color.
+
+    Whenever a swatch is drawn on a true-color-capable terminal, force the
+    window's next refresh to be a full repaint (clearok) rather than ncurses'
+    usual diffed redraw. Reused palette slots (see `_true_color_pair`) mean a
+    cell whose text hasn't changed can still be showing a stale color, since
+    terminals recolor on-screen glyphs by palette index the instant that
+    index is redefined, but ncurses only re-sends a cell when its (char,
+    pair-number) differs from what it last physically sent - it has no way
+    to know the pair's underlying color changed. Precisely tracking exactly
+    when a reprogram happened and might have gone stale is fragile (it has
+    to account for reprograms earlier in the very same redraw frame, not
+    just between frames); unconditionally forcing a full repaint on every
+    swatch draw is trivially cheap for a keystroke-driven TUI and removes
+    the whole class of bug instead of chasing each way it can resurface.
+    """
     global _NEXT_SWATCH_PAIR
     if not curses.has_colors() or getattr(curses, "COLORS", 0) < 256:
         return 0
     if _supports_true_color():
         attr = _true_color_pair(value)
-        _resync_palette(win)
+        if win is not None:
+            try:
+                win.clearok(True)
+            except curses.error:
+                pass
         if attr:
             return attr
     color = _xterm256_from_hex(value)
