@@ -266,7 +266,7 @@ WINDOW_PRESETS = {
     "minimal_dark": {"shape": "sharp", "texture": "clear", "border": "minimal", "shadow": "soft"},
 }
 
-ANIMATION_PRESETS = ("none", "subtle", "smooth", "snappy", "bouncy", "dramatic", "glitch")
+ANIMATION_PRESETS = ("none", "subtle", "smooth", "snappy", "bouncy", "dramatic", "glitch", "custom")
 
 BASE_COMPONENTS: dict[str, Any] = {
     "windows": {
@@ -314,6 +314,9 @@ BASE_COMPONENTS: dict[str, Any] = {
         "layout": "two_line", "separator": "powerline", "directory_role": "accent",
         "git_role": "accent2", "status_role": "urgent", "show_duration": True,
         "show_jobs": True, "show_battery": False, "show_memory": False, "show_time": False,
+        "show_os": True, "show_dev": True, "show_container": True, "show_cloud": True,
+        "show_cmd_status": True, "path_length": 6, "path_repo_root": True,
+        "duration_min_ms": 2000, "memory_threshold": 75,
     },
     "lock_screen": {
         "clock_size": 64, "clock_role": "accent", "field_width": 280,
@@ -361,7 +364,16 @@ BASE_COMPONENTS: dict[str, Any] = {
     "apps": {
         "gtk_radius": 10, "button_role": "bg_alt", "button_hover_role": "hover",
         "selection_role": "selected", "link_role": "accent2", "scrollbar_role": "border_strong",
-        "qt_match_gtk": True, "vscode_match_theme": True, "firefox_match_theme": True,
+    },
+    "neovim": {
+        "transparent_background": False,
+        "italic_comments": True,
+        "cursorline": True,
+        "cursorline_role": "surface_1",
+        "string_role": "success",
+        "function_role": "accent2",
+        "error_role": "urgent",
+        "warning_role": "warning",
     },
 }
 
@@ -372,6 +384,14 @@ STYLE_DEFAULTS = {
     "border_preset": "defined",
     "density_preset": "comfortable",
     "animation_preset": "smooth",
+    "workspace_style": "preset",
+    "animation_speed_multiplier": 1.0,
+    "layer_animation_enabled": True,
+    "layer_style": "fade",
+    "custom_bezier_x1": 0.16,
+    "custom_bezier_y1": 1.0,
+    "custom_bezier_x2": 0.3,
+    "custom_bezier_y2": 1.0,
     "font_family": "JetBrainsMono Nerd Font",
     "gaps": 10,
     "border_width": 2,
@@ -440,6 +460,14 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.windows.glow_role", "Glow color role", "role", help="Palette role used by the glow."),
         FieldSpec("components.windows.glow_render_power", "Glow falloff", "int", 1, 4, 1, advanced=True, help="Higher values make glow fall off faster."),
         FieldSpec("components.windows.glow_inactive_opacity", "Inactive glow opacity", "float", 0.0, 1.0, 0.01, advanced=True, help="Usually keep this at zero so only the focused window glows."),
+        FieldSpec("style.animation_speed_multiplier", "Animation speed", "float", 0.25, 3.0, 0.05, help="Scales every animation's duration. Below 1.0 is faster, above 1.0 is slower."),
+        FieldSpec("style.workspace_style", "Workspace transition", "choice", choices=("preset", "slide", "slidevert", "fade", "slidefade", "slidefadevert"), help="Override the workspace-switch animation independent of the Animation preset. 'preset' keeps whatever the preset defines."),
+        FieldSpec("style.layer_animation_enabled", "Animate popups/launchers", "bool", help="Animate layer-shell surfaces such as the app launcher and on-screen overlays."),
+        FieldSpec("style.layer_style", "Popup/launcher style", "choice", choices=("fade", "slide"), advanced=True),
+        FieldSpec("style.custom_bezier_x1", "Custom curve X1", "float", 0.0, 1.0, 0.01, advanced=True, help="Only used when the Animation preset is set to Custom."),
+        FieldSpec("style.custom_bezier_y1", "Custom curve Y1", "float", -1.0, 2.0, 0.01, advanced=True, help="Values above 1 or below 0 create overshoot/bounce. Only used when Animation preset is Custom."),
+        FieldSpec("style.custom_bezier_x2", "Custom curve X2", "float", 0.0, 1.0, 0.01, advanced=True, help="Only used when the Animation preset is set to Custom."),
+        FieldSpec("style.custom_bezier_y2", "Custom curve Y2", "float", -1.0, 2.0, 0.01, advanced=True, help="Values above 1 or below 0 create overshoot/bounce. Only used when Animation preset is Custom."),
     ),
     "notifications": (
         FieldSpec("components.notifications.width", "Width", "int", 220, 900, 10),
@@ -472,6 +500,15 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.prompt.show_battery", "Show battery", "bool", help="Show battery percentage on the right side of the prompt."),
         FieldSpec("components.prompt.show_memory", "Show memory", "bool", help="Show memory usage once it passes a threshold."),
         FieldSpec("components.prompt.show_time", "Show time", "bool", help="Show the current time on the right side."),
+        FieldSpec("components.prompt.show_cmd_status", "Show command status", "bool", help="Show a marker on the right side when the last command failed."),
+        FieldSpec("components.prompt.show_os", "Show OS/host", "bool", help="Show the OS icon, username, and (over SSH) hostname on the left."),
+        FieldSpec("components.prompt.show_dev", "Show language versions", "bool", help="Show detected language runtime versions (Python, Node.js, Rust, Go, Java, Lua, PHP, Ruby, package)."),
+        FieldSpec("components.prompt.show_container", "Show container/k8s", "bool", help="Show Docker context and Kubernetes context when detected."),
+        FieldSpec("components.prompt.show_cloud", "Show cloud/infra", "bool", help="Show Terraform, Nix shell, Conda, AWS, GCloud, and Azure context when detected."),
+        FieldSpec("components.prompt.path_length", "Directory segments", "int", 1, 10, 1, advanced=True, help="How many trailing path segments to show before truncating."),
+        FieldSpec("components.prompt.path_repo_root", "Truncate to repo root", "bool", advanced=True, help="Stop truncation at the root of the current git repository."),
+        FieldSpec("components.prompt.duration_min_ms", "Duration threshold (ms)", "int", 0, 10000, 100, advanced=True, help="Only show command duration once it exceeds this many milliseconds."),
+        FieldSpec("components.prompt.memory_threshold", "Memory threshold (%)", "int", 0, 100, 1, advanced=True, help="Only show memory usage once it exceeds this percentage."),
     ),
     "lock_screen": (
         FieldSpec("components.lock_screen.clock_size", "Clock size", "int", 16, 160, 1),
@@ -529,15 +566,23 @@ COMPONENT_FIELDS: dict[str, tuple[FieldSpec, ...]] = {
         FieldSpec("components.apps.selection_role", "Selection role", "role"),
         FieldSpec("components.apps.link_role", "Link role", "role"),
         FieldSpec("components.apps.scrollbar_role", "Scrollbar role", "role"),
-        FieldSpec("components.apps.qt_match_gtk", "Match Qt to GTK", "bool"),
-        FieldSpec("components.apps.vscode_match_theme", "Theme VS Code", "bool"),
-        FieldSpec("components.apps.firefox_match_theme", "Theme Firefox", "bool"),
+    ),
+    "neovim": (
+        FieldSpec("components.neovim.transparent_background", "Transparent background", "bool", help="Let the terminal background show through instead of Neovim's own bg color."),
+        FieldSpec("components.neovim.italic_comments", "Italic comments", "bool"),
+        FieldSpec("components.neovim.cursorline", "Highlight cursor line", "bool"),
+        FieldSpec("components.neovim.cursorline_role", "Cursor line role", "role"),
+        FieldSpec("components.neovim.string_role", "String color role", "role"),
+        FieldSpec("components.neovim.function_role", "Function color role", "role"),
+        FieldSpec("components.neovim.error_role", "Diagnostic error role", "role"),
+        FieldSpec("components.neovim.warning_role", "Diagnostic warning role", "role"),
     ),
 }
 
 COMPONENT_LABELS = {
     "windows": "Windows", "notifications": "Notifications", "terminal": "Terminal",
     "prompt": "Prompt", "lock_screen": "Lock Screen", "homepage": "Shell", "apps": "Apps",
+    "neovim": "Neovim",
 }
 
 def _rgb(hex_color: str) -> tuple[int, int, int]:

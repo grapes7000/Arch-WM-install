@@ -7,6 +7,7 @@ Home -> Quick Style -> Components -> Advanced Inspector.
 from __future__ import annotations
 
 from copy import deepcopy
+import colorsys
 import curses
 import json
 import os
@@ -29,8 +30,8 @@ from theme_schema import (
 )
 import theme_runtime
 from theme_tui_widgets import (
-    Palette, confirm, draw_box, draw_footer, draw_header, draw_list, fill_line,
-    init_palette, message, prompt, safe_addstr, slider_text,
+    Palette, confirm, draw_box, draw_color_swatch, draw_footer, draw_header, draw_list,
+    fill_line, init_palette, message, prompt, safe_addstr, slider_text,
 )
 
 
@@ -460,7 +461,8 @@ class ThemeStudio:
                 "prompt": "Starship layout, separators, modules, status roles.",
                 "lock_screen": "Hyprlock clock, password field, avatar, colors.",
                 "homepage": "Cards, alignment, visibility, density, glass.",
-                "apps": "GTK, Qt, Firefox, VS Code and common UI states.",
+                "apps": "GTK button, selection, link, and scrollbar colors.",
+                "neovim": "Highlight groups, transparency, cursor line, diagnostics.",
             }
             safe_addstr(stdscr, 7, x + 2, descriptions[name], 0, width - x - 5)
             preview = component_preview(self.editor.draft, name, min(44, width - x - 5), min(14, height - 13))
@@ -718,7 +720,7 @@ class ThemeStudio:
                 safe_addstr(stdscr, warn_y, x + 2, f"{issue['level'].upper()}: {issue['message']}", attr, width - x - 5)
                 warn_y += 1
             self._draw_status(stdscr, height - 4)
-            draw_footer(stdscr, "↑↓ Role  E Edit  X Swap  L Lock  G Variants  C Check  I Import  O Export  Esc Back", self.palette)
+            draw_footer(stdscr, "↑↓ Role  E Edit  P Pick  X Swap  L Lock  G Variants  C Check  I Import  O Export  Space Live  Esc Back", self.palette)
             stdscr.refresh()
             key = stdscr.getch()
             if self._common_key(stdscr, key):
@@ -730,6 +732,8 @@ class ThemeStudio:
                 selected = min(len(roles) - 1, selected + 1)
             elif key in (curses.KEY_UP, ord("k")):
                 selected = max(0, selected - 1)
+            elif key == ord(" "):
+                self._toggle_live_preview()
             elif key in (ord("e"), ord("E"), 10, 13):
                 entered = prompt(stdscr, f"Edit {ROLE_LABELS.get(role, role)}", value, palette=self.palette)
                 if entered is not None:
@@ -737,6 +741,8 @@ class ThemeStudio:
                         self.editor.mutate(f"Change color {role}", lambda d: d["roles"].__setitem__(role, entered.lower()))
                     else:
                         message(stdscr, "Invalid color", ["Use a six-digit hex color such as #ff5aa5."], self.palette, self.palette.error)
+            elif key in (ord("p"), ord("P")):
+                self.color_picker(stdscr, ROLE_LABELS.get(role, role), role)
             elif key in (ord("l"), ord("L")):
                 if role in locked: locked.remove(role)
                 else: locked.add(role)
@@ -1122,6 +1128,65 @@ class ThemeStudio:
             "automatically returns to the previous theme when cancelled.",
         ]
         self._scroll_text(stdscr, "HELP", lines)
+
+    def color_picker(self, stdscr: Any, title: str, role: str) -> None:
+        """Visual HSV picker so colors can be dialed in without typing hex codes.
+
+        Each nudge commits immediately (same pattern as the other room sliders),
+        so with live desktop preview on (Space), the change is pushed to
+        Quickshell as you turn the dial instead of only after confirming.
+        """
+        assert self.editor
+        initial = self.editor.draft["roles"].get(role, "#000000")
+        r, g, b = ((int(initial[i:i + 2], 16) if is_hex(initial) else 0) for i in (1, 3, 5))
+        hue, light, sat = colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+        fields = ["Hue", "Saturation", "Lightness"]
+        steps = [1 / 360, 0.01, 0.01]
+        selected = 0
+        curses.curs_set(0)
+        while True:
+            rr, gg, bb = colorsys.hls_to_rgb(hue, light, sat)
+            current = f"#{round(rr * 255):02x}{round(gg * 255):02x}{round(bb * 255):02x}"
+            values = [hue, sat, light]
+            stdscr.erase()
+            height, width = stdscr.getmaxyx()
+            draw_header(stdscr, f"PICK COLOR / {title}", self._status_right(), self.palette)
+            box_w = min(60, width - 4)
+            draw_box(stdscr, 3, 2, 5 + len(fields) * 2, box_w, "ADJUST", self.palette.muted)
+            draw_color_swatch(stdscr, 5, 4, current, width=8)
+            safe_addstr(stdscr, 5, 14, current, self.palette.accent)
+            row = 7
+            for idx, (label, val) in enumerate(zip(fields, values)):
+                attr = self.palette.selected if idx == selected else 0
+                fill_line(stdscr, row, 4, box_w - 6, " ", attr if idx == selected else 0)
+                safe_addstr(stdscr, row, 4, f"{label:<11}", attr, box_w - 6)
+                safe_addstr(stdscr, row, 16, slider_text(val, 0.0, 1.0, width=min(28, box_w - 22), precision=2), attr, box_w - 20)
+                row += 2
+            self._draw_status(stdscr, height - 4)
+            draw_footer(stdscr, "↑↓ Field  ←→ Adjust  Enter/Esc Done  Space Live", self.palette)
+            stdscr.refresh()
+            key = stdscr.getch()
+            if key in (27, ord("q"), 10, 13):
+                curses.curs_set(0)
+                return
+            if key == ord(" "):
+                self._toggle_live_preview()
+            elif key in (curses.KEY_DOWN, ord("j")):
+                selected = min(len(fields) - 1, selected + 1)
+            elif key in (curses.KEY_UP, ord("k")):
+                selected = max(0, selected - 1)
+            elif key in (curses.KEY_LEFT, ord("h"), curses.KEY_RIGHT, ord("l")):
+                direction = -1 if key in (curses.KEY_LEFT, ord("h")) else 1
+                step = steps[selected]
+                if selected == 0:
+                    hue = (hue + direction * step) % 1.0
+                elif selected == 1:
+                    sat = max(0.0, min(1.0, sat + direction * step))
+                else:
+                    light = max(0.0, min(1.0, light + direction * step))
+                rr, gg, bb = colorsys.hls_to_rgb(hue, light, sat)
+                new_value = f"#{round(rr * 255):02x}{round(gg * 255):02x}{round(bb * 255):02x}"
+                self.editor.mutate(f"Change color {role}", lambda d, v=new_value: d["roles"].__setitem__(role, v))
 
     def _simple_picker(self, stdscr: Any, title: str, items: list[str]) -> int | None:
         selected = 0

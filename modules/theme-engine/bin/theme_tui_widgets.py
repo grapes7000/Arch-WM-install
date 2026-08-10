@@ -24,6 +24,11 @@ _SWATCH_PAIRS: dict[int, int] = {}
 _NEXT_SWATCH_PAIR = 16
 _HEX_COLOR_RE = re.compile(r"#[0-9A-Fa-f]{6}")
 
+_RGB_PAIRS: dict[str, int] = {}
+_NEXT_RGB_COLOR = 16
+_NEXT_RGB_PAIR = 16
+_TRUE_COLOR_SUPPORTED: bool | None = None
+
 
 def init_palette() -> Palette:
     if not curses.has_colors():
@@ -183,16 +188,21 @@ def slider_text(value: float, minimum: float, maximum: float, width: int = 16,
     return f"{bar} {value:.{precision}f}"
 
 
-def _xterm256_from_hex(value: str) -> int | None:
-    """Approximate a #RRGGBB value with the nearest xterm-256 color."""
+def _parse_hex(value: str) -> tuple[int, int, int] | None:
     if not isinstance(value, str) or len(value) != 7 or not value.startswith("#"):
         return None
     try:
-        red = int(value[1:3], 16)
-        green = int(value[3:5], 16)
-        blue = int(value[5:7], 16)
+        return int(value[1:3], 16), int(value[3:5], 16), int(value[5:7], 16)
     except ValueError:
         return None
+
+
+def _xterm256_from_hex(value: str) -> int | None:
+    """Approximate a #RRGGBB value with the nearest xterm-256 color."""
+    parsed = _parse_hex(value)
+    if parsed is None:
+        return None
+    red, green, blue = parsed
 
     if max(red, green, blue) - min(red, green, blue) < 10:
         if red < 8:
@@ -207,11 +217,58 @@ def _xterm256_from_hex(value: str) -> int | None:
     return 16 + 36 * cube(red) + 6 * cube(green) + cube(blue)
 
 
+def _supports_true_color() -> bool:
+    """Detect whether the terminal can be reprogrammed with exact RGB values.
+
+    Most modern terminals (kitty, alacritty, wezterm, foot, real xterm) expose
+    an "initc"/"ccc" terminfo capability that lets ncurses redefine a palette
+    slot to any RGB triple, instead of only picking the closest of the 216
+    fixed xterm-256 cube colors. Using it makes swatches match Quickshell's
+    true-color rendering instead of a washed-out approximation.
+    """
+    global _TRUE_COLOR_SUPPORTED
+    if _TRUE_COLOR_SUPPORTED is None:
+        _TRUE_COLOR_SUPPORTED = bool(
+            curses.has_colors()
+            and getattr(curses, "COLORS", 0) >= 256
+            and curses.can_change_color()
+        )
+    return _TRUE_COLOR_SUPPORTED
+
+
+def _true_color_pair(value: str) -> int:
+    global _NEXT_RGB_COLOR, _NEXT_RGB_PAIR
+    if value in _RGB_PAIRS:
+        return curses.color_pair(_RGB_PAIRS[value])
+    parsed = _parse_hex(value)
+    if parsed is None:
+        return 0
+    color_limit = max(0, getattr(curses, "COLORS", 0) - 1)
+    pair_limit = max(0, getattr(curses, "COLOR_PAIRS", 0) - 1)
+    if _NEXT_RGB_COLOR > color_limit or _NEXT_RGB_PAIR > pair_limit:
+        return 0
+    slot, pair = _NEXT_RGB_COLOR, _NEXT_RGB_PAIR
+    red, green, blue = parsed
+    try:
+        curses.init_color(slot, round(red / 255 * 1000), round(green / 255 * 1000), round(blue / 255 * 1000))
+        curses.init_pair(pair, slot, -1)
+    except curses.error:
+        return 0
+    _NEXT_RGB_COLOR += 1
+    _NEXT_RGB_PAIR += 1
+    _RGB_PAIRS[value] = pair
+    return curses.color_pair(pair)
+
+
 def color_swatch_attr(value: str) -> int:
     """Return a curses attribute that renders close to the requested hex color."""
     global _NEXT_SWATCH_PAIR
     if not curses.has_colors() or getattr(curses, "COLORS", 0) < 256:
         return 0
+    if _supports_true_color():
+        attr = _true_color_pair(value)
+        if attr:
+            return attr
     color = _xterm256_from_hex(value)
     if color is None:
         return 0
