@@ -37,7 +37,7 @@ Item {
                             : Services.AudioService.volume >= 66 ? "󰕾"
                             : Services.AudioService.volume >= 33 ? "󰖀" : "󰕿"
                         color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.accent
-                        font.pixelSize: 22
+                        font.pixelSize: 25
 
                         MouseArea {
                             id: muteArea
@@ -57,7 +57,7 @@ Item {
                             font.family: Core.Theme.fontFamily
                             text: "Volume"
                             color: Core.Theme.foreground
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                         }
 
@@ -69,7 +69,7 @@ Item {
                                     ? (Services.MprisService.title || "Playing")
                                     : "System volume")
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                             elide: Text.ElideRight
                         }
                     }
@@ -85,7 +85,7 @@ Item {
                         font.family: Core.Theme.fontFamily
                         text: Services.AudioService.volume + "%"
                         color: Core.Theme.foreground
-                        font.pixelSize: 13
+                        font.pixelSize: 16
                         font.bold: true
                     }
                 }

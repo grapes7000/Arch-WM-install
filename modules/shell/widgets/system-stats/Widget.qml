@@ -13,22 +13,33 @@ Item {
         allows: function() { return false }
     })
 
-    implicitWidth: context.variant === "compact" ? compactText.implicitWidth : 280
-    implicitHeight: context.variant === "compact" ? compactText.implicitHeight
+    implicitWidth: context.variant === "compact" ? compactRow.implicitWidth : 280
+    implicitHeight: context.variant === "compact" ? compactRow.implicitHeight
         : context.variant === "standard" ? 92 : 170
 
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "system", anchorItem: root }) }
 
-    Text {
-        font.family: Core.Theme.fontFamily
-        id: compactText
+    Row {
+        id: compactRow
         anchors.centerIn: parent
         visible: context.variant === "compact"
-        text: "CPU " + Services.SystemStatsService.cpuPercent + "%  ·  RAM "
-            + Services.SystemStatsService.memoryPercent + "%"
-        color: Core.Theme.foreground
-        font.pixelSize: 11
-        font.bold: true
+        spacing: 6
+
+        Text {
+            font.family: Core.Theme.fontFamily
+            text: "󰻠 " + Services.SystemStatsService.cpuPercent + "%"
+            color: Core.Theme.foreground
+            font.pixelSize: 14
+            font.bold: true
+        }
+
+        Text {
+            font.family: Core.Theme.fontFamily
+            text: "󰍛 " + Services.SystemStatsService.memoryPercent + "%"
+            color: Core.Theme.foreground
+            font.pixelSize: 14
+            font.bold: true
+        }
     }
 
     ColumnLayout {
@@ -41,7 +52,7 @@ Item {
             Layout.fillWidth: true
             text: "SYSTEM"
             color: Core.Theme.accent
-            font.pixelSize: context.variant === "expanded" ? 18 : 14
+            font.pixelSize: context.variant === "expanded" ? 21 : 17
             font.bold: true
         }
 
@@ -64,7 +75,7 @@ Item {
             visible: context.variant === "expanded"
             text: "UPTIME  " + Services.SystemStatsService.uptime
             color: Core.Theme.muted
-            font.pixelSize: 13
+            font.pixelSize: 16
         }
     }
 
@@ -80,7 +91,7 @@ Item {
             Layout.preferredWidth: 58
             text: row.label
             color: Core.Theme.muted
-            font.pixelSize: 11
+            font.pixelSize: 14
             font.bold: true
         }
 
@@ -108,7 +119,7 @@ Item {
             horizontalAlignment: Text.AlignRight
             text: row.value + "%"
             color: Core.Theme.foreground
-            font.pixelSize: 11
+            font.pixelSize: 14
         }
     }
 }

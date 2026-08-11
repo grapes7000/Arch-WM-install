@@ -35,7 +35,7 @@ Item {
                     font.family: Core.Theme.fontFamily
                     text: Services.TimeService.timeShort
                     color: Core.Theme.foreground
-                    font.pixelSize: 22
+                    font.pixelSize: 25
                     font.bold: true
                 }
 
@@ -43,7 +43,7 @@ Item {
                     font.family: Core.Theme.fontFamily
                     text: Services.TimeService.dateLong
                     color: Core.Theme.muted
-                    font.pixelSize: 11
+                    font.pixelSize: 14
                 }
             }
         }
@@ -64,7 +64,7 @@ Item {
                     font.family: Core.Theme.fontFamily
                     text: panel.displayedMonth.toLocaleDateString(Qt.locale(), "MMMM yyyy")
                     color: Core.Theme.foreground
-                    font.pixelSize: 13
+                    font.pixelSize: 16
                     font.bold: true
                 }
 
@@ -83,7 +83,7 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                             text: modelData
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                         }
                     }
 
@@ -112,7 +112,7 @@ Item {
                                 text: parent.inMonth ? parent.day : ""
                                 color: parent.current ? Core.Theme.background : Core.Theme.foreground
                                 font.bold: parent.current
-                                font.pixelSize: 11
+                                font.pixelSize: 14
                             }
                         }
                     }

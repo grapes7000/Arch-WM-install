@@ -37,7 +37,7 @@ Rectangle {
         anchors.centerIn: parent
         text: root.active ? root.activeLabel : root.inactiveLabel
         color: root.active ? Core.Theme.background : Core.Theme.muted
-        font.pixelSize: 8
+        font.pixelSize: 11
         font.bold: true
         font.letterSpacing: 0.5
     }

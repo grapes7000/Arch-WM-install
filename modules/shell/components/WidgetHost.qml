@@ -150,7 +150,7 @@ Item {
             text: "!"
             color: Core.Theme.urgent
             font.bold: true
-            font.pixelSize: 14
+            font.pixelSize: 17
         }
     }
 

@@ -193,18 +193,18 @@ Scope {
                             Text {
                                 text: Services.TimeService.timeShort
                                 color: Core.Theme.foreground
-                                font.pixelSize: root.compact ? 30 : 40
+                                font.pixelSize: root.compact ? 33 : 43
                                 font.bold: true
                             }
                             Text {
                                 text: Services.TimeService.dateLong
                                 color: Core.Theme.muted
-                                font.pixelSize: 11
+                                font.pixelSize: 14
                             }
                             Text {
                                 text: Core.Theme.data.name || "Current theme"
                                 color: Core.Theme.accent
-                                font.pixelSize: 10
+                                font.pixelSize: 13
                                 font.bold: true
                             }
                         }
@@ -243,14 +243,14 @@ Scope {
                             Text {
                                 text: "Now Playing"
                                 color: Core.Theme.accent
-                                font.pixelSize: 12
+                                font.pixelSize: 15
                                 font.bold: true
                             }
                             Text {
                                 Layout.fillWidth: true
                                 text: Services.MprisService.title || "Nothing playing"
                                 color: Core.Theme.foreground
-                                font.pixelSize: 13
+                                font.pixelSize: 16
                                 font.bold: true
                                 elide: Text.ElideRight
                             }
@@ -258,7 +258,7 @@ Scope {
                                 Layout.fillWidth: true
                                 text: Services.MprisService.artist || "Your wallpaper slideshow is active"
                                 color: Core.Theme.muted
-                                font.pixelSize: 10
+                                font.pixelSize: 13
                                 elide: Text.ElideRight
                             }
                             Item {
@@ -288,21 +288,21 @@ Scope {
                                 Text {
                                     text: "󰒮"
                                     color: Core.Theme.muted
-                                    font.pixelSize: 20
+                                    font.pixelSize: 23
                                     MouseArea { id: hpPrevArea; anchors.fill: parent; onClicked: Services.MprisService.previous() }
                                     Components.PressBounce { pressed: hpPrevArea.pressed }
                                 }
                                 Text {
                                     text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
                                     color: Core.Theme.accent
-                                    font.pixelSize: 28
+                                    font.pixelSize: 31
                                     MouseArea { id: hpPlayPauseArea; anchors.fill: parent; onClicked: Services.MprisService.playPause() }
                                     Components.PressBounce { pressed: hpPlayPauseArea.pressed }
                                 }
                                 Text {
                                     text: "󰒭"
                                     color: Core.Theme.muted
-                                    font.pixelSize: 20
+                                    font.pixelSize: 23
                                     MouseArea { id: hpNextArea; anchors.fill: parent; onClicked: Services.MprisService.next() }
                                     Components.PressBounce { pressed: hpNextArea.pressed }
                                 }
@@ -352,7 +352,7 @@ Scope {
                             Text {
                                 text: root.selectedPage === "home" ? "Quick Access" : root.selectedPage.charAt(0).toUpperCase() + root.selectedPage.slice(1)
                                 color: Core.Theme.accent
-                                font.pixelSize: 13
+                                font.pixelSize: 16
                                 font.bold: true
                             }
 
@@ -401,11 +401,11 @@ Scope {
                                                         visible: appTile.desktopIcon === ""
                                                         text: modelData.icon
                                                         color: Core.Theme.accent
-                                                        font.pixelSize: root.compact ? 26 : 34
+                                                        font.pixelSize: root.compact ? 29 : 37
                                                         scale: appHover.hovered ? 1.08 : 1.0
                                                         Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                                                     }
-                                                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 9 }
+                                                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 12 }
                                                 }
                                                 HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
                                                 TapHandler { id: appTap; onTapped: root.launch(modelData.command) }
@@ -479,15 +479,15 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 15
                             spacing: 10
-                            Text { text: "System Overview"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 13 }
+                            Text { text: "System Overview"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 16 }
                             StatBar { label: "CPU"; value: Services.SystemStatsService.cpuPercent }
                             StatBar { label: "Memory"; value: Services.SystemStatsService.memoryPercent }
                             StatBar { label: "Disk"; value: Services.SystemStatsService.diskPercent }
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Uptime"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { text: "Uptime"; color: Core.Theme.muted; font.pixelSize: 13 }
                                 Item { Layout.fillWidth: true }
-                                Text { text: Services.SystemStatsService.uptime; color: Core.Theme.foreground; font.pixelSize: 10; font.bold: true }
+                                Text { text: Services.SystemStatsService.uptime; color: Core.Theme.foreground; font.pixelSize: 13; font.bold: true }
                             }
                         }
                     }
@@ -499,7 +499,7 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 14
                             spacing: 8
-                            Text { text: "Audio Visualizer"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 12 }
+                            Text { text: "Audio Visualizer"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 15 }
                             Item {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -530,7 +530,7 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 15
                             spacing: 11
-                            Text { text: "Quick Controls"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 12 }
+                            Text { text: "Quick Controls"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 15 }
                             ControlRow {
                                 icon: "󰖩"; title: "Wi-Fi"
                                 subtitle: !Services.NetworkService.radioEnabled ? "Off" : (Services.NetworkService.connected ? "Connected" : "Disconnected")
@@ -566,13 +566,13 @@ Scope {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Weather"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 12 }
+                                Text { text: "Weather"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 15 }
                                 Item { Layout.fillWidth: true }
                                 Text {
                                     visible: Services.WeatherService.available && Services.WeatherService.locationName
                                     text: Services.WeatherService.locationName
                                     color: Core.Theme.muted
-                                    font.pixelSize: 9
+                                    font.pixelSize: 12
                                     elide: Text.ElideRight
                                 }
                             }
@@ -583,7 +583,7 @@ Scope {
                                 Text {
                                     text: Services.WeatherService.icon || "󰖐"
                                     color: Core.Theme.foreground
-                                    font.pixelSize: root.compact ? 24 : 30
+                                    font.pixelSize: root.compact ? 27 : 33
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
@@ -591,13 +591,13 @@ Scope {
                                     Text {
                                         text: Services.WeatherService.available ? Services.WeatherService.temp : "--"
                                         color: Core.Theme.foreground
-                                        font.pixelSize: root.compact ? 22 : 28
+                                        font.pixelSize: root.compact ? 25 : 31
                                         font.bold: true
                                     }
                                     Text {
                                         text: Services.WeatherService.available ? Services.WeatherService.condition : "Unavailable"
                                         color: Core.Theme.muted
-                                        font.pixelSize: 10
+                                        font.pixelSize: 13
                                         elide: Text.ElideRight
                                     }
                                 }
@@ -606,13 +606,13 @@ Scope {
                                     Text {
                                         text: "H " + (Services.WeatherService.available ? Services.WeatherService.high : "--")
                                         color: Core.Theme.foreground
-                                        font.pixelSize: 10
+                                        font.pixelSize: 13
                                         font.bold: true
                                     }
                                     Text {
                                         text: "L " + (Services.WeatherService.available ? Services.WeatherService.low : "--")
                                         color: Core.Theme.muted
-                                        font.pixelSize: 10
+                                        font.pixelSize: 13
                                     }
                                 }
                             }
@@ -636,9 +636,9 @@ Scope {
                 spacing: 4
                 RowLayout {
                     Layout.fillWidth: true
-                    Text { text: label; color: Core.Theme.foreground; font.pixelSize: 10 }
+                    Text { text: label; color: Core.Theme.foreground; font.pixelSize: 13 }
                     Item { Layout.fillWidth: true }
-                    Text { text: value + "%"; color: Core.Theme.foreground; font.pixelSize: 10; font.bold: true }
+                    Text { text: value + "%"; color: Core.Theme.foreground; font.pixelSize: 13; font.bold: true }
                 }
                 Rectangle {
                     Layout.fillWidth: true
@@ -665,12 +665,12 @@ Scope {
                 signal toggled()
                 Layout.fillWidth: true
                 spacing: 9
-                Text { text: icon; color: Core.Theme.accent; font.pixelSize: 18 }
+                Text { text: icon; color: Core.Theme.accent; font.pixelSize: 21 }
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 1
-                    Text { text: title; color: Core.Theme.foreground; font.pixelSize: 10; font.bold: true }
-                    Text { text: subtitle; color: Core.Theme.muted; font.pixelSize: 8 }
+                    Text { text: title; color: Core.Theme.foreground; font.pixelSize: 13; font.bold: true }
+                    Text { text: subtitle; color: Core.Theme.muted; font.pixelSize: 11 }
                 }
                 Rectangle {
                     width: 34

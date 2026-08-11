@@ -96,7 +96,7 @@ PanelWindow {
                     font.family: Core.Theme.fontFamily
                     text: "←"
                     color: Core.Theme.foreground
-                    font.pixelSize: 16
+                    font.pixelSize: 19
                     MouseArea {
                         id: backArea
                         anchors.fill: parent
@@ -113,7 +113,7 @@ PanelWindow {
                     font.family: Core.Theme.fontFamily
                     text: popup.currentWidgetName
                     color: Core.Theme.foreground
-                    font.pixelSize: 14
+                    font.pixelSize: 17
                     font.bold: true
                 }
             }
@@ -141,7 +141,7 @@ PanelWindow {
                                 font.family: Core.Theme.fontFamily
                                 text: Services.TimeService.timeLong
                                 color: Core.Theme.foreground
-                                font.pixelSize: 28
+                                font.pixelSize: 31
                                 font.bold: true
                             }
 
@@ -149,7 +149,7 @@ PanelWindow {
                                 font.family: Core.Theme.fontFamily
                                 text: Services.TimeService.dateLong
                                 color: Core.Theme.muted
-                                font.pixelSize: 11
+                                font.pixelSize: 14
                             }
                         }
 
@@ -180,7 +180,7 @@ PanelWindow {
                                             return Core.Theme.urgent
                                         return Core.Theme.foreground
                                     }
-                                    font.pixelSize: 18
+                                    font.pixelSize: 21
                                     horizontalAlignment: Text.AlignHCenter
                                     Layout.alignment: Qt.AlignHCenter
                                 }
@@ -189,7 +189,7 @@ PanelWindow {
                                     text: Services.PowerService.available
                                         ? Services.PowerService.percent + "%" : "--"
                                     color: Core.Theme.muted
-                                    font.pixelSize: 10
+                                    font.pixelSize: 13
                                     horizontalAlignment: Text.AlignHCenter
                                     Layout.alignment: Qt.AlignHCenter
                                 }
@@ -207,7 +207,7 @@ PanelWindow {
                                     }
                                     color: Services.NotificationService.count > 0
                                         ? Core.Theme.accent : Core.Theme.muted
-                                    font.pixelSize: 18
+                                    font.pixelSize: 21
                                     horizontalAlignment: Text.AlignHCenter
                                     Layout.alignment: Qt.AlignHCenter
                                 }
@@ -216,7 +216,7 @@ PanelWindow {
                                     text: Services.NotificationService.count > 0
                                         ? Services.NotificationService.count : ""
                                     color: Core.Theme.muted
-                                    font.pixelSize: 10
+                                    font.pixelSize: 13
                                     horizontalAlignment: Text.AlignHCenter
                                     Layout.alignment: Qt.AlignHCenter
                                 }
@@ -250,37 +250,37 @@ PanelWindow {
 
                             RowLayout {
                                 spacing: 4
-                                Text { font.family: Core.Theme.fontFamily; text: "CPU"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { font.family: Core.Theme.fontFamily; text: "CPU"; color: Core.Theme.muted; font.pixelSize: 13 }
                                 Text {
                                     font.family: Core.Theme.fontFamily
                                     text: Services.SystemStatsService.cpuPercent + "%"
                                     color: Services.SystemStatsService.cpuPercent >= 90
                                         ? Core.Theme.urgent : Core.Theme.foreground
-                                    font.pixelSize: 12; font.bold: true
+                                    font.pixelSize: 15; font.bold: true
                                 }
                             }
 
                             RowLayout {
                                 spacing: 4
-                                Text { font.family: Core.Theme.fontFamily; text: "RAM"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { font.family: Core.Theme.fontFamily; text: "RAM"; color: Core.Theme.muted; font.pixelSize: 13 }
                                 Text {
                                     font.family: Core.Theme.fontFamily
                                     text: Services.SystemStatsService.memoryPercent + "%"
                                     color: Services.SystemStatsService.memoryPercent >= 90
                                         ? Core.Theme.urgent : Core.Theme.foreground
-                                    font.pixelSize: 12; font.bold: true
+                                    font.pixelSize: 15; font.bold: true
                                 }
                             }
 
                             RowLayout {
                                 spacing: 4
-                                Text { font.family: Core.Theme.fontFamily; text: "DISK"; color: Core.Theme.muted; font.pixelSize: 10 }
+                                Text { font.family: Core.Theme.fontFamily; text: "DISK"; color: Core.Theme.muted; font.pixelSize: 13 }
                                 Text {
                                     font.family: Core.Theme.fontFamily
                                     text: Services.SystemStatsService.diskPercent + "%"
                                     color: Services.SystemStatsService.diskPercent >= 90
                                         ? Core.Theme.urgent : Core.Theme.foreground
-                                    font.pixelSize: 12; font.bold: true
+                                    font.pixelSize: 15; font.bold: true
                                 }
                             }
 
@@ -290,7 +290,7 @@ PanelWindow {
                                 font.family: Core.Theme.fontFamily
                                 text: "›"
                                 color: Core.Theme.muted
-                                font.pixelSize: 14
+                                font.pixelSize: 17
                             }
                         }
                     }
@@ -327,7 +327,7 @@ PanelWindow {
                                 font.family: Core.Theme.fontFamily
                                 text: "NOW PLAYING"
                                 color: Core.Theme.accent
-                                font.pixelSize: 9
+                                font.pixelSize: 12
                                 font.bold: true
                                 font.letterSpacing: 1
                             }
@@ -344,7 +344,7 @@ PanelWindow {
                                         font.family: Core.Theme.fontFamily
                                         text: Services.MprisService.title || "Unknown"
                                         color: Core.Theme.foreground
-                                        font.pixelSize: 13
+                                        font.pixelSize: 16
                                         font.bold: true
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
@@ -354,7 +354,7 @@ PanelWindow {
                                         font.family: Core.Theme.fontFamily
                                         text: Services.MprisService.artist || "Unknown Artist"
                                         color: Core.Theme.muted
-                                        font.pixelSize: 11
+                                        font.pixelSize: 14
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
@@ -367,7 +367,7 @@ PanelWindow {
                                         font.family: Core.Theme.fontFamily
                                         text: "󰒮"
                                         color: Core.Theme.foreground
-                                        font.pixelSize: 16
+                                        font.pixelSize: 19
                                         visible: Services.MprisService.canPrev
                                         MouseArea {
                                             id: mpPrevArea
@@ -382,7 +382,7 @@ PanelWindow {
                                         font.family: Core.Theme.fontFamily
                                         text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
                                         color: Core.Theme.accent
-                                        font.pixelSize: 20
+                                        font.pixelSize: 23
                                         MouseArea {
                                             id: mpPlayPauseArea
                                             anchors.fill: parent
@@ -396,7 +396,7 @@ PanelWindow {
                                         font.family: Core.Theme.fontFamily
                                         text: "󰒭"
                                         color: Core.Theme.foreground
-                                        font.pixelSize: 16
+                                        font.pixelSize: 19
                                         visible: Services.MprisService.canNext
                                         MouseArea {
                                             id: mpNextArea
@@ -504,7 +504,7 @@ PanelWindow {
                             Text {
                                 font.family: Core.Theme.fontFamily
                                 text: Services.WeatherService.icon || "🌡"
-                                font.pixelSize: 28
+                                font.pixelSize: 31
                             }
 
                             ColumnLayout {
@@ -515,7 +515,7 @@ PanelWindow {
                                     font.family: Core.Theme.fontFamily
                                     text: Services.WeatherService.temp
                                     color: Core.Theme.foreground
-                                    font.pixelSize: 18
+                                    font.pixelSize: 21
                                     font.bold: true
                                 }
 
@@ -523,7 +523,7 @@ PanelWindow {
                                     font.family: Core.Theme.fontFamily
                                     text: Services.WeatherService.condition
                                     color: Core.Theme.muted
-                                    font.pixelSize: 11
+                                    font.pixelSize: 14
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
@@ -533,7 +533,7 @@ PanelWindow {
                                 font.family: Core.Theme.fontFamily
                                 text: "›"
                                 color: Core.Theme.muted
-                                font.pixelSize: 14
+                                font.pixelSize: 17
                             }
                         }
                     }
@@ -578,7 +578,7 @@ PanelWindow {
                                 }
                                 color: Services.NetworkService.connected
                                     ? Core.Theme.foreground : Core.Theme.muted
-                                font.pixelSize: 20
+                                font.pixelSize: 23
                             }
 
                             ColumnLayout {
@@ -592,7 +592,7 @@ PanelWindow {
                                         : "Disconnected"
                                     color: Services.NetworkService.connected
                                         ? Core.Theme.foreground : Core.Theme.muted
-                                    font.pixelSize: 13
+                                    font.pixelSize: 16
                                     font.bold: true
                                 }
 
@@ -602,7 +602,7 @@ PanelWindow {
                                     text: Services.TailscaleService.isMullvad
                                         ? "Mullvad VPN active" : "Tailscale connected"
                                     color: Core.Theme.accent
-                                    font.pixelSize: 10
+                                    font.pixelSize: 13
                                 }
                             }
 
@@ -610,7 +610,7 @@ PanelWindow {
                                 font.family: Core.Theme.fontFamily
                                 text: "›"
                                 color: Core.Theme.muted
-                                font.pixelSize: 14
+                                font.pixelSize: 17
                             }
                         }
                     }
@@ -642,7 +642,7 @@ PanelWindow {
                                 }
                                 color: Services.AudioService.muted
                                     ? Core.Theme.muted : Core.Theme.foreground
-                                font.pixelSize: 20
+                                font.pixelSize: 23
 
                                 MouseArea {
                                     id: muteToggleArea
@@ -672,7 +672,7 @@ PanelWindow {
                                 font.family: Core.Theme.fontFamily
                                 text: Services.AudioService.volume + "%"
                                 color: Core.Theme.foreground
-                                font.pixelSize: 12
+                                font.pixelSize: 15
                                 font.bold: true
                             }
                         }

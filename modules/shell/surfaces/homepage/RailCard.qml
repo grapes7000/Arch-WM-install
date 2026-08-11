@@ -23,7 +23,7 @@ GlassCard {
         Text {
             text: root.icon
             color: root.active ? Core.Theme.accent : Core.Theme.accent2
-            font.pixelSize: 25
+            font.pixelSize: 28
         }
 
         ColumnLayout {
@@ -34,7 +34,7 @@ GlassCard {
                 Layout.fillWidth: true
                 text: root.title
                 color: Core.Theme.foreground
-                font.pixelSize: 14
+                font.pixelSize: 17
                 font.bold: true
                 elide: Text.ElideRight
             }
@@ -43,7 +43,7 @@ GlassCard {
                 Layout.fillWidth: true
                 text: root.subtitle
                 color: Core.Theme.muted
-                font.pixelSize: 11
+                font.pixelSize: 14
                 elide: Text.ElideRight
             }
         }

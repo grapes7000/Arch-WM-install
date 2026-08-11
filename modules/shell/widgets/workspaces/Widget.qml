@@ -161,7 +161,7 @@ Item {
                         text: modelData.name
                         visible: box.selected || root.showAllLabels
                         font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: root.showAllLabels ? 10 : 11
+                        font.pixelSize: root.showAllLabels ? 13 : 14
                         font.bold: true
                         // Dark-on-accent when focused, foreground on the
                         // surface fills the other slots use otherwise.

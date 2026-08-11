@@ -33,14 +33,14 @@ Item {
                 return "󰕿"
             }
             color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 16 : 20
+            font.pixelSize: context.variant === "compact" ? 19 : 23
         }
 
         Text {
             font.family: Core.Theme.fontFamily
             text: Services.AudioService.volume + "%"
             color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 12 : 14
+            font.pixelSize: context.variant === "compact" ? 15 : 17
             font.bold: true
         }
     }

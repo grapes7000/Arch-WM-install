@@ -22,7 +22,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: Services.MprisService.title || "Nothing Playing"
                 color: Core.Theme.foreground
-                font.pixelSize: 16
+                font.pixelSize: 19
                 font.bold: true
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -32,7 +32,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: Services.MprisService.artist || "--"
                 color: Core.Theme.muted
-                font.pixelSize: 12
+                font.pixelSize: 15
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
@@ -98,7 +98,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: "󰒮"
                 color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted
-                font.pixelSize: 22
+                font.pixelSize: 25
                 MouseArea {
                     id: panelPrevArea
                     anchors.fill: parent
@@ -119,7 +119,7 @@ Item {
                     anchors.centerIn: parent
                     text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
                     color: Core.Theme.surface
-                    font.pixelSize: 24
+                    font.pixelSize: 27
                 }
 
                 MouseArea {
@@ -135,7 +135,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: "󰒭"
                 color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted
-                font.pixelSize: 22
+                font.pixelSize: 25
                 MouseArea {
                     id: panelNextArea
                     anchors.fill: parent
@@ -155,7 +155,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: Services.AudioService.muted ? "󰝟" : "󰕾"
                 color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
-                font.pixelSize: 16
+                font.pixelSize: 19
                 MouseArea {
                     id: panelMuteArea
                     anchors.fill: parent
@@ -184,7 +184,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: Services.AudioService.volume + "%"
                 color: Core.Theme.muted
-                font.pixelSize: 11
+                font.pixelSize: 14
             }
         }
     }

@@ -13,10 +13,8 @@ Item {
         allows: function() { return false }
     })
 
-    implicitWidth: content.implicitWidth
-    implicitHeight: content.implicitHeight
-
-    visible: Services.PowerService.available
+    implicitWidth: content.visible ? content.implicitWidth : 0
+    implicitHeight: content.visible ? content.implicitHeight : 0
 
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "battery", anchorItem: root }) }
 
@@ -24,6 +22,7 @@ Item {
         id: content
         anchors.centerIn: parent
         spacing: 4
+        visible: Services.PowerService.available
 
         Text {
             font.family: Core.Theme.fontFamily
@@ -37,17 +36,19 @@ Item {
                 if (p >= 10) return "󰁺"
                 return "󰂃"
             }
-            color: Services.PowerService.percent <= 15 && !Services.PowerService.charging
-                ? Core.Theme.urgent : Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 16 : 20
+            color: Services.PowerService.charging
+                ? Core.Theme.accent
+                : (Services.PowerService.percent <= 15 ? Core.Theme.urgent : Core.Theme.foreground)
+            font.pixelSize: context.variant === "compact" ? 19 : 23
         }
 
         Text {
             font.family: Core.Theme.fontFamily
             text: Services.PowerService.percent + "%"
-            color: Services.PowerService.percent <= 15 && !Services.PowerService.charging
-                ? Core.Theme.urgent : Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 12 : 14
+            color: Services.PowerService.charging
+                ? Core.Theme.accent
+                : (Services.PowerService.percent <= 15 ? Core.Theme.urgent : Core.Theme.foreground)
+            font.pixelSize: context.variant === "compact" ? 15 : 17
             font.bold: true
         }
 
@@ -56,7 +57,7 @@ Item {
             visible: context.variant !== "compact" && Services.PowerService.timeRemaining !== ""
             text: Services.PowerService.timeRemaining
             color: Core.Theme.muted
-            font.pixelSize: 11
+            font.pixelSize: 14
         }
     }
 }

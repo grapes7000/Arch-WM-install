@@ -27,7 +27,7 @@ Rectangle {
             font.family: Core.Theme.fontFamily
             text: root.icon
             color: Core.Theme.muted
-            font.pixelSize: 22
+            font.pixelSize: 25
         }
 
         Text {
@@ -35,7 +35,7 @@ Rectangle {
             font.family: Core.Theme.fontFamily
             text: root.message
             color: Core.Theme.muted
-            font.pixelSize: 11
+            font.pixelSize: 14
         }
     }
 }

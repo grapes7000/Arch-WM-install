@@ -15,13 +15,13 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            Text { font.family: Core.Theme.fontFamily; text: label; color: Core.Theme.muted; font.pixelSize: 11 }
+            Text { font.family: Core.Theme.fontFamily; text: label; color: Core.Theme.muted; font.pixelSize: 14 }
             Item { Layout.fillWidth: true }
             Text {
                 font.family: Core.Theme.fontFamily
                 text: value + "%"
                 color: value >= 90 ? Core.Theme.urgent : Core.Theme.foreground
-                font.pixelSize: 12; font.bold: true
+                font.pixelSize: 15; font.bold: true
             }
         }
 
@@ -63,13 +63,13 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            Text { font.family: Core.Theme.fontFamily; text: "Uptime"; color: Core.Theme.muted; font.pixelSize: 11 }
+            Text { font.family: Core.Theme.fontFamily; text: "Uptime"; color: Core.Theme.muted; font.pixelSize: 14 }
             Item { Layout.fillWidth: true }
             Text {
                 font.family: Core.Theme.fontFamily
                 text: Services.SystemStatsService.uptime
                 color: Core.Theme.foreground
-                font.pixelSize: 12; font.bold: true
+                font.pixelSize: 15; font.bold: true
             }
         }
     }

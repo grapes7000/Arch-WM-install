@@ -34,7 +34,7 @@ Item {
                         font.family: Core.Theme.fontFamily
                         text: "󰂚"
                         color: Core.Theme.accent
-                        font.pixelSize: 22
+                        font.pixelSize: 25
                     }
 
                     ColumnLayout {
@@ -45,7 +45,7 @@ Item {
                             font.family: Core.Theme.fontFamily
                             text: "Notifications"
                             color: Core.Theme.foreground
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                         }
 
@@ -54,7 +54,7 @@ Item {
                             text: Services.NotificationService.count
                                 + (Services.NotificationService.count === 1 ? " notification" : " notifications")
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                         }
                     }
 
@@ -74,7 +74,7 @@ Item {
                         font.family: Core.Theme.fontFamily
                         text: Services.NotificationService.dndEnabled ? "Resume notifications" : "Pause (DND)"
                         color: Core.Theme.accent
-                        font.pixelSize: 11
+                        font.pixelSize: 14
                         font.bold: true
 
                         MouseArea {
@@ -92,7 +92,7 @@ Item {
                         visible: Services.NotificationService.recent.length > 0
                         text: "Dismiss all"
                         color: Core.Theme.muted
-                        font.pixelSize: 11
+                        font.pixelSize: 14
 
                         MouseArea {
                             id: dismissArea
@@ -133,7 +133,7 @@ Item {
                             Layout.fillWidth: true
                             text: modelData.appName || "Notification"
                             color: Core.Theme.accent
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                             font.bold: true
                             elide: Text.ElideRight
                         }
@@ -143,7 +143,7 @@ Item {
                             Layout.fillWidth: true
                             text: modelData.summary || ""
                             color: Core.Theme.foreground
-                            font.pixelSize: 12
+                            font.pixelSize: 15
                             font.bold: true
                             elide: Text.ElideRight
                         }
@@ -154,7 +154,7 @@ Item {
                             visible: modelData.body !== ""
                             text: modelData.body || ""
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                             maximumLineCount: 2
                             elide: Text.ElideRight
                             wrapMode: Text.Wrap

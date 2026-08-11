@@ -35,7 +35,7 @@ Item {
                 return "󰤟"
             }
             color: Services.NetworkService.connected ? Core.Theme.foreground : Core.Theme.muted
-            font.pixelSize: context.variant === "compact" ? 16 : 20
+            font.pixelSize: context.variant === "compact" ? 19 : 23
         }
 
         Text {
@@ -45,7 +45,7 @@ Item {
                 ? (Services.NetworkService.ssid || Services.NetworkService.type)
                 : "Disconnected"
             color: Services.NetworkService.connected ? Core.Theme.foreground : Core.Theme.muted
-            font.pixelSize: 12
+            font.pixelSize: 15
             elide: Text.ElideRight
             Layout.maximumWidth: 100
         }

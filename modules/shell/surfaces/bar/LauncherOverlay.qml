@@ -148,7 +148,7 @@ Scope {
                         color: Core.Theme.foreground
                         placeholderTextColor: Core.Theme.muted
                         font.family: Core.Theme.fontFamily
-                        font.pixelSize: 18
+                        font.pixelSize: 21
                         background: Rectangle {
                             color: Core.Theme.background
                             radius: Core.Theme.radius
@@ -218,7 +218,7 @@ Scope {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 0
-                                    Text { font.family: Core.Theme.fontFamily; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 16; elide: Text.ElideRight; Layout.fillWidth: true }
+                                    Text { font.family: Core.Theme.fontFamily; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 19; elide: Text.ElideRight; Layout.fillWidth: true }
                                     Text { font.family: Core.Theme.fontFamily; text: modelData.comment || root.entryCategory(modelData); color: Core.Theme.muted; elide: Text.ElideRight; Layout.fillWidth: true }
                                 }
                                 Text {

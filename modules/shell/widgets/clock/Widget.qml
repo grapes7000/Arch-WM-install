@@ -30,8 +30,8 @@ Item {
                 ? Services.TimeService.timeShort
                 : Services.TimeService.timeLong
             color: Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 15
-                : context.variant === "standard" ? 28 : 48
+            font.pixelSize: context.variant === "compact" ? 18
+                : context.variant === "standard" ? 31 : 51
             font.bold: true
         }
 
@@ -42,7 +42,7 @@ Item {
             text: context.variant === "expanded"
                 ? Services.TimeService.dateLong : Services.TimeService.dateShort
             color: Core.Theme.muted
-            font.pixelSize: context.variant === "expanded" ? 16 : 13
+            font.pixelSize: context.variant === "expanded" ? 19 : 16
         }
     }
 }

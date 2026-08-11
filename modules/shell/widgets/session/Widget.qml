@@ -28,7 +28,7 @@ Item {
             font.family: Core.Theme.fontFamily
             text: "⏻"
             color: Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 16 : 20
+            font.pixelSize: context.variant === "compact" ? 19 : 23
 
             MouseArea {
                 id: lockArea
@@ -45,7 +45,7 @@ Item {
             visible: context.variant !== "compact"
             text: "󰍃"
             color: Core.Theme.foreground
-            font.pixelSize: 18
+            font.pixelSize: 21
 
             MouseArea {
                 id: logoutArea
@@ -62,7 +62,7 @@ Item {
             visible: context.variant !== "compact"
             text: "󰤄"
             color: Core.Theme.foreground
-            font.pixelSize: 18
+            font.pixelSize: 21
 
             MouseArea {
                 id: suspendArea
@@ -79,7 +79,7 @@ Item {
             visible: context.variant !== "compact"
             text: "󰜉"
             color: Core.Theme.foreground
-            font.pixelSize: 18
+            font.pixelSize: 21
 
             MouseArea {
                 id: rebootArea
@@ -96,7 +96,7 @@ Item {
             visible: context.variant !== "compact"
             text: "󰐥"
             color: Core.Theme.urgent
-            font.pixelSize: 18
+            font.pixelSize: 21
 
             MouseArea {
                 id: poweroffArea

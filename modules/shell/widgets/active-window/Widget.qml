@@ -22,7 +22,7 @@ Item {
         verticalAlignment: Text.AlignVCenter
         text: Services.ActiveWindowService.title || "Desktop"
         color: Services.ActiveWindowService.title ? Core.Theme.foreground : Core.Theme.muted
-        font.pixelSize: context.variant === "compact" ? 12 : 16
+        font.pixelSize: context.variant === "compact" ? 15 : 19
         font.bold: context.variant !== "compact"
         elide: Text.ElideRight
         maximumLineCount: 1

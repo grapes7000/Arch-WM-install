@@ -51,7 +51,7 @@ Item {
         anchors.centerIn: parent
         text: root.label
         color: Core.Theme.foreground
-        font.pixelSize: 10
+        font.pixelSize: 13
         font.bold: true
     }
 }

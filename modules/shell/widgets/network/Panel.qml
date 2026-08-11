@@ -49,7 +49,7 @@ Item {
                         }
                         color: Services.NetworkService.connected
                             ? Core.Theme.accent : Core.Theme.muted
-                        font.pixelSize: 22
+                        font.pixelSize: 25
                     }
 
                     ColumnLayout {
@@ -63,7 +63,7 @@ Item {
                                 : "Disconnected"
                             color: Services.NetworkService.connected
                                 ? Core.Theme.foreground : Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                         }
 
@@ -77,7 +77,7 @@ Item {
                                 return info || "Connected"
                             }
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                         }
                     }
 
@@ -107,14 +107,14 @@ Item {
                             font.family: Core.Theme.fontFamily
                             text: "󰩟 " + Services.NetworkService.downloadRate
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                         }
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "󰩠 " + Services.NetworkService.uploadRate
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                         }
                     }
                 }
@@ -157,14 +157,14 @@ Item {
                         Text {
                             text: panel.networksExpanded ? "󰅀" : "󰅂"
                             color: Core.Theme.muted
-                            font.pixelSize: 12
+                            font.pixelSize: 15
                         }
 
                         Text {
                             Layout.fillWidth: true
                             text: "Available Networks"
                             color: Core.Theme.foreground
-                            font.pixelSize: 12
+                            font.pixelSize: 15
                             font.bold: true
                         }
 
@@ -172,7 +172,7 @@ Item {
                             visible: panel.networksExpanded
                             text: Services.NetworkService.scanning ? "…" : "󰑐"
                             color: Core.Theme.muted
-                            font.pixelSize: 14
+                            font.pixelSize: 17
 
                             MouseArea {
                                 id: networkRescanArea
@@ -201,14 +201,14 @@ Item {
                             Text {
                                 text: modelData.active ? "󰤨" : "󰤢"
                                 color: modelData.active ? Core.Theme.accent : Core.Theme.muted
-                                font.pixelSize: 14
+                                font.pixelSize: 17
                             }
 
                             Text {
                                 Layout.fillWidth: true
                                 text: modelData.ssid
                                 color: modelData.active ? Core.Theme.foreground : Core.Theme.muted
-                                font.pixelSize: 12
+                                font.pixelSize: 15
                                 font.bold: modelData.active
                                 elide: Text.ElideRight
                             }
@@ -217,13 +217,13 @@ Item {
                                 visible: modelData.security !== ""
                                 text: "󰌾"
                                 color: Core.Theme.muted
-                                font.pixelSize: 11
+                                font.pixelSize: 14
                             }
 
                             Text {
                                 text: modelData.strength + "%"
                                 color: Core.Theme.muted
-                                font.pixelSize: 10
+                                font.pixelSize: 13
                             }
 
                             MouseArea {
@@ -264,7 +264,7 @@ Item {
                                     anchors.rightMargin: 12
                                     verticalAlignment: TextInput.AlignVCenter
                                     color: Core.Theme.foreground
-                                    font.pixelSize: 11
+                                    font.pixelSize: 14
                                     echoMode: TextInput.Password
                                     text: panel.passwordDraft
                                     onTextChanged: panel.passwordDraft = text
@@ -280,7 +280,7 @@ Item {
                             Text {
                                 text: "Connect"
                                 color: Core.Theme.accent
-                                font.pixelSize: 11
+                                font.pixelSize: 14
                                 font.bold: true
 
                                 MouseArea {
@@ -305,7 +305,7 @@ Item {
                     visible: panel.networksExpanded && Services.NetworkService.accessPoints.length === 0
                     text: Services.NetworkService.scanning ? "Scanning…" : "No networks found"
                     color: Core.Theme.muted
-                    font.pixelSize: 11
+                    font.pixelSize: 14
                 }
             }
         }
@@ -337,7 +337,7 @@ Item {
                         text: "󰦝"
                         color: Services.TailscaleService.isMullvad
                             ? Qt.rgba(0.2, 0.8, 0.4, 1.0) : Core.Theme.muted
-                        font.pixelSize: 22
+                        font.pixelSize: 25
                     }
 
                     ColumnLayout {
@@ -348,7 +348,7 @@ Item {
                             font.family: Core.Theme.fontFamily
                             text: "Mullvad VPN"
                             color: Core.Theme.foreground
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                         }
 
@@ -357,7 +357,7 @@ Item {
                             text: Services.TailscaleService.isMullvad
                                 ? "Via Tailscale exit node" : "Inactive"
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                         }
                     }
 
@@ -375,7 +375,7 @@ Item {
                         && Services.TailscaleService.mullvadLocation !== ""
                     text: "Exit: " + Services.TailscaleService.mullvadLocation
                     color: Core.Theme.muted
-                    font.pixelSize: 10
+                    font.pixelSize: 13
                 }
             }
         }
@@ -429,7 +429,7 @@ Item {
                             font.family: Core.Theme.fontFamily
                             text: "Tailscale"
                             color: Core.Theme.foreground
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                         }
 
@@ -441,7 +441,7 @@ Item {
                                 return Services.TailscaleService.ipAddress || "Connected"
                             }
                             color: Core.Theme.muted
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                         }
                     }
 
@@ -450,7 +450,7 @@ Item {
                         visible: Services.TailscaleService.connected
                         text: Services.TailscaleService.peerCount + " peers"
                         color: Core.Theme.muted
-                        font.pixelSize: 10
+                        font.pixelSize: 13
                     }
 
                     Rectangle {
@@ -465,7 +465,7 @@ Item {
                             anchors.centerIn: parent
                             text: "CONNECTED"
                             color: "white"
-                            font.pixelSize: 8
+                            font.pixelSize: 11
                             font.bold: true
                             font.letterSpacing: 0.5
                         }
@@ -477,7 +477,7 @@ Item {
                         && Services.TailscaleService.tailnet !== ""
                     text: "Tailnet: " + Services.TailscaleService.tailnet
                     color: Core.Theme.muted
-                    font.pixelSize: 10
+                    font.pixelSize: 13
                 }
 
                 Rectangle {
@@ -504,7 +504,7 @@ Item {
                                 ? "Loading…" : (Services.TailscaleService.statusText || "No output")
                             color: Core.Theme.foreground
                             font.family: "monospace"
-                            font.pixelSize: 10
+                            font.pixelSize: 13
                             wrapMode: Text.NoWrap
                         }
                     }

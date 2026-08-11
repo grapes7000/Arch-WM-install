@@ -28,7 +28,7 @@ Item {
             font.family: Core.Theme.fontFamily
             text: Services.NotificationService.dndEnabled ? "󰂛" : (Services.NotificationService.count > 0 ? "󰂚" : "󰂜")
             color: Services.NotificationService.count > 0 ? Core.Theme.accent : Core.Theme.muted
-            font.pixelSize: context.variant === "compact" ? 16 : 20
+            font.pixelSize: context.variant === "compact" ? 19 : 23
 
             MouseArea {
                 id: dismissArea
@@ -45,7 +45,7 @@ Item {
             visible: Services.NotificationService.count > 0
             text: Services.NotificationService.count
             color: Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 12 : 14
+            font.pixelSize: context.variant === "compact" ? 15 : 17
             font.bold: true
         }
 
@@ -54,7 +54,7 @@ Item {
             visible: context.variant !== "compact"
             text: Services.NotificationService.dndEnabled ? "DND" : ""
             color: Core.Theme.muted
-            font.pixelSize: 11
+            font.pixelSize: 14
 
             MouseArea {
                 id: dndArea

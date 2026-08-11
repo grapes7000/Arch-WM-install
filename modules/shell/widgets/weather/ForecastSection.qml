@@ -46,7 +46,7 @@ Item {
                 visible: Services.WeatherService.available
                 text: "Updated " + Services.WeatherService.lastUpdated
                 color: Core.Theme.muted
-                font.pixelSize: root.compact ? 7 : 8
+                font.pixelSize: root.compact ? 10 : 11
             }
         }
 
@@ -56,7 +56,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: "Forecast unavailable"
             color: Core.Theme.muted
-            font.pixelSize: root.compact ? 8 : 9
+            font.pixelSize: root.compact ? 11 : 12
         }
 
         // ---------- Daily view ----------
@@ -68,7 +68,7 @@ Item {
             Text {
                 text: "Today's Hourly"
                 color: Core.Theme.muted
-                font.pixelSize: root.compact ? 8 : 9
+                font.pixelSize: root.compact ? 11 : 12
                 font.bold: true
             }
 
@@ -90,19 +90,19 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: modelData.time
                         color: Core.Theme.muted
-                        font.pixelSize: root.compact ? 7 : 8
+                        font.pixelSize: root.compact ? 10 : 11
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: modelData.icon
                         color: Core.Theme.foreground
-                        font.pixelSize: root.compact ? 12 : 14
+                        font.pixelSize: root.compact ? 15 : 17
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: modelData.temp
                         color: Core.Theme.foreground
-                        font.pixelSize: root.compact ? 8 : 10
+                        font.pixelSize: root.compact ? 11 : 13
                         font.bold: true
                     }
                 }
@@ -141,26 +141,26 @@ Item {
                 Text {
                     text: modelData.day
                     color: Core.Theme.foreground
-                    font.pixelSize: root.compact ? 8 : 9
+                    font.pixelSize: root.compact ? 11 : 12
                     font.bold: true
                     Layout.preferredWidth: root.compact ? 30 : 42
                 }
                 Text {
                     text: modelData.icon
                     color: Core.Theme.foreground
-                    font.pixelSize: root.compact ? 11 : 13
+                    font.pixelSize: root.compact ? 14 : 16
                 }
                 Text {
                     text: modelData.condition
                     color: Core.Theme.muted
-                    font.pixelSize: root.compact ? 8 : 9
+                    font.pixelSize: root.compact ? 11 : 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }
                 Text {
                     text: modelData.low + " / " + modelData.high
                     color: Core.Theme.foreground
-                    font.pixelSize: root.compact ? 8 : 9
+                    font.pixelSize: root.compact ? 11 : 12
                     font.bold: true
                 }
             }
@@ -181,7 +181,7 @@ Item {
             anchors.centerIn: parent
             text: label
             color: active ? Core.Theme.background : Core.Theme.foreground
-            font.pixelSize: root.compact ? 8 : 9
+            font.pixelSize: root.compact ? 11 : 12
             font.bold: active
         }
         MouseArea {
@@ -209,13 +209,13 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: label
                 color: Core.Theme.muted
-                font.pixelSize: root.compact ? 6 : 7
+                font.pixelSize: root.compact ? 9 : 10
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: value
                 color: Core.Theme.foreground
-                font.pixelSize: root.compact ? 8 : 9
+                font.pixelSize: root.compact ? 11 : 12
                 font.bold: true
             }
         }

@@ -248,7 +248,7 @@ PanelWindow {
                                 anchors.centerIn: parent
                                 text: modelData.windows.length
                                 color: Core.Theme.background
-                                font.pixelSize: Math.max(8, Core.Theme.gap)
+                                font.pixelSize: Math.max(11, Core.Theme.gap)
                             }
                         }
 

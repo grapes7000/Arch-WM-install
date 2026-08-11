@@ -28,7 +28,7 @@ Item {
             Layout.fillWidth: true
             text: "Session"
             color: Core.Theme.foreground
-            font.pixelSize: 13
+            font.pixelSize: 16
             font.bold: true
         }
 
@@ -55,7 +55,7 @@ Item {
                         font.family: Core.Theme.fontFamily
                         text: actionCard.modelData.icon
                         color: actionCard.modelData.urgent ? Core.Theme.urgent : Core.Theme.foreground
-                        font.pixelSize: 16
+                        font.pixelSize: 19
                     }
 
                     Text {
@@ -65,7 +65,7 @@ Item {
                             ? "Confirm " + actionCard.modelData.label + "?"
                             : actionCard.modelData.label
                         color: actionCard.modelData.urgent ? Core.Theme.urgent : Core.Theme.foreground
-                        font.pixelSize: 12
+                        font.pixelSize: 15
                         font.bold: actionCard.armed
                     }
                 }
@@ -89,7 +89,7 @@ Item {
             visible: Services.SessionService.error !== ""
             text: Services.SessionService.error
             color: Core.Theme.urgent
-            font.pixelSize: 10
+            font.pixelSize: 13
             wrapMode: Text.Wrap
         }
     }
