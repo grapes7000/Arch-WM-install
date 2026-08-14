@@ -15,5 +15,6 @@ atuin
 yazi
 git-delta
 glow
+tree-sitter-cli
 ttf-jetbrains-mono-nerd
 neovim
