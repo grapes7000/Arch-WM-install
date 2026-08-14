@@ -74,8 +74,36 @@ Item {
             Components.PressBounce { pressed: nextArea.pressed }
         }
 
-        ColumnLayout {
-            spacing: 0
+        Item {
+            id: mediaLabelArea
+            implicitWidth: mediaLabels.implicitWidth
+            implicitHeight: mediaLabels.implicitHeight
+
+            ColumnLayout {
+                id: mediaLabels
+                anchors.fill: parent
+                spacing: 0
+
+                Text {
+                    font.family: Core.Theme.fontFamily
+                    Layout.maximumWidth: context.variant === "compact" ? 120 : 200
+                    text: Services.MprisService.title
+                    color: Core.Theme.foreground
+                    font.pixelSize: context.variant === "compact" ? 14 : 16
+                    font.bold: true
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    font.family: Core.Theme.fontFamily
+                    Layout.maximumWidth: context.variant === "compact" ? 120 : 200
+                    visible: context.variant !== "compact"
+                    text: Services.MprisService.artist
+                    color: Core.Theme.muted
+                    font.pixelSize: 14
+                    elide: Text.ElideRight
+                }
+            }
 
             MouseArea {
                 id: openMediaArea
@@ -85,28 +113,7 @@ Item {
                 onClicked: context.request("drawer.open", { kind: "media" })
             }
 
-            Components.PressBounce { target: parent; pressed: openMediaArea.pressed }
-
-            Text {
-                font.family: Core.Theme.fontFamily
-                Layout.maximumWidth: context.variant === "compact" ? 120 : 200
-                text: Services.MprisService.title
-                color: Core.Theme.foreground
-                font.pixelSize: context.variant === "compact" ? 14 : 16
-                font.bold: true
-                elide: Text.ElideRight
-            }
-
-            Text {
-                font.family: Core.Theme.fontFamily
-                Layout.maximumWidth: context.variant === "compact" ? 120 : 200
-                visible: context.variant !== "compact"
-                text: Services.MprisService.artist
-                color: Core.Theme.muted
-                font.pixelSize: 14
-                elide: Text.ElideRight
-            }
+            Components.PressBounce { target: mediaLabelArea; pressed: openMediaArea.pressed }
         }
     }
 }
-
