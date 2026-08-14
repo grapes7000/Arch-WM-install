@@ -227,7 +227,7 @@ Singleton {
             + "find -L \"$dir\" -maxdepth 1 -type f \\( "
             + "-iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o "
             + "-iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' \\) "
-            + "-print | LC_ALL=C sort",
+            + "-exec readlink -f -- {} \\; | LC_ALL=C sort",
             "sh", root.homepageImagesDir
         ]
         stdout: StdioCollector {
