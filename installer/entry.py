@@ -266,13 +266,36 @@ def hypr_verify(ctx: runtime.Context) -> bool:
     )
 
 
+def shell_payload_matches(ctx: runtime.Context) -> bool:
+    """True when every file under modules/shell is byte-identical to what's installed.
+
+    Redeploying used to hinge on modules/shell/.arch-wm-version matching the
+    installed copy, but that string has to be bumped by hand on every QML
+    change - commits 7fb14c6 and 3dfa1aa (the wallpaper symlink and media
+    widget crash fixes) landed without bumping it, so a real installer run
+    would report "already satisfied" and skip redeploying those fixes.
+    """
+    source = ctx.root / "modules/shell"
+    target = ctx.config / "quickshell/arch-wm"
+    if not target.is_dir():
+        return False
+    for src_file in source.rglob("*"):
+        if src_file.is_dir():
+            continue
+        dst_file = target / src_file.relative_to(source)
+        try:
+            if src_file.read_bytes() != dst_file.read_bytes():
+                return False
+        except OSError:
+            return False
+    return True
+
+
 def shell_check(ctx: runtime.Context) -> bool:
-    source_version = ctx.root / "modules/shell/.arch-wm-version"
-    installed_version = ctx.config / "quickshell/arch-wm/.arch-wm-version"
     return (
         (ctx.config / "quickshell/arch-wm/.arch-wm-managed").is_file()
         and (ctx.config / "quickshell/arch-wm/shell.qml").is_file()
-        and payload_version_matches(source_version, installed_version)
+        and shell_payload_matches(ctx)
     )
 
 
