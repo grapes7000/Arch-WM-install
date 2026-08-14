@@ -224,7 +224,7 @@ Singleton {
         command: [
             "sh", "-c",
             "dir=\"$1\"; mkdir -p \"$dir\"; "
-            + "find \"$dir\" -maxdepth 1 -type f \\( "
+            + "find -L \"$dir\" -maxdepth 1 -type f \\( "
             + "-iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o "
             + "-iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' \\) "
             + "-print | LC_ALL=C sort",
