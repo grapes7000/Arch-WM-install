@@ -14,6 +14,5 @@ zoxide
 atuin
 yazi
 git-delta
-tealdeer
 ttf-jetbrains-mono-nerd
 neovim
