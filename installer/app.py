@@ -355,13 +355,39 @@ def stage_theme_engine_check(ctx: Context) -> bool:
 
 
 def stage_theme_engine_apply(ctx: Context) -> None:
+    # Theme Studio is the user-facing `theme` command; the stable engine that
+    # writes the theme-engine contract is kept as `theme-legacy`. Mirrors the
+    # split done by themes/install.sh so this stage and a manual run of that
+    # script never fight over ~/.local/bin/theme or the active themes dir.
     module = ctx.root / "modules/theme-engine"
-    ctx.install_path(module / "bin/theme", ctx.home / ".local/bin/theme")
-    ctx.install_path(module / "themes", ctx.config_home / "theme-engine/themes")
+    bin_dir = ctx.home / ".local/bin"
+    ctx.install_path(module / "bin/theme", bin_dir / "theme-legacy")
+    ctx.install_path(module / "bin/theme-studio", bin_dir / "theme")
+    for tool in ("theme-new", "theme-menu", "wallgen"):
+        src = module / "bin" / tool
+        if src.exists():
+            ctx.install_path(src, bin_dir / tool)
+    for py_module in (
+        "theme_schema.py",
+        "theme_preview.py",
+        "theme_components.py",
+        "theme_tui_widgets.py",
+        "theme_tui.py",
+        "theme_editor.py",
+        "theme_runtime.py",
+        "theme_effects.py",
+        "theme_homepage.py",
+        "theme_starship.py",
+    ):
+        src = module / "bin" / py_module
+        if src.exists():
+            ctx.install_path(src, bin_dir / py_module)
+    ctx.install_path(module / "themes", ctx.config_home / "hypr/themes")
     ctx.install_path(module / "schema", ctx.config_home / "theme-engine/schema")
     if not ctx.options.dry_run:
-        os.chmod(ctx.home / ".local/bin/theme", 0o755)
-    ctx.run([str(ctx.home / ".local/bin/theme"), ctx.options.theme])
+        os.chmod(bin_dir / "theme", 0o755)
+        os.chmod(bin_dir / "theme-legacy", 0o755)
+    ctx.run([str(bin_dir / "theme"), ctx.options.theme])
 
 
 def stage_theme_engine_verify(ctx: Context) -> bool:
