@@ -19,6 +19,7 @@ from installer.entry import (
     THEME_COMMANDS,
     THEME_ENTRY_POINTS,
     THEME_STUDIO_MODULES,
+    shell_check,
     theme_check,
     theme_payload_current,
 )
@@ -379,6 +380,53 @@ class ThemeStageCheckTests(unittest.TestCase):
                     encoding="utf-8",
                 )
                 self.assertTrue(theme_check(context))
+            finally:
+                for key, value in previous.items():
+                    if value is None:
+                        os.environ.pop(key, None)
+                    else:
+                        os.environ[key] = value
+
+
+class ShellStageCheckTests(unittest.TestCase):
+    def test_shell_check_rejects_payload_drift_even_with_matching_version(self) -> None:
+        # Regression: shell_check used to trust modules/shell/.arch-wm-version
+        # alone, which must be bumped by hand on every QML change. Commits
+        # 7fb14c6 and 3dfa1aa (wallpaper symlink + media widget crash fixes)
+        # landed without bumping it, so a real installer run would have seen
+        # a matching version marker and skipped redeploying those fixes even
+        # though the installed QML no longer matched the repo.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            environment = {
+                "HOME": str(root / "home"),
+                "XDG_CONFIG_HOME": str(root / "config"),
+                "XDG_DATA_HOME": str(root / "data"),
+                "XDG_STATE_HOME": str(root / "state"),
+            }
+            previous = {key: os.environ.get(key) for key in environment}
+            os.environ.update(environment)
+            try:
+                config = pathlib.Path(os.environ["XDG_CONFIG_HOME"])
+                target = config / "quickshell/arch-wm"
+                shutil.copytree(ROOT / "modules/shell", target)
+
+                options = Options(command="install", dry_run=True)
+                context = Context(ROOT, options)
+                self.assertTrue(shell_check(context))
+
+                # Simulate drift: repo QML changed but the version marker
+                # was never bumped, matching what actually happened.
+                (target / "core/Theme.qml").write_text(
+                    "// stale copy, pre-dates the real fix\n", encoding="utf-8"
+                )
+                self.assertTrue(
+                    (target / ".arch-wm-version").read_text(encoding="utf-8")
+                    == (ROOT / "modules/shell/.arch-wm-version").read_text(
+                        encoding="utf-8"
+                    )
+                )
+                self.assertFalse(shell_check(context))
             finally:
                 for key, value in previous.items():
                     if value is None:
