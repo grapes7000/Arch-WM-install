@@ -1,6 +1,5 @@
 # Optional development and advanced terminal workflow
 hyperfine
-glow
 github-cli
 nodejs
 npm
