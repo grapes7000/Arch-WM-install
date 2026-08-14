@@ -279,14 +279,22 @@ def shell_payload_matches(ctx: runtime.Context) -> bool:
     target = ctx.config / "quickshell/arch-wm"
     if not target.is_dir():
         return False
+    source_relatives = set()
     for src_file in source.rglob("*"):
         if src_file.is_dir():
             continue
-        dst_file = target / src_file.relative_to(source)
+        relative = src_file.relative_to(source)
+        source_relatives.add(relative)
+        dst_file = target / relative
         try:
             if src_file.read_bytes() != dst_file.read_bytes():
                 return False
         except OSError:
+            return False
+    for dst_file in target.rglob("*"):
+        if dst_file.is_dir():
+            continue
+        if dst_file.relative_to(target) not in source_relatives:
             return False
     return True
 
