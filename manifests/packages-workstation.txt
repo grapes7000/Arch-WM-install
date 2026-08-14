@@ -1,12 +1,6 @@
 # Optional development and advanced terminal workflow
-zellij
-mise
 hyperfine
-procs
-xh
 glow
-sd
-just
 github-cli
 nodejs
 npm
