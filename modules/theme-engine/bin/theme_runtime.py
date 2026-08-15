@@ -80,7 +80,11 @@ def _run_legacy(name: str) -> tuple[bool, str]:
     command = legacy_command()
     if not command:
         return False, "legacy generator not found; applied Studio-managed components only"
-    proc = subprocess.run(command + [name], text=True, capture_output=True)
+    try:
+        proc = subprocess.run(command + [name], text=True, capture_output=True,
+                              timeout=20)
+    except subprocess.TimeoutExpired:
+        return False, "legacy generator timed out; applied Studio-managed components only"
     message = (proc.stdout or proc.stderr or "").strip()
     return proc.returncode == 0, message
 

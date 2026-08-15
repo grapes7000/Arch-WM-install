@@ -550,15 +550,22 @@ def write_outputs(theme: dict[str, Any], targets: dict[str, str | bool]) -> None
         atomic_write(path, text)
 
 
-def run_quiet(command: list[str]) -> bool:
+def run_quiet(command: list[str], timeout: float = 5.0) -> bool:
+    """Run an optional reload command without letting it block theme apply.
+
+    Consumers like dunstctl have been observed to hang indefinitely on
+    reload; a bounded timeout keeps one stuck consumer from stalling the
+    whole theme switch.
+    """
     try:
         return subprocess.run(
             command,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=False,
+            timeout=timeout,
         ).returncode == 0
-    except OSError:
+    except (OSError, subprocess.TimeoutExpired):
         return False
 
 
