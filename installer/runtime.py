@@ -28,6 +28,7 @@ STAGE_ORDER = (
     "60-quickshell",
     "70-services",
     "80-session",
+    "85-dotfiles",
     "90-validate",
 )
 
@@ -427,6 +428,40 @@ def services_verify(ctx: Context) -> bool:
     )
 
 
+def dotfiles_check(ctx: Context) -> bool:
+    repo = ctx.profile.get("dotfiles")
+    if not repo:
+        return True
+    if not ctx.has("chezmoi") or not (ctx.data / "chezmoi").is_dir():
+        return False
+    return ctx.run(["chezmoi", "diff"], check=False, capture=True).stdout.strip() == ""
+
+
+def dotfiles_apply(ctx: Context) -> None:
+    repo = ctx.profile.get("dotfiles")
+    if not repo:
+        ctx.emit("  no dotfiles repository configured for this profile; skipping")
+        return
+    if not ctx.package_installed("chezmoi") or not ctx.package_installed("age"):
+        ctx.run(["pacman", "-S", "--needed", "--noconfirm", "chezmoi", "age"], sudo=True)
+    key = ctx.home / ".config/chezmoi/key.txt"
+    if not key.is_file():
+        ctx.emit(
+            f"  {key} not found; restore it from your password manager before "
+            "applying encrypted dotfiles. Skipping chezmoi apply for now - rerun "
+            "this stage once the key is in place."
+        )
+        return
+    ctx.run(["chezmoi", "init", "--apply", repo])
+
+
+def dotfiles_verify(ctx: Context) -> bool:
+    repo = ctx.profile.get("dotfiles")
+    if not repo or ctx.options.dry_run:
+        return True
+    return (ctx.data / "chezmoi").is_dir()
+
+
 def session_check(ctx: Context) -> bool:
     return (ctx.config / "environment.d/90-arch-wm.conf").is_file()
 
@@ -491,6 +526,7 @@ STAGES = (
     Stage("60-quickshell", shell_check, shell_apply, shell_verify),
     Stage("70-services", services_check, services_apply, services_verify),
     Stage("80-session", session_check, session_apply, session_verify),
+    Stage("85-dotfiles", dotfiles_check, dotfiles_apply, dotfiles_verify),
     Stage("90-validate", validate_check, validate_apply, validate_verify),
 )
 

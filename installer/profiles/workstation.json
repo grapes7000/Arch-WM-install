@@ -9,5 +9,6 @@
     "packages-desktop.txt",
     "packages-workstation.txt"
   ],
-  "services": ["NetworkManager", "bluetooth", "power-profiles-daemon"]
+  "services": ["NetworkManager", "bluetooth", "power-profiles-daemon"],
+  "dotfiles": "git@github.com:grapes7000/dotfiles.git"
 }
