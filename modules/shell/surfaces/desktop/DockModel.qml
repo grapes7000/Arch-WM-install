@@ -1,4 +1,5 @@
 import QtQml
+import QtQuick
 
 QtObject {
     id: root
@@ -6,9 +7,26 @@ QtObject {
     property string monitorName: ""
     property var sourceToplevels: []
     property var desktopEntries: []
-    readonly property var groups: buildGroups(valuesOf(sourceToplevels),
-                                               valuesOf(desktopEntries),
-                                               monitorName)
+    property var groups: []
+
+    // Hyprland's toplevel list is live and can still be mid-mutation
+    // (partway through applying a batched IPC update) when its change
+    // signal fires. Rebuilding groups synchronously in that same call
+    // stack raced Quickshell's native property-update-group bookkeeping
+    // and produced a reproducible native crash on startup. Deferring the
+    // rebuild to the next event-loop tick lets the native update finish
+    // first, so this only ever reads a settled toplevel list.
+    onSourceToplevelsChanged: rebuildTimer.restart()
+    onDesktopEntriesChanged: rebuildTimer.restart()
+    onMonitorNameChanged: rebuildTimer.restart()
+    Component.onCompleted: rebuildTimer.restart()
+
+    property Timer rebuildTimer: Timer {
+        interval: 0
+        onTriggered: root.groups = root.buildGroups(root.valuesOf(root.sourceToplevels),
+                                                      root.valuesOf(root.desktopEntries),
+                                                      root.monitorName)
+    }
 
     function valuesOf(model) {
         if (!model)
