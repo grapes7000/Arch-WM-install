@@ -15,8 +15,10 @@ from theme_components import apply_all
 from theme_schema import dump_json, ensure_theme_schema, safe_theme_name
 
 CFG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
 THEME_DIR = CFG / "theme-engine" / "themes"
 ACTIVE_FILE = CFG / "theme-engine" / "generated" / ".active"
+RENDER_ROOT = CACHE / "theme-engine" / "wallpapers"
 PREVIEW_NAME = "_theme_studio_preview"
 # The preview draft lives in the generated dir, never inside the themes dir,
 # so it cannot surface as a selectable theme in browsers or managers.
@@ -46,6 +48,19 @@ def legacy_command() -> list[str] | None:
     source = Path(__file__).resolve().with_name("theme")
     if source.exists() and source.name != Path(sys.argv[0]).name:
         return [str(source)]
+    return None
+
+
+def wallgen_command() -> list[str] | None:
+    explicit = os.environ.get("THEME_WALLGEN_COMMAND")
+    if explicit:
+        return explicit.split()
+    found = shutil.which("wallgen")
+    if found:
+        return [found]
+    sibling = Path(__file__).resolve().with_name("wallgen")
+    if sibling.exists():
+        return [str(sibling)]
     return None
 
 
@@ -89,6 +104,65 @@ def _run_legacy(name: str) -> tuple[bool, str]:
     return proc.returncode == 0, message
 
 
+def _atomic_symlink(target: Path, link: Path) -> None:
+    """Atomically point *link* at *target*, replacing the previous link/file."""
+    target = target.expanduser().resolve()
+    link.parent.mkdir(parents=True, exist_ok=True)
+    temporary = link.with_name(f".{link.name}.{os.getpid()}.tmp")
+    temporary.unlink(missing_ok=True)
+    try:
+        os.symlink(str(target), temporary)
+        os.replace(temporary, link)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _publish_current_wallpaper(rendered: Path) -> tuple[Path, Path]:
+    """Publish stable links for consumers that should follow the active wallpaper.
+
+    ~/.cache/theme-engine/wallpapers/current.png always points at the most
+    recently rendered semantic wallpaper; the Quickshell homepage image
+    symlink then follows that, so both retarget on every theme switch
+    without either consumer needing to know the per-theme filename.
+    """
+    rendered = rendered.expanduser().resolve()
+    if not rendered.is_file():
+        raise OSError(f"rendered wallpaper does not exist: {rendered}")
+    current = RENDER_ROOT / "current.png"
+    homepage = CFG / "quickshell" / "homepage-images" / "theme-wallpaper.png"
+    _atomic_symlink(rendered, current)
+    _atomic_symlink(current, homepage)
+    return current, homepage
+
+
+def _sync_semantic_wallpaper(name: str) -> tuple[bool, str]:
+    """Re-render the active wallpaper template (if any) for the new theme.
+
+    wallgen no-ops safely when no semantic template is active, so this is
+    harmless to call unconditionally on every theme switch.
+    """
+    if name == PREVIEW_NAME:
+        return False, ""
+    command = wallgen_command()
+    if not command:
+        return False, ""
+    try:
+        proc = subprocess.run(command + ["semantic", "apply", name, "--set"],
+                              text=True, capture_output=True, timeout=20)
+    except subprocess.TimeoutExpired:
+        return False, "wallgen semantic apply timed out"
+    message = (proc.stdout or proc.stderr or "").strip()
+    if proc.returncode != 0:
+        return False, message
+    if message:
+        rendered = Path(message.splitlines()[-1].strip())
+        try:
+            _publish_current_wallpaper(rendered)
+        except OSError as exc:
+            return False, f"{message}\ncurrent wallpaper link: {exc}"
+    return True, message
+
+
 def apply_studio_overrides(name: str, *,
                            components: list[str] | None = None) -> dict[str, Any]:
     """Apply only Studio-managed component layers after a legacy subcommand."""
@@ -100,6 +174,7 @@ def apply_studio_overrides(name: str, *,
 def apply_theme(name: str, *, components: list[str] | None = None) -> dict[str, Any]:
     theme = load_theme(name)
     legacy_ok, legacy_message = _run_legacy(name)
+    wallpaper_ok, wallpaper_message = _sync_semantic_wallpaper(name)
     component_result = apply_all(theme, components)
     ACTIVE_FILE.parent.mkdir(parents=True, exist_ok=True)
     ACTIVE_FILE.write_text(name + "\n", encoding="utf-8")
@@ -107,6 +182,8 @@ def apply_theme(name: str, *, components: list[str] | None = None) -> dict[str, 
         "name": name,
         "legacy_ok": legacy_ok,
         "legacy_message": legacy_message,
+        "wallpaper_ok": wallpaper_ok,
+        "wallpaper_message": wallpaper_message,
         "components": component_result,
     }
 
