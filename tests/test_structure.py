@@ -68,6 +68,40 @@ class StructureTests(unittest.TestCase):
             self.assertIn("property var context:", content, str(path))
             self.assertIn("allows: function() { return false }", content, str(path))
 
+    def test_dock_model_defers_group_rebuild(self) -> None:
+        # Hyprland.toplevels is a live model that can still be mid-mutation
+        # when its change signal fires; rebuilding groups synchronously in
+        # that signal handler raced Quickshell's native property-update-group
+        # bookkeeping and crashed the shell on startup. groups must be a
+        # plain (non-readonly) property populated from a deferred Timer, not
+        # a readonly property bound directly to buildGroups().
+        dock_model = (
+            ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("property var groups: []", dock_model)
+        self.assertNotIn("readonly property var groups: buildGroups(", dock_model)
+        self.assertIn("onSourceToplevelsChanged: rebuildTimer.restart()", dock_model)
+
+    def test_theme_reload_helpers_are_bounded(self) -> None:
+        # Optional component reloads (dunstctl, etc.) have hung indefinitely
+        # in the field and must never block a theme switch forever.
+        legacy_engine = (
+            ROOT / "modules/theme-engine/bin/theme"
+        ).read_text(encoding="utf-8")
+        self.assertRegex(
+            legacy_engine,
+            r"def run_quiet\(command: list\[str\], timeout: float = [\d.]+\)",
+        )
+        self.assertIn("subprocess.TimeoutExpired", legacy_engine)
+
+        runtime = (
+            ROOT / "modules/theme-engine/bin/theme_runtime.py"
+        ).read_text(encoding="utf-8")
+        self.assertRegex(
+            runtime,
+            r"def _run_legacy\(name: str\)[\s\S]*?timeout=\d+",
+        )
+
     def test_surface_geometry_is_bounded(self) -> None:
         bar = (
             ROOT / "modules/shell/surfaces/bar/BarSurface.qml"
@@ -81,7 +115,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("anchors.fill: parent", desktop)
         self.assertIn("exclusionMode: ExclusionMode.Ignore", desktop)
         self.assertIn("anchors.margins: Core.Theme.barPadding", bar)
-        self.assertIn("Core.Theme.windowGap", bar)
+        self.assertIn("Core.Theme.barOuterMargin", bar)
         self.assertNotIn("anchors.margins: Core.Theme.gap", bar)
 
     def test_quickshell_autostart_prevents_duplicate_instances(self) -> None:

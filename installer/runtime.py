@@ -444,14 +444,7 @@ def dotfiles_apply(ctx: Context) -> None:
         return
     if not ctx.package_installed("chezmoi") or not ctx.package_installed("age"):
         ctx.run(["pacman", "-S", "--needed", "--noconfirm", "chezmoi", "age"], sudo=True)
-    key = ctx.home / ".config/chezmoi/key.txt"
-    if not key.is_file():
-        ctx.emit(
-            f"  {key} not found; restore it from your password manager before "
-            "applying encrypted dotfiles. Skipping chezmoi apply for now - rerun "
-            "this stage once the key is in place."
-        )
-        return
+    ctx.emit("  applying dotfiles; enter the age passphrase from your password manager when prompted")
     ctx.run(["chezmoi", "init", "--apply", repo])
 
 
