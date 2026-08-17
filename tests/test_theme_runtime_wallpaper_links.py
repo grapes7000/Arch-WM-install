@@ -11,18 +11,45 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "modules/theme-engine/bin"))
 
 # theme_runtime's component modules are optional in this focused unit test;
-# provide tiny import stubs so the symlink helpers can be tested in isolation.
+# provide tiny import stubs so theme_runtime can be imported without pulling
+# in the real, heavier theme_components/theme_schema modules.
+#
+# These MUST be restored immediately after importing theme_runtime, not
+# deferred to tearDownModule(): pytest imports every test module during its
+# collection phase, before any test runs, so a stub left in sys.modules here
+# is already visible to every other test file by the time any teardown could
+# run. Plain `sys.modules.setdefault(...)` alone leaked these stubs for the
+# rest of the process; a test module collected afterwards (e.g.
+# test_theme_studio.py) doing a plain `import theme_components` picked up
+# this stub instead of the real module and failed on `render_hypr_lua` and
+# other real attributes it lacks. We only install a stub when the real
+# module isn't already imported, and remove exactly what we installed right
+# after theme_runtime is done importing it.
+_STUBBED_MODULES: dict[str, object] = {}
+
+
+def _install_stub(name: str, module: types.ModuleType) -> None:
+    if name in sys.modules:
+        return
+    sys.modules[name] = module
+    _STUBBED_MODULES[name] = module
+
+
 components = types.ModuleType("theme_components")
 components.apply_all = lambda *_args, **_kwargs: {}
-sys.modules.setdefault("theme_components", components)
+_install_stub("theme_components", components)
 
 schema = types.ModuleType("theme_schema")
 schema.dump_json = lambda _data: "{}"
 schema.ensure_theme_schema = lambda data: data
 schema.safe_theme_name = lambda name: name
-sys.modules.setdefault("theme_schema", schema)
+_install_stub("theme_schema", schema)
 
 import theme_runtime
+
+for _name, _module in _STUBBED_MODULES.items():
+    if sys.modules.get(_name) is _module:
+        del sys.modules[_name]
 
 
 class PublishCurrentWallpaperTests(unittest.TestCase):
