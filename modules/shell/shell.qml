@@ -8,6 +8,13 @@ import "surfaces/desktop"
 import "surfaces/homepage"
 
 ShellRoot {
+    // Sets the process-wide default font so every Text/TextInput that
+    // doesn't set an explicit font.family (e.g. the homepage surface)
+    // also renders in the theme's UI font. Icon glyphs are unaffected:
+    // Qt's per-glyph font fallback still substitutes a Nerd Font for
+    // any private-use icon codepoint missing from this font.
+    Component.onCompleted: Qt.application.font.family = Core.Theme.fontFamily
+
     Binding {
         target: Core.InteractiveShellController
         property: "locked"
@@ -37,6 +44,14 @@ ShellRoot {
         function open(): bool { return Core.InteractiveShellController.dock("open") }
         function close(): bool { return Core.InteractiveShellController.dock("close") }
         function toggle(): bool { return Core.InteractiveShellController.dock("toggle") }
+    }
+
+    IpcHandler {
+        target: "homepage"
+
+        function show(): bool { return Core.InteractiveShellController.homepage("show") }
+        function hide(): bool { return Core.InteractiveShellController.homepage("hide") }
+        function toggle(): bool { return Core.InteractiveShellController.homepage("toggle") }
     }
 
     BarSurface {}

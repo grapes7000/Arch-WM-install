@@ -38,6 +38,9 @@ hl.bind(main .. " + SHIFT + E", hl.dsp.exec_cmd(
 hl.bind(main .. " + T", hl.dsp.exec_cmd("kitty --class theme-picker -e term theme"), {
     description = "Choose desktop theme",
 })
+hl.bind(main .. " + D", hl.dsp.exec_cmd("qs -c arch-wm ipc call homepage toggle"), {
+    description = "Toggle homepage dashboard",
+})
 hl.bind(main .. " + G", hl.dsp.exec_cmd("kitty --class lazygit -e lazygit"), {
     description = "Open Lazygit",
 })

@@ -63,6 +63,7 @@ Item {
         ColumnLayout {
             visible: root.selectedTab === 0 && Services.WeatherService.available
             Layout.fillWidth: true
+            Layout.fillHeight: true
             spacing: root.compact ? 4 : 6
 
             Text {
@@ -74,7 +75,7 @@ Item {
 
             ListView {
                 Layout.fillWidth: true
-                Layout.preferredHeight: root.compact ? 42 : 52
+                Layout.preferredHeight: root.compact ? 54 : 64
                 orientation: ListView.Horizontal
                 spacing: root.compact ? 3 : 5
                 clip: true
@@ -84,7 +85,7 @@ Item {
                 delegate: Column {
                     required property var modelData
                     width: root.compact ? 34 : 42
-                    spacing: root.compact ? 1 : 2
+                    spacing: root.compact ? 2 : 3
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -108,19 +109,25 @@ Item {
                 }
             }
 
-            Flow {
-                Layout.fillWidth: true
-                spacing: root.compact ? 3 : 4
+            // Absorbs any leftover vertical space in the card so the stat
+            // pills below sit at the bottom of the weather card instead of
+            // leaving a gap between the hourly row and the pills.
+            Item { Layout.fillHeight: true }
 
-                StatChip { label: "High"; value: Services.WeatherService.high }
-                StatChip { label: "Low"; value: Services.WeatherService.low }
-                StatChip { label: "Feels"; value: Services.WeatherService.feelsLike }
-                StatChip { label: "Humidity"; value: Services.WeatherService.humidity }
-                StatChip { label: "Wind"; value: Services.WeatherService.wind }
-                StatChip { label: "Sunrise"; value: Services.WeatherService.sunrise }
-                StatChip { label: "Sunset"; value: Services.WeatherService.sunset }
-            }
-        }
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 4
+                rowSpacing: root.compact ? 4 : 5
+                columnSpacing: root.compact ? 4 : 5
+
+                StatChip { label: "High"; value: Services.WeatherService.high; Layout.fillWidth: true }
+                StatChip { label: "Low"; value: Services.WeatherService.low; Layout.fillWidth: true }
+                StatChip { label: "Feels"; value: Services.WeatherService.feelsLike; Layout.fillWidth: true }
+                StatChip { label: "Humidity"; value: Services.WeatherService.humidity; Layout.fillWidth: true }
+                StatChip { label: "Wind"; value: Services.WeatherService.wind; Layout.fillWidth: true }
+                StatChip { label: "Sunrise"; value: Services.WeatherService.sunrise; Layout.fillWidth: true }
+                StatChip { label: "Sunset"; value: Services.WeatherService.sunset; Layout.fillWidth: true }
+            }        }
 
         // ---------- 10-day view ----------
         ListView {
@@ -176,7 +183,7 @@ Item {
         radius: height / 2
         color: active ? Core.Theme.accent : Core.Theme.surface
         border.width: 1
-        border.color: active ? Core.Theme.accent : Core.Theme.accent2
+        border.color: active ? Core.Theme.accent : (Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor)
         Text {
             anchors.centerIn: parent
             text: label
@@ -197,14 +204,14 @@ Item {
         property string label: ""
         property string value: "--"
         implicitWidth: root.compact ? 50 : 60
-        implicitHeight: root.compact ? 22 : 26
+        implicitHeight: root.compact ? 30 : 34
         radius: 5
         color: Core.Theme.surface
         border.width: 1
-        border.color: Core.Theme.accent2
+        border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
         Column {
             anchors.centerIn: parent
-            spacing: 1
+            spacing: 2
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: label

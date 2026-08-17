@@ -31,9 +31,14 @@ Item {
     implicitWidth: {
         if (!supported || !contentVisible)
             return 0
-        if (loadedItem)
-            return Math.max(0, loadedItem.implicitWidth)
+        if (loadedItem) {
+            const natural = Math.max(0, loadedItem.implicitWidth)
                 + (root.pillEnabled ? root.pillPadding * 2 : 0)
+            // Stretch every bar pill to a shared minimum width so pills read
+            // as a uniform row rather than jumping between widget-specific
+            // sizes (a single glyph vs. a longer clock string).
+            return root.pillEnabled ? Math.max(natural, Core.Theme.barPillMinWidth) : natural
+        }
         return loadError ? 24 : 0
     }
     implicitHeight: {

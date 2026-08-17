@@ -19,7 +19,7 @@ Item {
 
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "system", anchorItem: root }) }
 
-    Row {
+    RowLayout {
         id: compactRow
         anchors.centerIn: parent
         visible: context.variant === "compact"
@@ -27,18 +27,36 @@ Item {
 
         Text {
             font.family: Core.Theme.fontFamily
-            text: "󰻠 " + Services.SystemStatsService.cpuPercent + "%"
+            text: "󰻠"
             color: Core.Theme.foreground
-            font.pixelSize: 14
-            font.bold: true
+            font.pixelSize: 19
+            Layout.alignment: Qt.AlignVCenter
         }
 
         Text {
             font.family: Core.Theme.fontFamily
-            text: "󰍛 " + Services.SystemStatsService.memoryPercent + "%"
+            text: Services.SystemStatsService.cpuPercent + "%"
             color: Core.Theme.foreground
-            font.pixelSize: 14
+            font.pixelSize: 15
             font.bold: true
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Text {
+            font.family: Core.Theme.fontFamily
+            text: "󰍛"
+            color: Core.Theme.foreground
+            font.pixelSize: 19
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Text {
+            font.family: Core.Theme.fontFamily
+            text: Services.SystemStatsService.memoryPercent + "%"
+            color: Core.Theme.foreground
+            font.pixelSize: 15
+            font.bold: true
+            Layout.alignment: Qt.AlignVCenter
         }
     }
 

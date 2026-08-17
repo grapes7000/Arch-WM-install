@@ -27,7 +27,7 @@ Item {
         Text {
             font.family: Core.Theme.fontFamily
             text: Services.WeatherService.icon || "🌡"
-            font.pixelSize: context.variant === "compact" ? 17 : 21
+            font.pixelSize: context.variant === "compact" ? 19 : 23
         }
 
         Text {
