@@ -525,7 +525,7 @@ Scope {
 
                     GlassCard {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 140 : 180
+                        Layout.preferredHeight: root.compact ? 210 : 230
                         ColumnLayout {
                             anchors.fill: parent
                             anchors.margins: 15
