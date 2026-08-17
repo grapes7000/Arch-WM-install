@@ -19,7 +19,7 @@ Item {
 
     MouseArea { anchors.fill: parent; z: 10; enabled: context.allows("drawer.open"); cursorShape: Qt.PointingHandCursor; onClicked: context.request("drawer.open", { kind: "system", anchorItem: root }) }
 
-    Row {
+    RowLayout {
         id: compactRow
         anchors.centerIn: parent
         visible: context.variant === "compact"
@@ -30,6 +30,7 @@ Item {
             text: "󰻠"
             color: Core.Theme.foreground
             font.pixelSize: 19
+            Layout.alignment: Qt.AlignVCenter
         }
 
         Text {
@@ -38,6 +39,7 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: 15
             font.bold: true
+            Layout.alignment: Qt.AlignVCenter
         }
 
         Text {
@@ -45,6 +47,7 @@ Item {
             text: "󰍛"
             color: Core.Theme.foreground
             font.pixelSize: 19
+            Layout.alignment: Qt.AlignVCenter
         }
 
         Text {
@@ -53,6 +56,7 @@ Item {
             color: Core.Theme.foreground
             font.pixelSize: 15
             font.bold: true
+            Layout.alignment: Qt.AlignVCenter
         }
     }
 
