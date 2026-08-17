@@ -505,16 +505,17 @@ Scope {
                                 Layout.fillHeight: true
                                 Row {
                                     anchors.fill: parent
-                                    spacing: 3
+                                    spacing: 2
                                     Repeater {
                                         model: Services.CavaService.bars
                                         Rectangle {
                                             required property real modelData
+                                            required property int index
                                             width: Math.max(2, (parent.width - (Services.CavaService.bars.length - 1) * parent.spacing) / Math.max(1, Services.CavaService.bars.length))
-                                            height: Math.max(4, parent.height * modelData)
+                                            height: Math.max(3, parent.height * modelData)
                                             anchors.bottom: parent.bottom
                                             radius: width / 2
-                                            color: Core.Theme.accent
+                                            color: index % 2 ? Core.Theme.accent2 : Core.Theme.accent
                                             Behavior on height { NumberAnimation { duration: 70 } }
                                         }
                                     }

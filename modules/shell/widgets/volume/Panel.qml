@@ -132,32 +132,19 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 24
                     visible: Services.MprisService.status === "Playing"
-                    spacing: 3
+                    spacing: 2
 
                     Repeater {
-                        model: 24
+                        model: Services.CavaService.bars
                         Rectangle {
+                            required property real modelData
                             required property int index
-                            width: (parent.width - 23 * 3) / 24
-                            radius: 1
-                            color: Core.Theme.accent
-                            opacity: barAnim.value
+                            width: Math.max(2, (parent.width - (Services.CavaService.bars.length - 1) * parent.spacing) / Math.max(1, Services.CavaService.bars.length))
+                            height: Math.max(3, parent.height * modelData)
                             anchors.bottom: parent.bottom
-                            height: parent.height * barAnim.value
-
-                            Timer {
-                                id: barAnim
-                                property real value: 0.15
-                                interval: 140 + index * 8
-                                running: Services.MprisService.status === "Playing" && panel.visible
-                                repeat: true
-                                triggeredOnStart: true
-                                onTriggered: value = 0.15 + Math.random() * 0.55
-                            }
-
-                            Behavior on height {
-                                NumberAnimation { duration: 160; easing.type: Easing.OutQuad }
-                            }
+                            radius: width / 2
+                            color: index % 2 ? Core.Theme.accent2 : Core.Theme.accent
+                            Behavior on height { NumberAnimation { duration: 70 } }
                         }
                     }
                 }
