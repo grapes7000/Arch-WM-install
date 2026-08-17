@@ -191,7 +191,7 @@ Singleton {
     readonly property bool shadowEnabled: style.shadow_on === undefined ? true : Boolean(style.shadow_on)
     readonly property int shadowRadius: style.shadow_radius === undefined ? 20 : Math.max(0, Number(style.shadow_radius))
 
-    readonly property string fontFamily: "JetBrainsMono Nerd Font"
+    readonly property string fontFamily: "Inter"
 
     function applyHomepageImages(baseData) {
         const merged = Object.assign({}, baseData || root.data)
