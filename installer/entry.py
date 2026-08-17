@@ -217,31 +217,39 @@ def theme_apply(ctx: runtime.Context) -> None:
 def theme_verify(ctx: runtime.Context) -> bool:
     if ctx.options.dry_run:
         return True
+
+    failures: list[str] = []
+    contract_path = ctx.config / "theme-engine/generated/theme.json"
     try:
-        current = runtime.json_file(ctx.config / "theme-engine/generated/theme.json")
-    except (OSError, json.JSONDecodeError):
+        current = runtime.json_file(contract_path)
+    except (OSError, json.JSONDecodeError) as error:
+        ctx.emit(f"  theme verification: unreadable {contract_path}: {error}")
         return False
-    return (
-        theme_payload_current(ctx)
-        and current.get("name") == ctx.options.theme
-        and theme_catalog_valid(ctx)
-        and all(
-            path.is_file()
-            for path in (
-                ctx.config / "kitty/generated/theme.conf",
-                ctx.config / "theme-engine/generated/starship.toml",
-                ctx.config / "arch-wm/help.txt",
-                ctx.home / ".local/bin/arch-wm-help",
-            )
+
+    if not theme_payload_current(ctx):
+        failures.append("installed Theme Studio payload does not match the checkout")
+    if current.get("name") != ctx.options.theme:
+        failures.append(
+            f"generated theme contract is {current.get('name')!r}, expected {ctx.options.theme!r}"
         )
-        and all(
-            path.is_file()
-            for path in (
-                *(ctx.home / ".local/bin" / name for _, name in THEME_ENTRY_POINTS),
-                *(ctx.home / ".local/bin" / module for module in THEME_STUDIO_MODULES),
-            )
-        )
+    if not theme_catalog_valid(ctx):
+        failures.append("theme catalog lock/catalog is invalid")
+
+    required_paths = (
+        ctx.config / "kitty/generated/theme.conf",
+        ctx.config / "theme-engine/generated/starship.toml",
+        ctx.config / "arch-wm/help.txt",
+        ctx.home / ".local/bin/arch-wm-help",
+        *(ctx.home / ".local/bin" / name for _, name in THEME_ENTRY_POINTS),
+        *(ctx.home / ".local/bin" / module for module in THEME_STUDIO_MODULES),
     )
+    missing = [str(path) for path in required_paths if not path.is_file()]
+    if missing:
+        failures.append("missing generated/installed files: " + ", ".join(missing))
+
+    for failure in failures:
+        ctx.emit(f"  theme verification: {failure}")
+    return not failures
 
 
 def hypr_check(ctx: runtime.Context) -> bool:
