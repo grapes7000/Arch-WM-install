@@ -6,6 +6,7 @@ QtObject {
     id: root
 
     property bool locked: false
+    property bool homepageVisible: true
     property var launcherController: null
     property var drawerController: null
     property var dockController: null
@@ -61,6 +62,18 @@ QtObject {
         if (!screen)
             return false
         return invoke(root.dockController, action, [screen])
+    }
+
+    function homepage(action) {
+        if (action === "show")
+            root.homepageVisible = true
+        else if (action === "hide")
+            root.homepageVisible = false
+        else if (action === "toggle")
+            root.homepageVisible = !root.homepageVisible
+        else
+            return false
+        return true
     }
 
     function requestFromBar(capability, payload, screen) {

@@ -92,6 +92,7 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             color: "transparent"
             visible: !hiddenForWindows && !Services.LockStateService.locked
+                && Core.InteractiveShellController.homepageVisible
             Timer {
                 id: windowProbe
                 interval: 600

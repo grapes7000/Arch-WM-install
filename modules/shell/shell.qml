@@ -46,6 +46,14 @@ ShellRoot {
         function toggle(): bool { return Core.InteractiveShellController.dock("toggle") }
     }
 
+    IpcHandler {
+        target: "homepage"
+
+        function show(): bool { return Core.InteractiveShellController.homepage("show") }
+        function hide(): bool { return Core.InteractiveShellController.homepage("hide") }
+        function toggle(): bool { return Core.InteractiveShellController.homepage("toggle") }
+    }
+
     BarSurface {}
     HomepageSurface {}
     TaskDockSurface {}

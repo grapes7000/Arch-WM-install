@@ -156,6 +156,10 @@ Singleton {
     readonly property real barOutlineOpacity: shellConfig.bar_outline_opacity === undefined ? 0.72 : Math.max(0, Math.min(1, Number(shellConfig.bar_outline_opacity)))
     readonly property int barOutlineWidth: shellConfig.bar_outline_width === undefined ? borderWidth : Math.max(0, Number(shellConfig.bar_outline_width))
     readonly property int barWidgetSpacing: shellConfig.bar_widget_spacing === undefined ? Math.max(4, Math.floor(barPadding / 2)) : Math.max(0, Number(shellConfig.bar_widget_spacing))
+    // Minimum width every bar pill is stretched to, so widgets with very
+    // different natural content widths (a single icon vs. a clock string)
+    // still read as a uniform row of pills instead of a mismatched jumble.
+    readonly property int barPillMinWidth: shellConfig.bar_pill_min_width === undefined ? 56 : Math.max(24, Number(shellConfig.bar_pill_min_width))
     readonly property int barIconSize: shellConfig.bar_icon_size === undefined ? 16 : Math.max(8, Number(shellConfig.bar_icon_size))
     readonly property int barFontSize: shellConfig.bar_font_size === undefined ? 11 : Math.max(7, Number(shellConfig.bar_font_size))
 
