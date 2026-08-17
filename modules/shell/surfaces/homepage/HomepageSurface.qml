@@ -33,8 +33,20 @@ Scope {
             readonly property string currentSlide: slides.length > 0
                 ? String(slides[Math.min(slideIndex, slides.length - 1)]) : ""
             readonly property bool mediaActive: Services.MprisService.status !== "Stopped"
-            readonly property string heroSource: mediaActive && Services.MprisService.artUrl
-                ? Services.MprisService.artUrl : currentSlide
+            readonly property bool heroHasArt: mediaActive && !!Services.MprisService.artUrl
+
+            // Switch between the two hero card behaviors here:
+            //  - false (current default): the hero card only shows while
+            //    media is actively playing with artwork, and disappears
+            //    entirely otherwise (Quick Access expands to fill the space).
+            //  - true: restores the previous always-visible hero card that
+            //    falls back to a wallpaper slideshow when nothing is playing.
+            property bool heroSlideshowEnabled: false
+
+            readonly property bool heroVisible: root.heroSlideshowEnabled ? true : root.heroHasArt
+            readonly property string heroSource: root.heroHasArt
+                ? Services.MprisService.artUrl
+                : (root.heroSlideshowEnabled ? root.currentSlide : "")
             readonly property bool compact: width < 1180 || height < 700
             readonly property real gap: compact ? 8 : Math.max(10, Core.Theme.gap)
             // Roughly 18% / 62% / 20% of the available width, clamped to
@@ -321,6 +333,7 @@ Scope {
                     spacing: root.gap
 
                     GlassCard {
+                        visible: root.heroVisible
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         Layout.minimumHeight: root.compact ? 240 : 320
@@ -369,6 +382,7 @@ Scope {
 
                     GlassCard {
                         Layout.fillWidth: true
+                        Layout.fillHeight: !root.heroVisible
                         fillAlphaBoost: 0.1
                         implicitHeight: quickAccessCol.implicitHeight + (root.compact ? 22 : 30)
 
@@ -736,7 +750,7 @@ Scope {
 
             Timer {
                 interval: 30000
-                running: root.slides.length > 1 && !root.mediaActive
+                running: root.heroSlideshowEnabled && root.slides.length > 1 && !root.mediaActive
                 repeat: true
                 onTriggered: root.slideIndex = (root.slideIndex + 1) % root.slides.length
             }
