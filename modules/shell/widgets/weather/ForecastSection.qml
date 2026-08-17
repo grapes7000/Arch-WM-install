@@ -108,19 +108,20 @@ Item {
                 }
             }
 
-            Flow {
+            GridLayout {
                 Layout.fillWidth: true
-                spacing: root.compact ? 3 : 4
+                columns: 4
+                rowSpacing: root.compact ? 4 : 5
+                columnSpacing: root.compact ? 4 : 5
 
-                StatChip { label: "High"; value: Services.WeatherService.high }
-                StatChip { label: "Low"; value: Services.WeatherService.low }
-                StatChip { label: "Feels"; value: Services.WeatherService.feelsLike }
-                StatChip { label: "Humidity"; value: Services.WeatherService.humidity }
-                StatChip { label: "Wind"; value: Services.WeatherService.wind }
-                StatChip { label: "Sunrise"; value: Services.WeatherService.sunrise }
-                StatChip { label: "Sunset"; value: Services.WeatherService.sunset }
-            }
-        }
+                StatChip { label: "High"; value: Services.WeatherService.high; Layout.fillWidth: true }
+                StatChip { label: "Low"; value: Services.WeatherService.low; Layout.fillWidth: true }
+                StatChip { label: "Feels"; value: Services.WeatherService.feelsLike; Layout.fillWidth: true }
+                StatChip { label: "Humidity"; value: Services.WeatherService.humidity; Layout.fillWidth: true }
+                StatChip { label: "Wind"; value: Services.WeatherService.wind; Layout.fillWidth: true }
+                StatChip { label: "Sunrise"; value: Services.WeatherService.sunrise; Layout.fillWidth: true }
+                StatChip { label: "Sunset"; value: Services.WeatherService.sunset; Layout.fillWidth: true }
+            }        }
 
         // ---------- 10-day view ----------
         ListView {
@@ -176,7 +177,7 @@ Item {
         radius: height / 2
         color: active ? Core.Theme.accent : Core.Theme.surface
         border.width: 1
-        border.color: active ? Core.Theme.accent : Core.Theme.accent2
+        border.color: active ? Core.Theme.accent : (Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor)
         Text {
             anchors.centerIn: parent
             text: label
@@ -201,7 +202,7 @@ Item {
         radius: 5
         color: Core.Theme.surface
         border.width: 1
-        border.color: Core.Theme.accent2
+        border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
         Column {
             anchors.centerIn: parent
             spacing: 1

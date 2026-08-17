@@ -37,8 +37,11 @@ Scope {
                 ? Services.MprisService.artUrl : currentSlide
             readonly property bool compact: width < 1180 || height < 700
             readonly property real gap: compact ? 8 : Math.max(10, Core.Theme.gap)
-            readonly property real leftWidth: compact ? 220 : Math.max(250, Math.min(310, width * 0.19))
-            readonly property real rightWidth: compact ? 240 : Math.max(270, Math.min(330, width * 0.21))
+            // Roughly 18% / 62% / 20% of the available width, clamped to
+            // sane min/max so the rails stay usable on very small or very
+            // large screens without starving the center column.
+            readonly property real leftWidth: compact ? 200 : Math.max(220, Math.min(300, width * 0.18))
+            readonly property real rightWidth: compact ? 220 : Math.max(240, Math.min(320, width * 0.20))
 
             // Quick Access apps shown on the homepage. Edit this list to change what shows up:
             // - icon: fallback glyph used only if no matching .desktop entry is found
@@ -157,7 +160,7 @@ Scope {
                     color: Core.Theme.background
                     opacity: 0.86
                     border.width: Core.Theme.borderWidth
-                    border.color: Core.Theme.accent2
+                    border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
                 }
 
             Image {
@@ -189,22 +192,22 @@ Scope {
                         Column {
                             anchors.fill: parent
                             anchors.margins: 18
-                            spacing: 5
+                            spacing: 6
                             Text {
                                 text: Services.TimeService.timeShort
                                 color: Core.Theme.foreground
-                                font.pixelSize: root.compact ? 33 : 43
+                                font.pixelSize: root.compact ? 26 : 34
                                 font.bold: true
                             }
                             Text {
                                 text: Services.TimeService.dateLong
                                 color: Core.Theme.muted
-                                font.pixelSize: 14
+                                font.pixelSize: 13
                             }
                             Text {
                                 text: Core.Theme.data.name || "Current theme"
                                 color: Core.Theme.accent
-                                font.pixelSize: 13
+                                font.pixelSize: 12
                                 font.bold: true
                             }
                         }
@@ -243,7 +246,7 @@ Scope {
                             Text {
                                 text: "Now Playing"
                                 color: Core.Theme.accent
-                                font.pixelSize: 15
+                                font.pixelSize: 16
                                 font.bold: true
                             }
                             Text {
@@ -320,6 +323,7 @@ Scope {
                     GlassCard {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        Layout.minimumHeight: root.compact ? 240 : 320
                         clip: true
 
                         Image {
@@ -332,108 +336,98 @@ Scope {
                             Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
                         }
 
+                        // A light vignette only, so the artwork itself stays
+                        // the strongest visual focal point on the homepage
+                        // instead of being dimmed by a heavy scrim (the
+                        // Quick Access controls now live in their own card
+                        // below, not overlaid on top of the image).
                         Rectangle {
                             anchors.fill: parent
                             color: "transparent"
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.04) }
-                                GradientStop { position: 0.65; color: Qt.rgba(0, 0, 0, 0.10) }
-                                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.72) }
+                                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
+                                GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.0) }
+                                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.22) }
                             }
                         }
+                    }
+
+                    GlassCard {
+                        Layout.fillWidth: true
+                        fillAlphaBoost: 0.1
+                        implicitHeight: quickAccessCol.implicitHeight + (root.compact ? 22 : 30)
 
                         ColumnLayout {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            anchors.margins: root.compact ? 14 : 22
+                            id: quickAccessCol
+                            anchors.fill: parent
+                            anchors.margins: root.compact ? 12 : 16
                             spacing: 10
 
                             Text {
                                 text: root.selectedPage === "home" ? "Quick Access" : root.selectedPage.charAt(0).toUpperCase() + root.selectedPage.slice(1)
                                 color: Core.Theme.accent
-                                font.pixelSize: 16
+                                font.pixelSize: 17
                                 font.bold: true
                             }
 
-                            GlassCard {
+                            GridLayout {
                                 visible: root.selectedPage === "home"
                                 Layout.fillWidth: true
-                                fillAlphaBoost: 0.28
-                                implicitHeight: appsLayout.implicitHeight + (root.compact ? 20 : 28)
+                                columns: root.compact ? 4 : 5
+                                rowSpacing: 9
+                                columnSpacing: 9
 
-                                ColumnLayout {
-                                    id: appsLayout
-                                    anchors.fill: parent
-                                    anchors.margins: root.compact ? 10 : 14
-                                    spacing: 9
+                                Repeater {
+                                    model: root.quickAccessApps
 
-                                    GridLayout {
+                                    Item {
+                                        id: appTile
+                                        required property var modelData
+                                        readonly property string desktopIcon: root.desktopIconFor(modelData.command)
                                         Layout.fillWidth: true
-                                        columns: root.compact ? 4 : 5
-                                        rowSpacing: 9
-                                        columnSpacing: 9
+                                        Layout.preferredHeight: root.compact ? 68 : 86
 
-                                        Repeater {
-                                            model: root.quickAccessApps
-
-                                            Item {
-                                                id: appTile
-                                                required property var modelData
-                                                readonly property string desktopIcon: root.desktopIconFor(modelData.command)
-                                                Layout.fillWidth: true
-                                                Layout.preferredHeight: root.compact ? 68 : 86
-
-                                                Column {
-                                                    anchors.centerIn: parent
-                                                    spacing: 4
-                                                    IconImage {
-                                                        anchors.horizontalCenter: parent.horizontalCenter
-                                                        visible: appTile.desktopIcon !== ""
-                                                        implicitSize: root.compact ? 30 : 40
-                                                        source: appTile.desktopIcon !== "" ? Quickshell.iconPath(appTile.desktopIcon, "") : ""
-                                                        opacity: appHover.hovered ? 1.0 : 0.9
-                                                        scale: appHover.hovered ? 1.08 : 1.0
-                                                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                                    }
-                                                    Text {
-                                                        anchors.horizontalCenter: parent.horizontalCenter
-                                                        visible: appTile.desktopIcon === ""
-                                                        text: modelData.icon
-                                                        color: Core.Theme.accent
-                                                        font.pixelSize: root.compact ? 29 : 37
-                                                        scale: appHover.hovered ? 1.08 : 1.0
-                                                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                                    }
-                                                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 12 }
-                                                }
-                                                HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
-                                                TapHandler { id: appTap; onTapped: root.launch(modelData.command) }
-                                                Components.PressBounce { target: appTile; pressed: appTap.pressed }
+                                        Column {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            IconImage {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                visible: appTile.desktopIcon !== ""
+                                                implicitSize: root.compact ? 30 : 40
+                                                source: appTile.desktopIcon !== "" ? Quickshell.iconPath(appTile.desktopIcon, "") : ""
+                                                opacity: appHover.hovered ? 1.0 : 0.9
+                                                scale: appHover.hovered ? 1.08 : 1.0
+                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                                             }
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                visible: appTile.desktopIcon === ""
+                                                text: modelData.icon
+                                                color: Core.Theme.accent
+                                                font.pixelSize: root.compact ? 29 : 37
+                                                scale: appHover.hovered ? 1.08 : 1.0
+                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                            }
+                                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 12 }
                                         }
+                                        HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
+                                        TapHandler { id: appTap; onTapped: root.launch(modelData.command) }
+                                        Components.PressBounce { target: appTile; pressed: appTap.pressed }
                                     }
                                 }
                             }
 
-                            GlassCard {
+                            ColumnLayout {
+                                id: panelHostLayout
                                 visible: root.selectedPage !== "home"
                                 Layout.fillWidth: true
-                                fillAlphaBoost: 0.28
-                                implicitHeight: panelHostLayout.implicitHeight + (root.compact ? 20 : 32)
+                                spacing: 0
 
-                                ColumnLayout {
-                                    id: panelHostLayout
-                                    anchors.fill: parent
-                                    anchors.margins: root.compact ? 10 : 16
-                                    spacing: 0
-
-                                    PagePanel { page: "network" }
-                                    PagePanel { page: "system" }
-                                    PagePanel { page: "media" }
-                                    PagePanel { page: "audio" }
-                                    PagePanel { page: "calendar" }
-                                }
+                                PagePanel { page: "network" }
+                                PagePanel { page: "system" }
+                                PagePanel { page: "media" }
+                                PagePanel { page: "audio" }
+                                PagePanel { page: "calendar" }
                             }
                         }
                     }
@@ -479,7 +473,7 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 15
                             spacing: 10
-                            Text { text: "System Overview"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 16 }
+                            Text { text: "System Overview"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
                             StatBar { label: "CPU"; value: Services.SystemStatsService.cpuPercent }
                             StatBar { label: "Memory"; value: Services.SystemStatsService.memoryPercent }
                             StatBar { label: "Disk"; value: Services.SystemStatsService.diskPercent }
@@ -499,7 +493,7 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 14
                             spacing: 8
-                            Text { text: "Audio Visualizer"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 15 }
+                            Text { text: "Audio Visualizer"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
                             Item {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -531,7 +525,7 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 15
                             spacing: 11
-                            Text { text: "Quick Controls"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 15 }
+                            Text { text: "Quick Controls"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
                             ControlRow {
                                 icon: "󰖩"; title: "Wi-Fi"
                                 subtitle: !Services.NetworkService.radioEnabled ? "Off" : (Services.NetworkService.connected ? "Connected" : "Disconnected")
@@ -556,18 +550,18 @@ Scope {
                     GlassCard {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.minimumHeight: root.compact ? 200 : 300
-                        Layout.preferredHeight: root.compact ? 260 : 400
+                        Layout.minimumHeight: root.compact ? 260 : 340
+                        Layout.preferredHeight: root.compact ? 300 : 420
                         clip: true
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: root.compact ? 12 : 15
-                            spacing: root.compact ? 6 : 9
+                            anchors.margins: root.compact ? 12 : 14
+                            spacing: root.compact ? 6 : 8
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Weather"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 15 }
+                                Text { text: "Weather"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
                                 Item { Layout.fillWidth: true }
                                 Text {
                                     visible: Services.WeatherService.available && Services.WeatherService.locationName
@@ -584,21 +578,21 @@ Scope {
                                 Text {
                                     text: Services.WeatherService.icon || "󰖐"
                                     color: Core.Theme.foreground
-                                    font.pixelSize: root.compact ? 27 : 33
+                                    font.pixelSize: root.compact ? 26 : 30
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
-                                    spacing: 1
+                                    spacing: 0
                                     Text {
                                         text: Services.WeatherService.available ? Services.WeatherService.temp : "--"
                                         color: Core.Theme.foreground
-                                        font.pixelSize: root.compact ? 25 : 31
+                                        font.pixelSize: root.compact ? 24 : 28
                                         font.bold: true
                                     }
                                     Text {
                                         text: Services.WeatherService.available ? Services.WeatherService.condition : "Unavailable"
                                         color: Core.Theme.muted
-                                        font.pixelSize: 13
+                                        font.pixelSize: 12
                                         elide: Text.ElideRight
                                     }
                                 }
@@ -607,13 +601,13 @@ Scope {
                                     Text {
                                         text: "H " + (Services.WeatherService.available ? Services.WeatherService.high : "--")
                                         color: Core.Theme.foreground
-                                        font.pixelSize: 13
+                                        font.pixelSize: 12
                                         font.bold: true
                                     }
                                     Text {
                                         text: "L " + (Services.WeatherService.available ? Services.WeatherService.low : "--")
                                         color: Core.Theme.muted
-                                        font.pixelSize: 13
+                                        font.pixelSize: 12
                                     }
                                 }
                             }

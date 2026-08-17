@@ -86,10 +86,12 @@ Rectangle {
             : "transparent"
         opacity: interactive && hover.hovered ? 1 : 0
         border.width: 1
-        border.color: Core.Theme.alphaColor(
-            Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor,
-            hover.hovered ? 0.42 : 0.22
-        )
+        // Subtle by default; a stronger accent-tinted border only appears
+        // while hovering an interactive card, so borders read as feedback
+        // rather than constant visual noise.
+        border.color: hover.hovered
+            ? Core.Theme.alphaColor(Core.Theme.accent, 0.55)
+            : Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.22)
         Behavior on opacity {
             NumberAnimation { duration: Math.round(Core.Theme.homepageTransitionMs * Core.Theme.motionScale) }
         }
