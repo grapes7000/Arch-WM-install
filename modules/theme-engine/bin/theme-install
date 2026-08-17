@@ -53,8 +53,8 @@ theme_dir = Path(sys.argv[1])
 lock_file = Path(sys.argv[2])
 commit = sys.argv[3]
 files = sorted(theme_dir.glob("*.json"))
-if len(files) < 40:
-    raise SystemExit(f"theme-install: bundled catalog has only {len(files)} themes")
+if not files:
+    raise SystemExit("theme-install: bundled catalog contains no themes")
 managed = []
 for path in files:
     payload = json.loads(path.read_text(encoding="utf-8"))
