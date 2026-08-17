@@ -94,14 +94,18 @@ def cleanup_preview() -> None:
 def _run_legacy(name: str) -> tuple[bool, str]:
     command = legacy_command()
     if not command:
-        return False, "legacy generator not found; applied Studio-managed components only"
+        return False, "legacy generator not found"
     try:
         proc = subprocess.run(command + [name], text=True, capture_output=True,
                               timeout=20)
     except subprocess.TimeoutExpired:
-        return False, "legacy generator timed out; applied Studio-managed components only"
-    message = (proc.stdout or proc.stderr or "").strip()
-    return proc.returncode == 0, message
+        return False, "legacy generator timed out"
+    stdout = (proc.stdout or "").strip()
+    stderr = (proc.stderr or "").strip()
+    if proc.returncode != 0:
+        detail = stderr or stdout or f"legacy generator exited {proc.returncode}"
+        return False, detail
+    return True, stdout or stderr
 
 
 def _atomic_symlink(target: Path, link: Path) -> None:
@@ -174,6 +178,16 @@ def apply_studio_overrides(name: str, *,
 def apply_theme(name: str, *, components: list[str] | None = None) -> dict[str, Any]:
     theme = load_theme(name)
     legacy_ok, legacy_message = _run_legacy(name)
+    # A full named-theme apply depends on the legacy generator to write the
+    # canonical generated/theme.json contract plus terminal outputs. Previously
+    # this failure was swallowed, Theme Studio returned success, and the
+    # installer could only report the misleading generic
+    # "verification failed: 40-theme-engine" afterward.
+    if not legacy_ok:
+        raise RuntimeError(
+            "legacy theme generator failed"
+            + (f": {legacy_message}" if legacy_message else "")
+        )
     wallpaper_ok, wallpaper_message = _sync_semantic_wallpaper(name)
     component_result = apply_all(theme, components)
     ACTIVE_FILE.parent.mkdir(parents=True, exist_ok=True)
