@@ -30,7 +30,7 @@ Item {
                 ? Services.TimeService.timeShort
                 : Services.TimeService.timeLong
             color: Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 18
+            font.pixelSize: context.variant === "compact" ? 24
                 : context.variant === "standard" ? 31 : 51
             font.bold: true
         }

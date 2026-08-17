@@ -134,7 +134,14 @@ Scope {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
                                     Layout.preferredWidth: implicitWidth
-                                    Layout.preferredHeight: implicitHeight
+                                    // The clock pill fills almost the full bar
+                                    // height (rather than shrink-wrapping its
+                                    // text) so its larger font has room to
+                                    // breathe; every other bar pill keeps its
+                                    // natural content height.
+                                    Layout.preferredHeight: modelData.widget === "clock"
+                                        ? Math.max(implicitHeight, Core.Theme.barHeight - Core.Theme.barPadding)
+                                        : implicitHeight
                                 }
                             }
                         }

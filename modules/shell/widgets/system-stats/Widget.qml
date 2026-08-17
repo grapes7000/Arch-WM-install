@@ -27,17 +27,31 @@ Item {
 
         Text {
             font.family: Core.Theme.fontFamily
-            text: "󰻠 " + Services.SystemStatsService.cpuPercent + "%"
+            text: "󰻠"
             color: Core.Theme.foreground
-            font.pixelSize: 14
+            font.pixelSize: 19
+        }
+
+        Text {
+            font.family: Core.Theme.fontFamily
+            text: Services.SystemStatsService.cpuPercent + "%"
+            color: Core.Theme.foreground
+            font.pixelSize: 15
             font.bold: true
         }
 
         Text {
             font.family: Core.Theme.fontFamily
-            text: "󰍛 " + Services.SystemStatsService.memoryPercent + "%"
+            text: "󰍛"
             color: Core.Theme.foreground
-            font.pixelSize: 14
+            font.pixelSize: 19
+        }
+
+        Text {
+            font.family: Core.Theme.fontFamily
+            text: Services.SystemStatsService.memoryPercent + "%"
+            color: Core.Theme.foreground
+            font.pixelSize: 15
             font.bold: true
         }
     }
