@@ -326,28 +326,43 @@ Scope {
                         Layout.minimumHeight: root.compact ? 240 : 320
                         clip: true
 
-                        Image {
+                        // ClippingRectangle (unlike a plain Rectangle) always
+                        // paints its border on top of its content and insets
+                        // the content inside that border automatically, so
+                        // the frame stays visible even though the image
+                        // fills the same bounds -- a plain child Image with
+                        // anchors.fill: parent would otherwise paint over
+                        // and hide a Rectangle's border.
+                        ClippingRectangle {
                             anchors.fill: parent
-                            source: root.heroSource
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: true
-                            opacity: status === Image.Ready ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
-                        }
+                            radius: Core.Theme.homepageCardRadius
+                            color: Core.Theme.surfaceBase
+                            border.width: Core.Theme.borderWidth
+                            border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
 
-                        // A light vignette only, so the artwork itself stays
-                        // the strongest visual focal point on the homepage
-                        // instead of being dimmed by a heavy scrim (the
-                        // Quick Access controls now live in their own card
-                        // below, not overlaid on top of the image).
-                        Rectangle {
-                            anchors.fill: parent
-                            color: "transparent"
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
-                                GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.0) }
-                                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.22) }
+                            Image {
+                                anchors.fill: parent
+                                source: root.heroSource
+                                fillMode: Image.PreserveAspectFit
+                                asynchronous: true
+                                cache: true
+                                opacity: status === Image.Ready ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
+                            }
+
+                            // A light vignette only, so the artwork itself stays
+                            // the strongest visual focal point on the homepage
+                            // instead of being dimmed by a heavy scrim (the
+                            // Quick Access controls now live in their own card
+                            // below, not overlaid on top of the image).
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "transparent"
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
+                                    GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.0) }
+                                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.22) }
+                                }
                             }
                         }
                     }
