@@ -91,13 +91,19 @@ def payload_version_matches(source: Path, installed: Path) -> bool:
 def theme_catalog_valid(ctx: runtime.Context) -> bool:
     theme_dir = ctx.config / "theme-engine/themes"
     lock_path = ctx.config / "theme-engine/upstream-lock.json"
-    if len(list(theme_dir.glob("*.json"))) < 40 or not lock_path.is_file():
+    files = list(theme_dir.glob("*.json"))
+    if not files or not lock_path.is_file():
         return False
     try:
         lock = runtime.json_file(lock_path)
-    except (OSError, json.JSONDecodeError):
+        theme_count = int(lock.get("theme_count", 0))
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
         return False
-    return lock.get("commit") == THEME_UPSTREAM_COMMIT and int(lock.get("theme_count", 0)) >= 40
+    if lock.get("commit") != THEME_UPSTREAM_COMMIT:
+        return False
+    if lock.get("source") == "bundled-fallback":
+        return 0 < theme_count <= len(files)
+    return len(files) >= 40 and theme_count >= 40
 
 
 def theme_payload_current(ctx: runtime.Context) -> bool:
