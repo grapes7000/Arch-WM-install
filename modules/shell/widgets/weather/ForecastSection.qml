@@ -63,6 +63,7 @@ Item {
         ColumnLayout {
             visible: root.selectedTab === 0 && Services.WeatherService.available
             Layout.fillWidth: true
+            Layout.fillHeight: true
             spacing: root.compact ? 4 : 6
 
             Text {
@@ -74,7 +75,7 @@ Item {
 
             ListView {
                 Layout.fillWidth: true
-                Layout.preferredHeight: root.compact ? 42 : 52
+                Layout.preferredHeight: root.compact ? 54 : 64
                 orientation: ListView.Horizontal
                 spacing: root.compact ? 3 : 5
                 clip: true
@@ -84,7 +85,7 @@ Item {
                 delegate: Column {
                     required property var modelData
                     width: root.compact ? 34 : 42
-                    spacing: root.compact ? 1 : 2
+                    spacing: root.compact ? 2 : 3
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -107,6 +108,11 @@ Item {
                     }
                 }
             }
+
+            // Absorbs any leftover vertical space in the card so the stat
+            // pills below sit at the bottom of the weather card instead of
+            // leaving a gap between the hourly row and the pills.
+            Item { Layout.fillHeight: true }
 
             GridLayout {
                 Layout.fillWidth: true
@@ -198,14 +204,14 @@ Item {
         property string label: ""
         property string value: "--"
         implicitWidth: root.compact ? 50 : 60
-        implicitHeight: root.compact ? 22 : 26
+        implicitHeight: root.compact ? 30 : 34
         radius: 5
         color: Core.Theme.surface
         border.width: 1
         border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
         Column {
             anchors.centerIn: parent
-            spacing: 1
+            spacing: 2
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: label

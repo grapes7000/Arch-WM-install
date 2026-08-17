@@ -550,8 +550,8 @@ Scope {
                     GlassCard {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.minimumHeight: root.compact ? 260 : 340
-                        Layout.preferredHeight: root.compact ? 300 : 420
+                        Layout.minimumHeight: root.compact ? 300 : 380
+                        Layout.preferredHeight: root.compact ? 340 : 440
                         clip: true
 
                         ColumnLayout {
