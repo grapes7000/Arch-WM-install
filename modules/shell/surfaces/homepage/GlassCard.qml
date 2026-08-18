@@ -9,7 +9,71 @@ Rectangle {
     property real fillAlphaBoost: 0
     property alias hoverHandler: hover
     property real bounce: 1.0
+
+    // Homepage assembly motion. Every GlassCard participates by default, but
+    // callers can disable it or provide an explicit order when a future
+    // layout needs different choreography. The automatic order is derived
+    // from the card's top-level column, so the left rail lands first, the
+    // center follows, then the right rail.
+    property bool assemblyEnabled: true
+    property int assemblyOrder: -1
+    property real revealProgress: 1.0
+    readonly property int effectiveAssemblyOrder: assemblyOrder >= 0
+        ? assemblyOrder : automaticAssemblyOrder()
+    readonly property int assemblyDelay: Math.round(
+        (35 + effectiveAssemblyOrder * 105) * Core.Theme.motionScale)
+    readonly property real revealScale: 0.98 + (0.02 * revealProgress)
+    readonly property real revealOffset: (1.0 - revealProgress)
+        * -Math.round((42 + effectiveAssemblyOrder * 10) * Math.max(0.25, Core.Theme.motionScale))
+    readonly property bool hostVisible: Window.visibility !== Window.Hidden
+
     signal clicked()
+
+    function automaticAssemblyOrder() {
+        const column = root.parent
+        const row = column ? column.parent : null
+        if (!column || !row || Number(row.width) <= 0)
+            return 0
+
+        const midpoint = Number(column.x) + Number(column.width) / 2
+        const ratio = midpoint / Number(row.width)
+        if (ratio < 0.28)
+            return 0
+        if (ratio < 0.78)
+            return 1
+        return 2
+    }
+
+    function resetAssembly() {
+        revealDelay.stop()
+        revealAnimation.stop()
+        revealProgress = assemblyEnabled && Core.Theme.motionScale > 0.05 ? 0.0 : 1.0
+    }
+
+    function startAssembly() {
+        revealDelay.stop()
+        revealAnimation.stop()
+        if (!assemblyEnabled || Core.Theme.motionScale <= 0.05) {
+            revealProgress = 1.0
+            return
+        }
+        revealProgress = 0.0
+        revealDelay.restart()
+    }
+
+    Component.onCompleted: {
+        if (hostVisible)
+            Qt.callLater(root.startAssembly)
+        else
+            resetAssembly()
+    }
+
+    onHostVisibleChanged: {
+        if (hostVisible)
+            Qt.callLater(root.startAssembly)
+        else
+            resetAssembly()
+    }
 
     radius: Core.Theme.homepageCardRadius
     color: {
@@ -23,9 +87,38 @@ Rectangle {
     border.color: active
         ? Core.Theme.accent
         : (Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor)
-    scale: (interactive && hover.hovered ? 1.015 : 1.0) * root.bounce
+    opacity: Math.max(0.0, Math.min(1.0, revealProgress))
+    scale: (interactive && hover.hovered ? 1.015 : 1.0) * root.bounce * root.revealScale
+
+    // Translate is intentionally used instead of animating y. GlassCard is
+    // frequently owned by Qt Quick Layouts, which control its geometry; a
+    // render transform gives us the falling/settling motion without fighting
+    // the layout engine or leaving cards at incorrect coordinates.
+    transform: Translate {
+        y: root.revealOffset
+    }
+
+    Timer {
+        id: revealDelay
+        interval: root.assemblyDelay
+        repeat: false
+        onTriggered: revealAnimation.restart()
+    }
+
+    NumberAnimation {
+        id: revealAnimation
+        target: root
+        property: "revealProgress"
+        to: 1.0
+        duration: Math.round(
+            Math.max(280, Core.Theme.homepageTransitionMs) * Math.max(0.25, Core.Theme.motionScale))
+        easing.type: Core.Theme.animationProfile === "snappy"
+            ? Easing.OutCubic : Easing.OutBack
+        easing.overshoot: 1.45
+    }
 
     Behavior on scale {
+        enabled: revealProgress >= 0.999
         NumberAnimation {
             duration: Math.round(Core.Theme.homepageTransitionMs * Core.Theme.motionScale)
             easing.type: Core.Theme.animationProfile === "snappy" ? Easing.OutQuad : Easing.OutCubic
