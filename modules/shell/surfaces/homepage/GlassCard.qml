@@ -18,13 +18,13 @@ Rectangle {
     property bool assemblyEnabled: true
     property int assemblyOrder: -1
     property real revealProgress: 1.0
-    readonly property int effectiveAssemblyOrder: assemblyOrder >= 0
-        ? assemblyOrder : automaticAssemblyOrder()
+    readonly property int effectiveAssemblyOrder: root.assemblyOrder >= 0
+        ? root.assemblyOrder : root.automaticAssemblyOrder()
     readonly property int assemblyDelay: Math.round(
-        (35 + effectiveAssemblyOrder * 105) * Core.Theme.motionScale)
-    readonly property real revealScale: 0.98 + (0.02 * revealProgress)
-    readonly property real revealOffset: (1.0 - revealProgress)
-        * -Math.round((42 + effectiveAssemblyOrder * 10) * Math.max(0.25, Core.Theme.motionScale))
+        (35 + root.effectiveAssemblyOrder * 105) * Core.Theme.motionScale)
+    readonly property real revealScale: 0.98 + (0.02 * root.revealProgress)
+    readonly property real revealOffset: (1.0 - root.revealProgress)
+        * -Math.round((42 + root.effectiveAssemblyOrder * 10) * Math.max(0.25, Core.Theme.motionScale))
     readonly property bool hostVisible: Window.visibility !== Window.Hidden
 
     signal clicked()
@@ -47,48 +47,48 @@ Rectangle {
     function resetAssembly() {
         revealDelay.stop()
         revealAnimation.stop()
-        revealProgress = assemblyEnabled && Core.Theme.motionScale > 0.05 ? 0.0 : 1.0
+        root.revealProgress = root.assemblyEnabled && Core.Theme.motionScale > 0.05 ? 0.0 : 1.0
     }
 
     function startAssembly() {
         revealDelay.stop()
         revealAnimation.stop()
-        if (!assemblyEnabled || Core.Theme.motionScale <= 0.05) {
-            revealProgress = 1.0
+        if (!root.assemblyEnabled || Core.Theme.motionScale <= 0.05) {
+            root.revealProgress = 1.0
             return
         }
-        revealProgress = 0.0
+        root.revealProgress = 0.0
         revealDelay.restart()
     }
 
     Component.onCompleted: {
-        if (hostVisible)
+        if (root.hostVisible)
             Qt.callLater(root.startAssembly)
         else
-            resetAssembly()
+            root.resetAssembly()
     }
 
     onHostVisibleChanged: {
-        if (hostVisible)
+        if (root.hostVisible)
             Qt.callLater(root.startAssembly)
         else
-            resetAssembly()
+            root.resetAssembly()
     }
 
     radius: Core.Theme.homepageCardRadius
     color: {
-        const token = active ? Core.Theme.surfaceElevated : Core.Theme.surfaceRaised
+        const token = root.active ? Core.Theme.surfaceElevated : Core.Theme.surfaceRaised
         const c = Qt.color(token)
-        const alpha = Math.min(1.0, Core.Theme.homepageCardOpacity + fillAlphaBoost
-            + (active ? 0.16 : 0))
+        const alpha = Math.min(1.0, Core.Theme.homepageCardOpacity + root.fillAlphaBoost
+            + (root.active ? 0.16 : 0))
         return Qt.rgba(c.r, c.g, c.b, alpha)
     }
-    border.width: active ? Math.max(2, Core.Theme.borderWidth) : Core.Theme.borderWidth
-    border.color: active
+    border.width: root.active ? Math.max(2, Core.Theme.borderWidth) : Core.Theme.borderWidth
+    border.color: root.active
         ? Core.Theme.accent
         : (Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor)
-    opacity: Math.max(0.0, Math.min(1.0, revealProgress))
-    scale: (interactive && hover.hovered ? 1.015 : 1.0) * root.bounce * root.revealScale
+    opacity: Math.max(0.0, Math.min(1.0, root.revealProgress))
+    scale: (root.interactive && hover.hovered ? 1.015 : 1.0) * root.bounce * root.revealScale
 
     // Translate is intentionally used instead of animating y. GlassCard is
     // frequently owned by Qt Quick Layouts, which control its geometry; a
@@ -118,7 +118,7 @@ Rectangle {
     }
 
     Behavior on scale {
-        enabled: revealProgress >= 0.999
+        enabled: root.revealProgress >= 0.999
         NumberAnimation {
             duration: Math.round(Core.Theme.homepageTransitionMs * Core.Theme.motionScale)
             easing.type: Core.Theme.animationProfile === "snappy" ? Easing.OutQuad : Easing.OutCubic
@@ -141,7 +141,7 @@ Rectangle {
         gesturePolicy: TapHandler.WithinBounds
         onTapped: root.clicked()
         onPressedChanged: {
-            if (pressed) {
+            if (tap.pressed) {
                 bounceAnim.stop()
                 pressAnim.restart()
             } else {
@@ -174,10 +174,10 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 1
         radius: Math.max(0, parent.radius - 1)
-        color: interactive && hover.hovered
+        color: root.interactive && hover.hovered
             ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.24)
             : "transparent"
-        opacity: interactive && hover.hovered ? 1 : 0
+        opacity: root.interactive && hover.hovered ? 1 : 0
         border.width: 1
         // Subtle by default; a stronger accent-tinted border only appears
         // while hovering an interactive card, so borders read as feedback
