@@ -28,6 +28,19 @@ jobs:
           test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv_pastel.json"
           test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv_luxe.json"
           python modules/theme-engine/bin/theme --validate
+      - name: Lint homepage QML with Arch + Quickshell
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo" \
+            -w /repo \
+            archlinux:latest \
+            bash -lc '
+              set -euo pipefail
+              pacman -Syu --noconfirm --needed qt6-declarative quickshell >/dev/null
+              /usr/lib/qt6/bin/qmllint -I modules/shell \
+                modules/shell/surfaces/homepage/GlassCard.qml \
+                modules/shell/surfaces/homepage/HomepageSurface.qml
+            '
       - name: Check shell scripts
         run: |
           bash -n install.sh uninstall.sh scripts/*.sh modules/terminal/bin/term
