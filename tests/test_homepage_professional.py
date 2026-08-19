@@ -29,7 +29,14 @@ class ProfessionalHomepageTests(unittest.TestCase):
         self.assertIn("root.entry.widget", host)
         self.assertEqual(surface.count("BarMotionHost {"), 4)
         self.assertEqual(surface.count("entry: modelData"), 4)
-        self.assertNotIn("required property var modelData\n                                    required property int index", surface)
+        self.assertIn("function withEntranceOrder(entries, base)", surface)
+        self.assertIn("copy._entranceOrder = base + position", surface)
+        self.assertGreaterEqual(surface.count("modelData._entranceOrder"), 4)
+        self.assertNotIn("required property int index", surface)
+        self.assertNotIn("entranceOrder: index", surface)
+        self.assertNotIn("entranceOrder: 5 + index", surface)
+        self.assertNotIn("entranceOrder: 8 + index", surface)
+        self.assertNotIn("entranceOrder: 14 + index", surface)
 
     def test_pro_card_has_visual_hierarchy_and_status_slot(self) -> None:
         content = (HOMEPAGE / "ProCard.qml").read_text(encoding="utf-8")
