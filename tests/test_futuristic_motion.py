@@ -47,12 +47,10 @@ class FuturisticShellMotionTests(unittest.TestCase):
         motion_index = content.index('require("conf.motion")')
         self.assertLess(theme_index, motion_index)
 
-    def test_hyprland_motion_uses_current_spring_and_layer_features(self) -> None:
+    def test_hyprland_motion_uses_055_compatible_spring_and_layer_features(self) -> None:
         content = HYPR_MOTION.read_text(encoding="utf-8")
         self.assertIn('type = "spring"', content)
         self.assertIn("dampening =", content)
-        self.assertIn("motion_blur", content)
-        self.assertIn("wobble", content)
         self.assertIn('leaf = "windowsIn"', content)
         self.assertIn('leaf = "windowsMove"', content)
         self.assertIn('leaf = "workspaces"', content)
@@ -61,6 +59,12 @@ class FuturisticShellMotionTests(unittest.TestCase):
         self.assertIn('animation = "slide top"', content)
         self.assertIn('animation = "slide right"', content)
         self.assertIn('animation = "popin 94%"', content)
+
+        # These compositor options landed after the 0.55 baseline and caused
+        # live config errors on the VM. Keep them out until version-gated.
+        self.assertNotIn("motion_blur", content)
+        self.assertNotIn("wobble = {", content)
+        self.assertNotIn('leaf = "glowangle"', content)
 
     def test_motion_layer_never_uses_continuous_angle_loops(self) -> None:
         content = HYPR_MOTION.read_text(encoding="utf-8")
