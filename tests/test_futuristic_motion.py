@@ -5,7 +5,6 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BAR = ROOT / "modules/shell/surfaces/bar/BarSurface.qml"
-BAR_HOST = ROOT / "modules/shell/surfaces/bar/BarMotionHost.qml"
 DRAWER = ROOT / "modules/shell/surfaces/bar/DrawerSurface.qml"
 LAUNCHER = ROOT / "modules/shell/surfaces/bar/LauncherOverlay.qml"
 HYPR_ENTRY = ROOT / "modules/hyprland/config/hyprland.lua"
@@ -13,24 +12,14 @@ HYPR_MOTION = ROOT / "modules/hyprland/config/conf/motion.lua"
 
 
 class FuturisticShellMotionTests(unittest.TestCase):
-    def test_bar_uses_animated_hosts_and_layer_namespace(self) -> None:
+    def test_bar_keeps_direct_widget_hosts_and_layer_motion(self) -> None:
         content = BAR.read_text(encoding="utf-8")
-        self.assertGreaterEqual(content.count("BarMotionHost {"), 4)
+        self.assertEqual(content.count("WidgetHost {"), 4)
+        self.assertNotIn("BarMotionHost {", content)
         self.assertIn('WlrLayershell.namespace: root.isPrimary ? "arch-wm:bar"', content)
         self.assertIn("HoverHandler { id: menuHover }", content)
         self.assertIn("HoverHandler { id: homeHover }", content)
-
-    def test_bar_motion_is_layout_safe_and_reduced_motion_aware(self) -> None:
-        content = BAR_HOST.read_text(encoding="utf-8")
-        self.assertIn("opacity: 1.0", content)
-        self.assertIn("entranceOrder * 26", content)
-        self.assertIn("id: entranceTranslate", content)
-        self.assertIn("target: entranceTranslate", content)
-        self.assertIn("HoverHandler", content)
-        self.assertIn("Translate", content)
-        self.assertIn("Core.Theme.motionScale <= 0.05", content)
-        self.assertNotIn("revealProgress", content)
-        self.assertNotIn('property: "x"', content)
+        self.assertIn("Behavior on scale", content)
 
     def test_drawer_and_launcher_have_internal_reveal_motion(self) -> None:
         drawer = DRAWER.read_text(encoding="utf-8")
