@@ -21,7 +21,7 @@ Rectangle {
     readonly property int effectiveAssemblyOrder: root.assemblyOrder >= 0
         ? root.assemblyOrder : root.automaticAssemblyOrder()
     readonly property int assemblyDelay: Math.round(
-        (35 + root.effectiveAssemblyOrder * 105) * Core.Theme.motionScale)
+        (35 + root.effectiveAssemblyOrder * 150) * Core.Theme.motionScale)
     readonly property real revealScale: 0.98 + (0.02 * root.revealProgress)
     readonly property real revealOffset: (1.0 - root.revealProgress)
         * -Math.round((42 + root.effectiveAssemblyOrder * 10) * Math.max(0.25, Core.Theme.motionScale))
@@ -111,7 +111,7 @@ Rectangle {
         property: "revealProgress"
         to: 1.0
         duration: Math.round(
-            Math.max(280, Core.Theme.homepageTransitionMs) * Math.max(0.25, Core.Theme.motionScale))
+            Math.max(360, Core.Theme.homepageTransitionMs) * Math.max(0.25, Core.Theme.motionScale))
         easing.type: Core.Theme.animationProfile === "snappy"
             ? Easing.OutCubic : Easing.OutBack
         easing.overshoot: 1.45
