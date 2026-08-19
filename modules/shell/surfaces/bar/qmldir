@@ -1,4 +1,5 @@
 BarSurface 1.0 BarSurface.qml
+BarMotionHost 1.0 BarMotionHost.qml
 DrawerController 1.0 DrawerController.qml
 DrawerSurface 1.0 DrawerSurface.qml
 LauncherOverlay 1.0 LauncherOverlay.qml
