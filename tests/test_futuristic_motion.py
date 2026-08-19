@@ -94,7 +94,7 @@ class FuturisticShellMotionTests(unittest.TestCase):
         content = PRO_CARD.read_text(encoding="utf-8")
         self.assertIn("id: cardHover", content)
         self.assertIn("blocking: false", content)
-        self.assertIn("cardHover.hovered ? 1.006 : 1.0", content)
+        self.assertIn("cardHover.hovered && root.revealProgress >= 0.999 ? 1.006 : 1.0", content)
         self.assertIn("Behavior on color", content)
         self.assertIn("Behavior on scale", content)
 
