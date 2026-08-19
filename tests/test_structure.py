@@ -128,7 +128,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
         self.assertIn("theme-sync.py", autostart)
-        self.assertEqual(version, "2026.08.07.4")
+        self.assertEqual(version, "2026.08.07.5")
 
     def test_universal_theme_contract_drives_shell_and_hyprland(self) -> None:
         schema = json.loads(
