@@ -34,6 +34,18 @@ Scope {
     PanelWindow {
         id: drawerWindow
 
+        property real revealProgress: 1.0
+
+        function startReveal() {
+            revealAnimation.stop()
+            if (Core.Theme.motionScale <= 0.05) {
+                revealProgress = 1.0
+                return
+            }
+            revealProgress = 0.0
+            revealAnimation.restart()
+        }
+
         screen: controller.screen
         visible: controller.visible && !controller.locked
         anchors { top: true; right: true; bottom: true; left: true }
@@ -44,6 +56,26 @@ Scope {
         WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         WlrLayershell.namespace: controller.activeKind
             ? "arch-wm-drawer-" + controller.activeKind : "arch-wm-drawer"
+
+        onVisibleChanged: {
+            if (visible)
+                Qt.callLater(drawerWindow.startReveal)
+            else {
+                revealAnimation.stop()
+                revealProgress = Core.Theme.motionScale <= 0.05 ? 1.0 : 0.0
+            }
+        }
+
+        NumberAnimation {
+            id: revealAnimation
+            target: drawerWindow
+            property: "revealProgress"
+            from: 0.0
+            to: 1.0
+            duration: Math.round(Math.max(190, Core.Theme.animationMs * 1.35) * Core.Theme.motionScale)
+            easing.type: Easing.OutBack
+            easing.overshoot: 1.18
+        }
 
         Item {
             id: dismissal
@@ -102,6 +134,13 @@ Scope {
                     Core.Theme.drawerOutlineColor,
                     Core.Theme.drawerOutlineOpacity
                 )
+                opacity: Math.max(0.0, Math.min(1.0, drawerWindow.revealProgress))
+                scale: 0.96 + drawerWindow.revealProgress * 0.04
+                transform: Translate {
+                    x: (1.0 - drawerWindow.revealProgress) * 26
+                    y: (1.0 - drawerWindow.revealProgress)
+                        * (Core.Theme.barPosition === "top" ? -5 : 5)
+                }
                 MouseArea { anchors.fill: parent }
 
                 Loader {

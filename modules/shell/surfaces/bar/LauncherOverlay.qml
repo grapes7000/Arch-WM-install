@@ -111,6 +111,20 @@ Scope {
     }
 
     PanelWindow {
+        id: launcherWindow
+
+        property real revealProgress: 1.0
+
+        function startReveal() {
+            launcherReveal.stop()
+            if (Core.Theme.motionScale <= 0.05) {
+                revealProgress = 1.0
+                return
+            }
+            revealProgress = 0.0
+            launcherReveal.restart()
+        }
+
         screen: session.screen
         visible: session.visible && !Services.LockStateService.locked
         anchors { top: true; right: true; bottom: true; left: true }
@@ -121,12 +135,37 @@ Scope {
         WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         WlrLayershell.namespace: "arch-wm-launcher"
 
+        onVisibleChanged: {
+            if (visible)
+                Qt.callLater(launcherWindow.startReveal)
+            else {
+                launcherReveal.stop()
+                revealProgress = Core.Theme.motionScale <= 0.05 ? 1.0 : 0.0
+            }
+        }
+
+        NumberAnimation {
+            id: launcherReveal
+            target: launcherWindow
+            property: "revealProgress"
+            from: 0.0
+            to: 1.0
+            duration: Math.round(Math.max(210, Core.Theme.animationMs * 1.4) * Core.Theme.motionScale)
+            easing.type: Easing.OutBack
+            easing.overshoot: 1.12
+        }
+
         Rectangle {
             anchors.fill: parent
-            color: { var c = Qt.color(Core.Theme.background); return Qt.rgba(c.r, c.g, c.b, 0.82) }
+            color: {
+                const c = Qt.color(Core.Theme.background)
+                return Qt.rgba(c.r, c.g, c.b, 0.82)
+            }
+            opacity: Math.max(0.0, Math.min(1.0, launcherWindow.revealProgress))
             MouseArea { anchors.fill: parent; onClicked: root.close() }
 
             Rectangle {
+                id: launcherCard
                 anchors.centerIn: parent
                 width: Math.min(parent.width - Core.Theme.gap * 6, 900)
                 height: Math.min(parent.height - Core.Theme.gap * 10, 650)
@@ -134,6 +173,11 @@ Scope {
                 color: Core.Theme.surface
                 border.width: Core.Theme.borderWidth
                 border.color: Core.Theme.accent2
+                opacity: Math.max(0.0, Math.min(1.0, launcherWindow.revealProgress))
+                scale: 0.91 + launcherWindow.revealProgress * 0.09
+                transform: Translate {
+                    y: (1.0 - launcherWindow.revealProgress) * 16
+                }
                 MouseArea { anchors.fill: parent }
 
                 ColumnLayout {
