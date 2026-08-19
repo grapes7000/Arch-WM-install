@@ -18,11 +18,20 @@ GlassCard {
     property bool showHeader: root.eyebrow.length > 0 || root.title.length > 0
         || root.subtitle.length > 0 || root.icon.length > 0 || root.statusText.length > 0
 
+    // Professional cards respond to pointer presence even when they are not
+    // clickable. This is passive lighting/elevation only; it never steals taps
+    // from controls inside the card.
+    bounce: cardHover.hovered && root.revealProgress >= 0.999 ? 1.006 : 1.0
+
     // A parent layout may request a compact preferred height, but it must
     // never compress a card below the space needed by its header and body.
-    // This keeps metric tiles and control rows inside the rounded surface.
     implicitHeight: frame.implicitHeight + root.contentPadding * 2
     Layout.minimumHeight: implicitHeight
+
+    HoverHandler {
+        id: cardHover
+        blocking: false
+    }
 
     ColumnLayout {
         id: frame
@@ -64,9 +73,13 @@ GlassCard {
                 Layout.preferredWidth: root.heroStyle ? 40 : 34
                 Layout.preferredHeight: root.heroStyle ? 40 : 34
                 radius: root.heroStyle ? 13 : 11
-                color: Core.Theme.alphaColor(Core.Theme.accent, root.heroStyle ? 0.16 : 0.11)
+                color: Core.Theme.alphaColor(Core.Theme.accent,
+                    cardHover.hovered ? (root.heroStyle ? 0.22 : 0.17) : (root.heroStyle ? 0.16 : 0.11))
                 border.width: 1
-                border.color: Core.Theme.alphaColor(Core.Theme.accent, 0.22)
+                border.color: Core.Theme.alphaColor(Core.Theme.accent, cardHover.hovered ? 0.42 : 0.22)
+
+                Behavior on color { ColorAnimation { duration: 140 } }
+                Behavior on border.color { ColorAnimation { duration: 140 } }
 
                 Text {
                     anchors.centerIn: parent
@@ -74,6 +87,10 @@ GlassCard {
                     color: Core.Theme.accent
                     font.family: Core.Theme.fontFamily
                     font.pixelSize: root.heroStyle ? 20 : 17
+                    scale: cardHover.hovered ? 1.06 : 1.0
+                    Behavior on scale {
+                        NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                    }
                 }
             }
 
@@ -116,9 +133,13 @@ GlassCard {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: 1
+        height: cardHover.hovered ? 2 : 1
         radius: 1
-        color: Core.Theme.alphaColor(Core.Theme.accent, 0.26)
-        opacity: root.active ? 1.0 : 0.42
+        color: Core.Theme.alphaColor(Core.Theme.accent, cardHover.hovered ? 0.62 : 0.26)
+        opacity: root.active ? 1.0 : (cardHover.hovered ? 0.82 : 0.42)
+
+        Behavior on height { NumberAnimation { duration: 120 } }
+        Behavior on color { ColorAnimation { duration: 140 } }
+        Behavior on opacity { NumberAnimation { duration: 140 } }
     }
 }
