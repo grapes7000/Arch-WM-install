@@ -1,9 +1,10 @@
 -- Arch-WM compositor motion layer.
 --
 -- Loaded after generated.theme so these motion rules stay coherent across
--- color themes. Set ARCH_WM_LOW_MOTION=1 before starting Hyprland to disable
--- the two relatively expensive deformation effects while keeping the fast
--- spatial animation language intact.
+-- color themes. This file deliberately targets the Hyprland 0.55-era config
+-- schema used by the installer/test VM. Newer 0.56-only effects such as
+-- decoration.motion_blur, decoration.wobble and glowangle must not be emitted
+-- unconditionally because older Hyprland builds reject unknown config keys.
 
 local low_motion = os.getenv("ARCH_WM_LOW_MOTION") == "1"
 
@@ -12,27 +13,11 @@ hl.config({
         enabled = true,
         workspace_wraparound = true,
     },
-    decoration = {
-        motion_blur = {
-            enabled = not low_motion,
-            samples = 3,
-        },
-        wobble = {
-            enabled = not low_motion,
-            mesh = 10,
-            stiffness = 420.0,
-            damping = 34.0,
-            mass = 1.0,
-            intensity = 0.035,
-            value_epsilon = 0.18,
-            velocity_epsilon = 1.5,
-        },
-    },
 })
 
 -- Short, controlled springs: enough overshoot to feel physical without making
--- windows rubbery. Separate curves let workspaces carry slightly more mass
--- than individual windows.
+-- windows rubbery. Springs landed in the 0.55 generation, so these remain the
+-- compositor-level foundation of the motion language on supported installs.
 hl.curve("archWindowSpring", {
     type = "spring",
     mass = 1.0,
@@ -115,8 +100,8 @@ hl.animation({
     bezier = "archLayerEase",
 })
 
--- Focus feedback. Angle animations are deliberately one-shot: never use the
--- looping angle style here because it forces continuous compositor frames.
+-- Focus feedback. Border-angle is supported on the 0.55 baseline and stays
+-- one-shot so it never forces continuous compositor frames.
 hl.animation({
     leaf = "border",
     enabled = true,
@@ -130,18 +115,11 @@ hl.animation({
     bezier = "archLayerEase",
     style = "once",
 })
-hl.animation({
-    leaf = "glowangle",
-    enabled = true,
-    speed = 3.4,
-    bezier = "archLayerEase",
-    style = "once",
-})
 
 hl.layer_rule({
     name = "arch-wm-bar-motion",
     match = { namespace = "arch-wm:bar.*" },
-    blur = true,
+    blur = not low_motion,
     ignore_alpha = 0.08,
     animation = "slide top",
 })
@@ -149,17 +127,17 @@ hl.layer_rule({
 hl.layer_rule({
     name = "arch-wm-drawer-motion",
     match = { namespace = "arch-wm-drawer.*" },
-    blur = true,
+    blur = not low_motion,
     ignore_alpha = 0.08,
-    dim_around = true,
+    dim_around = not low_motion,
     animation = "slide right",
 })
 
 hl.layer_rule({
     name = "arch-wm-launcher-motion",
     match = { namespace = "arch-wm-launcher" },
-    blur = true,
+    blur = not low_motion,
     ignore_alpha = 0.06,
-    dim_around = true,
+    dim_around = not low_motion,
     animation = "popin 94%",
 })
