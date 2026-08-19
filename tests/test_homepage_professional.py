@@ -21,22 +21,25 @@ class ProfessionalHomepageTests(unittest.TestCase):
         self.assertTrue((BAR / "BarMotionHost.qml").is_file())
         self.assertIn("BarMotionHost 1.0 BarMotionHost.qml", qmldir)
 
-    def test_bar_motion_repeater_entries_are_bound_explicitly(self) -> None:
+    def test_bar_motion_is_fail_open_and_uses_original_layout_entries(self) -> None:
         host = (BAR / "BarMotionHost.qml").read_text(encoding="utf-8")
         surface = (BAR / "BarSurface.qml").read_text(encoding="utf-8")
-        self.assertIn("required property var entry", host)
+        self.assertIn("property var entry: ({})", host)
         self.assertNotIn("required property var modelData", host)
+        self.assertIn("opacity: 1.0", host)
+        self.assertNotIn("revealProgress", host)
         self.assertIn("root.entry.widget", host)
         self.assertEqual(surface.count("BarMotionHost {"), 4)
         self.assertEqual(surface.count("entry: modelData"), 4)
-        self.assertIn("function withEntranceOrder(entries, base)", surface)
-        self.assertIn("copy._entranceOrder = base + position", surface)
-        self.assertGreaterEqual(surface.count("modelData._entranceOrder"), 4)
+        self.assertNotIn("withEntranceOrder", surface)
+        self.assertNotIn("Object.assign", surface)
         self.assertNotIn("required property int index", surface)
-        self.assertNotIn("entranceOrder: index", surface)
-        self.assertNotIn("entranceOrder: 5 + index", surface)
-        self.assertNotIn("entranceOrder: 8 + index", surface)
-        self.assertNotIn("entranceOrder: 14 + index", surface)
+        for token in (
+            "Services.LayoutService.bar.regions.start || []",
+            "Services.LayoutService.bar.regions.center || []",
+            "Services.LayoutService.bar.regions.end || []",
+        ):
+            self.assertIn(token, surface)
 
     def test_pro_card_has_visual_hierarchy_and_status_slot(self) -> None:
         content = (HOMEPAGE / "ProCard.qml").read_text(encoding="utf-8")
@@ -48,6 +51,7 @@ class ProfessionalHomepageTests(unittest.TestCase):
         self.assertIn("StatusChip {", content)
         self.assertIn("Core.Theme.alphaColor(Core.Theme.accent", content)
         self.assertIn("anchors.top: parent.top", content)
+        self.assertIn("Layout.minimumHeight: implicitHeight", content)
 
     def test_metric_and_sparkline_components_are_data_driven(self) -> None:
         metric = (HOMEPAGE / "MetricTile.qml").read_text(encoding="utf-8")
