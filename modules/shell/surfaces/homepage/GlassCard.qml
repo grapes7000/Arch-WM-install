@@ -10,38 +10,93 @@ Rectangle {
     property alias hoverHandler: hover
     property real bounce: 1.0
 
-    // Homepage assembly motion. Every GlassCard participates by default, but
-    // callers can disable it or provide an explicit order when a future
-    // layout needs different choreography. The automatic order is derived
-    // from the card's top-level column, so the left rail lands first, the
-    // center follows, then the right rail.
+    // Homepage assembly motion. Cards derive a clockwise reveal order and
+    // entrance direction from their position in the three-column homepage:
+    // top-center first, right rail top-to-bottom, lower center, then left rail
+    // bottom-to-top. Callers can still override order/direction explicitly.
     property bool assemblyEnabled: true
-    property int assemblyOrder: -1
+    property real assemblyOrder: -1
+    property string assemblyDirection: "auto"
     property real revealProgress: 1.0
-    readonly property int effectiveAssemblyOrder: root.assemblyOrder >= 0
+    readonly property real effectiveAssemblyOrder: root.assemblyOrder >= 0
         ? root.assemblyOrder : root.automaticAssemblyOrder()
+    readonly property string effectiveAssemblyDirection: root.assemblyDirection !== "auto"
+        ? root.assemblyDirection : root.automaticAssemblyDirection()
     readonly property int assemblyDelay: Math.round(
-        (35 + root.effectiveAssemblyOrder * 105) * Core.Theme.motionScale)
-    readonly property real revealScale: 0.98 + (0.02 * root.revealProgress)
-    readonly property real revealOffset: (1.0 - root.revealProgress)
-        * -Math.round((42 + root.effectiveAssemblyOrder * 10) * Math.max(0.25, Core.Theme.motionScale))
+        (45 + root.effectiveAssemblyOrder * 145) * Core.Theme.motionScale)
+    readonly property real revealScale: 0.975 + (0.025 * root.revealProgress)
+    readonly property real revealDistance: Math.round(
+        (54 + Math.min(18, root.effectiveAssemblyOrder * 2))
+        * Math.max(0.25, Core.Theme.motionScale))
+    readonly property real revealOffsetX: {
+        const remaining = 1.0 - root.revealProgress
+        if (root.effectiveAssemblyDirection === "left")
+            return -root.revealDistance * remaining
+        if (root.effectiveAssemblyDirection === "right")
+            return root.revealDistance * remaining
+        return 0
+    }
+    readonly property real revealOffsetY: {
+        const remaining = 1.0 - root.revealProgress
+        if (root.effectiveAssemblyDirection === "top")
+            return -root.revealDistance * remaining
+        if (root.effectiveAssemblyDirection === "bottom")
+            return root.revealDistance * remaining
+        return 0
+    }
     readonly property bool hostVisible: Window.visibility !== Window.Hidden
 
     signal clicked()
 
-    function automaticAssemblyOrder() {
+    function layoutMetrics() {
         const column = root.parent
         const row = column ? column.parent : null
-        if (!column || !row || Number(row.width) <= 0)
+        if (!column || !row || Number(row.width) <= 0 || Number(column.height) <= 0)
+            return { valid: false, columnRatio: 0.5, vertical: 0.0, topmost: true }
+
+        const columnMidpoint = Number(column.x) + Number(column.width) / 2
+        const columnRatio = columnMidpoint / Number(row.width)
+        const cardMidpoint = Number(root.y) + Number(root.height) / 2
+        const vertical = Math.max(0.0, Math.min(1.0, cardMidpoint / Number(column.height)))
+        const topThreshold = Math.max(12, Number(column.height) * 0.035)
+        return {
+            valid: true,
+            columnRatio: columnRatio,
+            vertical: vertical,
+            topmost: Number(root.y) <= topThreshold
+        }
+    }
+
+    function automaticAssemblyOrder() {
+        const metrics = root.layoutMetrics()
+        if (!metrics.valid)
             return 0
 
-        const midpoint = Number(column.x) + Number(column.width) / 2
-        const ratio = midpoint / Number(row.width)
-        if (ratio < 0.28)
-            return 0
-        if (ratio < 0.78)
-            return 1
-        return 2
+        // Center: the topmost card is the hero/primary card and always leads.
+        // Remaining center cards follow the right rail before the left side.
+        if (metrics.columnRatio >= 0.28 && metrics.columnRatio < 0.78) {
+            if (metrics.topmost)
+                return 0
+            return 4.4 + metrics.vertical * 0.8
+        }
+
+        // Right rail proceeds downward after the hero.
+        if (metrics.columnRatio >= 0.78)
+            return 0.9 + metrics.vertical * 3.3
+
+        // Left rail closes the clockwise loop from bottom back toward the top.
+        return 5.1 + (1.0 - metrics.vertical) * 3.4
+    }
+
+    function automaticAssemblyDirection() {
+        const metrics = root.layoutMetrics()
+        if (!metrics.valid)
+            return "top"
+        if (metrics.columnRatio < 0.28)
+            return "left"
+        if (metrics.columnRatio >= 0.78)
+            return "right"
+        return metrics.topmost ? "top" : "bottom"
     }
 
     function resetAssembly() {
@@ -90,12 +145,12 @@ Rectangle {
     opacity: Math.max(0.0, Math.min(1.0, root.revealProgress))
     scale: (root.interactive && hover.hovered ? 1.015 : 1.0) * root.bounce * root.revealScale
 
-    // Translate is intentionally used instead of animating y. GlassCard is
-    // frequently owned by Qt Quick Layouts, which control its geometry; a
-    // render transform gives us the falling/settling motion without fighting
-    // the layout engine or leaving cards at incorrect coordinates.
+    // Translate is intentionally used instead of animating layout-owned x/y.
+    // Qt Quick Layouts retain geometry ownership while cards visually slide
+    // from their nearest screen-side and settle into their final positions.
     transform: Translate {
-        y: root.revealOffset
+        x: root.revealOffsetX
+        y: root.revealOffsetY
     }
 
     Timer {
@@ -111,7 +166,7 @@ Rectangle {
         property: "revealProgress"
         to: 1.0
         duration: Math.round(
-            Math.max(280, Core.Theme.homepageTransitionMs) * Math.max(0.25, Core.Theme.motionScale))
+            Math.max(420, Core.Theme.homepageTransitionMs) * Math.max(0.25, Core.Theme.motionScale))
         easing.type: Core.Theme.animationProfile === "snappy"
             ? Easing.OutCubic : Easing.OutBack
         easing.overshoot: 1.45
