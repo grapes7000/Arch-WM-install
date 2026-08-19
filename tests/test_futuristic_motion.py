@@ -22,13 +22,15 @@ class FuturisticShellMotionTests(unittest.TestCase):
 
     def test_bar_motion_is_layout_safe_and_reduced_motion_aware(self) -> None:
         content = BAR_HOST.read_text(encoding="utf-8")
-        self.assertIn("revealProgress", content)
-        self.assertIn("entranceOrder * 34", content)
+        self.assertIn("opacity: 1.0", content)
+        self.assertIn("entranceOrder * 26", content)
+        self.assertIn("id: entranceTranslate", content)
+        self.assertIn("target: entranceTranslate", content)
         self.assertIn("HoverHandler", content)
         self.assertIn("Translate", content)
         self.assertIn("Core.Theme.motionScale <= 0.05", content)
+        self.assertNotIn("revealProgress", content)
         self.assertNotIn('property: "x"', content)
-        self.assertNotIn('property: "y"', content)
 
     def test_drawer_and_launcher_have_internal_reveal_motion(self) -> None:
         drawer = DRAWER.read_text(encoding="utf-8")
