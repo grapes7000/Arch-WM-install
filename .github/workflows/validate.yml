@@ -38,8 +38,7 @@ jobs:
               set -euo pipefail
               pacman -Syu --noconfirm --needed qt6-declarative quickshell lua >/dev/null
               /usr/lib/qt6/bin/qmllint -I modules/shell \
-                modules/shell/surfaces/homepage/GlassCard.qml \
-                modules/shell/surfaces/homepage/HomepageSurface.qml \
+                modules/shell/surfaces/homepage/*.qml \
                 modules/shell/surfaces/bar/BarMotionHost.qml \
                 modules/shell/surfaces/bar/BarSurface.qml \
                 modules/shell/surfaces/bar/DrawerSurface.qml \
