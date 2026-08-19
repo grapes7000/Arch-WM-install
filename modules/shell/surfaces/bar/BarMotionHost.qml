@@ -5,25 +5,25 @@ import "../../core" as Core
 Item {
     id: root
 
-    required property var entry
+    property var entry: ({})
     required property string surfaceKind
     required property bool locked
     property var requestHandler: null
     property int entranceOrder: 0
-    property real revealProgress: Core.Theme.motionScale <= 0.05 ? 1.0 : 0.0
 
     implicitWidth: host.implicitWidth
     implicitHeight: host.implicitHeight
-    opacity: Math.max(0.0, Math.min(1.0, revealProgress))
-    scale: (0.94 + 0.06 * revealProgress) * (hover.hovered ? 1.045 : 1.0)
+    opacity: 1.0
+    scale: hover.hovered ? 1.045 : 1.0
 
     transform: [
         Translate {
-            y: (1.0 - root.revealProgress) * -7
+            id: entranceTranslate
+            y: Core.Theme.motionScale <= 0.05 ? 0 : -6
         },
         Translate {
             id: hoverLift
-            y: hover.hovered && root.revealProgress >= 0.999 ? -2 : 0
+            y: hover.hovered ? -2 : 0
             Behavior on y {
                 NumberAnimation {
                     duration: Math.round(Math.max(70, Core.Theme.animationMs * 0.65) * Core.Theme.motionScale)
@@ -33,34 +33,37 @@ Item {
         }
     ]
 
+    // Entrance motion is deliberately fail-open: the widget is fully visible
+    // before this timer ever runs. If a compositor/runtime skips the timer or
+    // animation, the only failure mode is a harmless 6px offset rather than a
+    // missing bar widget.
     Component.onCompleted: {
         if (Core.Theme.motionScale <= 0.05) {
-            root.revealProgress = 1.0
+            entranceTranslate.y = 0
             return
         }
-        revealDelay.restart()
+        entranceDelay.restart()
     }
 
     Timer {
-        id: revealDelay
-        interval: Math.round((24 + root.entranceOrder * 34) * Core.Theme.motionScale)
+        id: entranceDelay
+        interval: Math.round((24 + root.entranceOrder * 26) * Core.Theme.motionScale)
         repeat: false
-        onTriggered: revealAnimation.restart()
+        onTriggered: entranceAnimation.restart()
     }
 
     NumberAnimation {
-        id: revealAnimation
-        target: root
-        property: "revealProgress"
-        from: 0.0
-        to: 1.0
-        duration: Math.round(Math.max(150, Core.Theme.animationMs) * Core.Theme.motionScale)
+        id: entranceAnimation
+        target: entranceTranslate
+        property: "y"
+        from: -6
+        to: 0
+        duration: Math.round(Math.max(130, Core.Theme.animationMs * 0.9) * Core.Theme.motionScale)
         easing.type: Easing.OutBack
-        easing.overshoot: 1.25
+        easing.overshoot: 1.2
     }
 
     Behavior on scale {
-        enabled: root.revealProgress >= 0.999
         NumberAnimation {
             duration: Math.round(Math.max(80, Core.Theme.animationMs * 0.7) * Core.Theme.motionScale)
             easing.type: Easing.OutCubic
