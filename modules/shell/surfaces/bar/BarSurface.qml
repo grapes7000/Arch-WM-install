@@ -22,19 +22,6 @@ Scope {
         return true
     }
 
-    // Quickshell 0.2.x exposes Repeater modelData reliably here, but the
-    // implicit `index` context value is not available inside imported delegate
-    // types on every runtime. Bake the stagger order into the model itself so
-    // BarMotionHost only consumes explicit entry data.
-    function withEntranceOrder(entries, base) {
-        const source = entries || []
-        return source.map(function(entry, position) {
-            const copy = Object.assign({}, entry)
-            copy._entranceOrder = base + position
-            return copy
-        })
-    }
-
     Binding {
         target: Core.InteractiveShellController
         property: "menuController"
@@ -107,14 +94,13 @@ Scope {
                             spacing: Core.Theme.barWidgetSpacing
 
                             Repeater {
-                                model: barScope.withEntranceOrder(
-                                    Services.LayoutService.bar.regions.start || [], 0)
+                                model: Services.LayoutService.bar.regions.start || []
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: Number(modelData._entranceOrder || 0)
+                                    entranceOrder: 0
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -136,23 +122,17 @@ Scope {
                             spacing: Core.Theme.barWidgetSpacing
 
                             Repeater {
-                                model: barScope.withEntranceOrder(
-                                    Services.LayoutService.bar.regions.center || [], 5)
+                                model: Services.LayoutService.bar.regions.center || []
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: Number(modelData._entranceOrder || 5)
+                                    entranceOrder: 5
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
                                     Layout.preferredWidth: implicitWidth
-                                    // The clock pill fills almost the full bar
-                                    // height (rather than shrink-wrapping its
-                                    // text) so its larger font has room to
-                                    // breathe; every other bar pill keeps its
-                                    // natural content height.
                                     Layout.preferredHeight: modelData.widget === "clock"
                                         ? Math.max(implicitHeight, Core.Theme.barHeight - Core.Theme.barPadding)
                                         : implicitHeight
@@ -174,21 +154,15 @@ Scope {
                             }
                             spacing: Core.Theme.barWidgetSpacing
 
-                            // The session/power widget is rendered after the
-                            // hamburger menu trigger (see below) instead of
-                            // via this repeater, so the two switch places:
-                            // hamburger now sits to the left of power.
                             Repeater {
-                                model: barScope.withEntranceOrder(
-                                    (Services.LayoutService.bar.regions.end || [])
-                                        .filter(function(entry) { return entry.instance !== "session-main" }),
-                                    8)
+                                model: (Services.LayoutService.bar.regions.end || [])
+                                    .filter(function(entry) { return entry.instance !== "session-main" })
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: Number(modelData._entranceOrder || 8)
+                                    entranceOrder: 8
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -237,9 +211,6 @@ Scope {
                                 }
                             }
 
-                            // Toggles the homepage dashboard on/off. Same
-                            // capability as the SUPER+D keybind, exposed here
-                            // as a bar switch for mouse-driven use.
                             Item {
                                 Layout.preferredWidth: homepageTrigger.implicitWidth + 8
                                 Layout.fillHeight: true
@@ -271,16 +242,14 @@ Scope {
                             }
 
                             Repeater {
-                                model: barScope.withEntranceOrder(
-                                    (Services.LayoutService.bar.regions.end || [])
-                                        .filter(function(entry) { return entry.instance === "session-main" }),
-                                    14)
+                                model: (Services.LayoutService.bar.regions.end || [])
+                                    .filter(function(entry) { return entry.instance === "session-main" })
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: Number(modelData._entranceOrder || 14)
+                                    entranceOrder: 14
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
