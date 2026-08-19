@@ -7,7 +7,7 @@ Item {
 
     required property var modelData
     required property string surfaceKind
-    required property var locked
+    required property bool locked
     property var requestHandler: null
     property int entranceOrder: 0
     property real revealProgress: Core.Theme.motionScale <= 0.05 ? 1.0 : 0.0
@@ -74,8 +74,11 @@ Item {
     Components.WidgetHost {
         id: host
         anchors.centerIn: parent
+        widgetId: root.modelData.widget
         surfaceKind: root.surfaceKind
-        modelData: root.modelData
+        instanceId: root.modelData.instance
+        variant: root.modelData.variant || "compact"
+        settings: root.modelData.settings || ({})
         locked: root.locked
         requestHandler: root.requestHandler
     }
