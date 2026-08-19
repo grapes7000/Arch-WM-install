@@ -5,6 +5,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 HOMEPAGE = ROOT / "modules/shell/surfaces/homepage"
+BAR = ROOT / "modules/shell/surfaces/bar"
 
 
 class ProfessionalHomepageTests(unittest.TestCase):
@@ -14,6 +15,11 @@ class ProfessionalHomepageTests(unittest.TestCase):
             path = HOMEPAGE / f"{name}.qml"
             self.assertTrue(path.is_file(), name)
             self.assertIn(f"{name} 1.0 {name}.qml", qmldir)
+
+    def test_bar_motion_host_is_registered_for_runtime_loading(self) -> None:
+        qmldir = (BAR / "qmldir").read_text(encoding="utf-8")
+        self.assertTrue((BAR / "BarMotionHost.qml").is_file())
+        self.assertIn("BarMotionHost 1.0 BarMotionHost.qml", qmldir)
 
     def test_pro_card_has_visual_hierarchy_and_status_slot(self) -> None:
         content = (HOMEPAGE / "ProCard.qml").read_text(encoding="utf-8")
@@ -61,7 +67,7 @@ class ProfessionalHomepageTests(unittest.TestCase):
 
     def test_managed_shell_version_is_bumped(self) -> None:
         version = (ROOT / "modules/shell/.arch-wm-version").read_text(encoding="utf-8").strip()
-        self.assertEqual(version, "2026.08.07.22")
+        self.assertEqual(version, "2026.08.07.23")
 
 
 if __name__ == "__main__":
