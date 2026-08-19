@@ -22,6 +22,19 @@ Scope {
         return true
     }
 
+    // Quickshell 0.2.x exposes Repeater modelData reliably here, but the
+    // implicit `index` context value is not available inside imported delegate
+    // types on every runtime. Bake the stagger order into the model itself so
+    // BarMotionHost only consumes explicit entry data.
+    function withEntranceOrder(entries, base) {
+        const source = entries || []
+        return source.map(function(entry, position) {
+            const copy = Object.assign({}, entry)
+            copy._entranceOrder = base + position
+            return copy
+        })
+    }
+
     Binding {
         target: Core.InteractiveShellController
         property: "menuController"
@@ -94,13 +107,14 @@ Scope {
                             spacing: Core.Theme.barWidgetSpacing
 
                             Repeater {
-                                model: Services.LayoutService.bar.regions.start || []
+                                model: barScope.withEntranceOrder(
+                                    Services.LayoutService.bar.regions.start || [], 0)
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: index
+                                    entranceOrder: Number(modelData._entranceOrder || 0)
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -122,13 +136,14 @@ Scope {
                             spacing: Core.Theme.barWidgetSpacing
 
                             Repeater {
-                                model: Services.LayoutService.bar.regions.center || []
+                                model: barScope.withEntranceOrder(
+                                    Services.LayoutService.bar.regions.center || [], 5)
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 5 + index
+                                    entranceOrder: Number(modelData._entranceOrder || 5)
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -164,14 +179,16 @@ Scope {
                             // via this repeater, so the two switch places:
                             // hamburger now sits to the left of power.
                             Repeater {
-                                model: (Services.LayoutService.bar.regions.end || [])
-                                    .filter(function(entry) { return entry.instance !== "session-main" })
+                                model: barScope.withEntranceOrder(
+                                    (Services.LayoutService.bar.regions.end || [])
+                                        .filter(function(entry) { return entry.instance !== "session-main" }),
+                                    8)
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 8 + index
+                                    entranceOrder: Number(modelData._entranceOrder || 8)
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -254,14 +271,16 @@ Scope {
                             }
 
                             Repeater {
-                                model: (Services.LayoutService.bar.regions.end || [])
-                                    .filter(function(entry) { return entry.instance === "session-main" })
+                                model: barScope.withEntranceOrder(
+                                    (Services.LayoutService.bar.regions.end || [])
+                                        .filter(function(entry) { return entry.instance === "session-main" }),
+                                    14)
 
                                 BarMotionHost {
                                     entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 14 + index
+                                    entranceOrder: Number(modelData._entranceOrder || 14)
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
