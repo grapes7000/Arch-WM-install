@@ -28,7 +28,7 @@ jobs:
           test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv_pastel.json"
           test -f "$XDG_CONFIG_HOME/theme-engine/themes/winegruv_luxe.json"
           python modules/theme-engine/bin/theme --validate
-      - name: Lint homepage QML with Arch + Quickshell
+      - name: Lint motion QML and Hyprland Lua with Arch
         run: |
           docker run --rm \
             -v "$PWD:/repo" \
@@ -36,10 +36,15 @@ jobs:
             archlinux:latest \
             bash -lc '
               set -euo pipefail
-              pacman -Syu --noconfirm --needed qt6-declarative quickshell >/dev/null
+              pacman -Syu --noconfirm --needed qt6-declarative quickshell lua >/dev/null
               /usr/lib/qt6/bin/qmllint -I modules/shell \
                 modules/shell/surfaces/homepage/GlassCard.qml \
-                modules/shell/surfaces/homepage/HomepageSurface.qml
+                modules/shell/surfaces/homepage/HomepageSurface.qml \
+                modules/shell/surfaces/bar/BarMotionHost.qml \
+                modules/shell/surfaces/bar/BarSurface.qml \
+                modules/shell/surfaces/bar/DrawerSurface.qml \
+                modules/shell/surfaces/bar/LauncherOverlay.qml
+              find modules/hyprland/config -name "*.lua" -print0 | xargs -0 -n1 luac -p
             '
       - name: Check shell scripts
         run: |
