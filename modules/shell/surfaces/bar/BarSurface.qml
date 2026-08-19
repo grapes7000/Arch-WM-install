@@ -139,8 +139,12 @@ Scope {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
                                     Layout.preferredWidth: implicitWidth
+                                    // The RowLayout already sits inside barPadding on
+                                    // both the top and bottom. Keep the clock pill
+                                    // strictly inside that usable height so its border
+                                    // and rounded corners are never clipped.
                                     Layout.preferredHeight: modelData.widget === "clock"
-                                        ? Math.max(implicitHeight, Core.Theme.barHeight - Core.Theme.barPadding)
+                                        ? Math.max(implicitHeight, Core.Theme.barHeight - Core.Theme.barPadding * 2 - 2)
                                         : implicitHeight
                                 }
                             }
@@ -156,6 +160,7 @@ Scope {
                         RowLayout {
                             anchors {
                                 right: parent.right
+                                rightMargin: 2
                                 verticalCenter: parent.verticalCenter
                             }
                             spacing: Core.Theme.barWidgetSpacing
