@@ -35,7 +35,7 @@ class HomepageMotionTests(unittest.TestCase):
         self.assertIn("function layoutMetrics()", content)
         self.assertIn("function automaticAssemblyOrder()", content)
         self.assertIn("function automaticAssemblyDirection()", content)
-        self.assertIn("effectiveAssemblyOrder * 145", content)
+        self.assertIn("effectiveAssemblyOrder * 112", content)
         self.assertIn("return 0.9 + metrics.vertical * 3.3", content)
         self.assertIn("return 5.1 + (1.0 - metrics.vertical) * 3.4", content)
         self.assertIn('return "left"', content)
@@ -43,10 +43,18 @@ class HomepageMotionTests(unittest.TestCase):
         self.assertIn('return metrics.topmost ? "top" : "bottom"', content)
         self.assertRegex(content, r"if \(metrics\.topmost\)\s+return 0")
 
-    def test_homepage_motion_is_deliberately_slower(self) -> None:
+    def test_homepage_motion_is_quicker_but_still_choreographed(self) -> None:
         content = GLASS_CARD.read_text(encoding="utf-8")
-        self.assertIn("effectiveAssemblyOrder * 145", content)
-        self.assertIn("Math.max(420, Core.Theme.homepageTransitionMs)", content)
+        self.assertIn("effectiveAssemblyOrder * 112", content)
+        self.assertIn("Math.max(350, Core.Theme.homepageTransitionMs)", content)
+        self.assertNotIn("effectiveAssemblyOrder * 145", content)
+        self.assertNotIn("Math.max(420, Core.Theme.homepageTransitionMs)", content)
+
+    def test_homepage_motion_has_progress_driven_landing_flash(self) -> None:
+        content = GLASS_CARD.read_text(encoding="utf-8")
+        self.assertIn("readonly property real landingPulse", content)
+        self.assertIn("opacity: root.landingPulse * 0.55", content)
+        self.assertNotIn("landingPulseTimer", content)
 
     def test_homepage_motion_replays_on_window_visibility(self) -> None:
         content = GLASS_CARD.read_text(encoding="utf-8")
