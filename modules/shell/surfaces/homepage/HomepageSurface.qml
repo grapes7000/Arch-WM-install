@@ -232,7 +232,47 @@ Scope {
                             }
                         }
 
-                        Item { Layout.fillHeight: true }
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: root.compact ? 138 : 172
+                            eyebrow: "At a glance"
+                            icon: "󰋼"
+                            title: "Desktop Pulse"
+                            subtitle: "Useful state without opening a panel"
+                            statusText: Services.NetworkService.connected ? "ONLINE" : "OFFLINE"
+                            statusTone: Services.NetworkService.connected ? "good" : "muted"
+                            contentPadding: root.compact ? 10 : 12
+                            contentSpacing: 6
+
+                            GlanceRow {
+                                icon: "󰖩"
+                                label: "Network"
+                                valueText: Services.NetworkService.connected ? "Connected" : "Offline"
+                                tone: Services.NetworkService.connected ? "good" : "muted"
+                            }
+
+                            GlanceRow {
+                                icon: "󰻠"
+                                label: "CPU"
+                                valueText: Services.SystemStatsService.cpuPercent + "%"
+                                tone: Services.SystemStatsService.cpuPercent >= 85 ? "urgent" : "accent"
+                            }
+
+                            GlanceRow {
+                                icon: Services.WeatherService.icon || "󰖐"
+                                label: "Outside"
+                                valueText: Services.WeatherService.available ? Services.WeatherService.temp : "--"
+                                tone: "secondary"
+                            }
+
+                            GlanceRow {
+                                icon: "󰔛"
+                                label: "Uptime"
+                                valueText: Services.SystemStatsService.uptime
+                                tone: "muted"
+                            }
+                        }
 
                         ProCard {
                             Layout.fillWidth: true
@@ -420,9 +460,142 @@ Scope {
                             QuickAccessPanel {
                                 visible: root.selectedPage === "home"
                                 Layout.fillWidth: true
-                                Layout.fillHeight: true
+                                Layout.preferredHeight: implicitHeight
                                 compact: root.compact
                                 apps: root.quickAccessApps
+                            }
+
+                            Rectangle {
+                                id: desktopActivityDeck
+                                visible: root.selectedPage === "home"
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                Layout.minimumHeight: root.compact ? 150 : 190
+                                radius: Math.max(12, Core.Theme.homepageCardRadius - 3)
+                                color: Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.34)
+                                border.width: 1
+                                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.42)
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: root.compact ? 11 : 14
+                                    spacing: 10
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+
+                                        ColumnLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 1
+                                            Text {
+                                                text: "DESKTOP PULSE"
+                                                color: Core.Theme.accent
+                                                font.family: Core.Theme.fontFamily
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                                font.letterSpacing: 1.0
+                                            }
+                                            Text {
+                                                text: "Live activity and session context"
+                                                color: Core.Theme.muted
+                                                font.family: Core.Theme.fontFamily
+                                                font.pixelSize: 9
+                                            }
+                                        }
+
+                                        StatusChip {
+                                            text: "UP " + Services.SystemStatsService.uptime
+                                            tone: "muted"
+                                        }
+                                    }
+
+                                    GridLayout {
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                        columns: root.compact ? 1 : 3
+                                        rowSpacing: 8
+                                        columnSpacing: 8
+
+                                        PulseTile {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            label: "CPU LOAD"
+                                            icon: "󰻠"
+                                            valueText: Services.SystemStatsService.cpuPercent + "%"
+                                            samples: root.cpuHistory
+                                            toneColor: Core.Theme.accent
+                                        }
+
+                                        PulseTile {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            label: "MEMORY"
+                                            icon: "󰘚"
+                                            valueText: Services.SystemStatsService.memoryPercent + "%"
+                                            samples: root.memoryHistory
+                                            toneColor: Core.Theme.accent2
+                                        }
+
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            Layout.minimumHeight: root.compact ? 84 : 110
+                                            radius: 11
+                                            color: Core.Theme.alphaColor(Core.Theme.surfaceOverlay, 0.42)
+                                            border.width: 1
+                                            border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.34)
+
+                                            ColumnLayout {
+                                                anchors.fill: parent
+                                                anchors.margins: 10
+                                                spacing: 5
+
+                                                RowLayout {
+                                                    Layout.fillWidth: true
+                                                    Text { text: Services.WeatherService.icon || "󰖐"; color: Core.Theme.accent2; font.pixelSize: 17 }
+                                                    Text { text: "SESSION"; color: Core.Theme.muted; font.pixelSize: 9; font.bold: true }
+                                                    Item { Layout.fillWidth: true }
+                                                    Text {
+                                                        text: Services.WeatherService.available ? Services.WeatherService.temp : "--"
+                                                        color: Core.Theme.foreground
+                                                        font.pixelSize: 18
+                                                        font.bold: true
+                                                    }
+                                                }
+
+                                                Text {
+                                                    Layout.fillWidth: true
+                                                    text: Services.WeatherService.available
+                                                        ? Services.WeatherService.condition
+                                                        : "Weather unavailable"
+                                                    color: Core.Theme.foreground
+                                                    font.pixelSize: 10
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                Rectangle {
+                                                    Layout.fillWidth: true
+                                                    Layout.preferredHeight: 1
+                                                    color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.42)
+                                                }
+
+                                                RowLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 6
+                                                    Text { text: "󰖩"; color: Services.NetworkService.connected ? Core.Theme.accent : Core.Theme.muted; font.pixelSize: 13 }
+                                                    Text {
+                                                        Layout.fillWidth: true
+                                                        text: Services.NetworkService.connected ? "Network connected" : "Network offline"
+                                                        color: Core.Theme.muted
+                                                        font.pixelSize: 9
+                                                        elide: Text.ElideRight
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             PagePanel { page: "network" }
@@ -663,6 +836,73 @@ Scope {
                                 expand: true
                             }
                         }
+                    }
+                }
+            }
+
+            component GlanceRow: Rectangle {
+                id: glanceRow
+                property string icon: ""
+                property string label: ""
+                property string valueText: ""
+                property string tone: "accent"
+                readonly property color toneColor: glanceRow.tone === "good" ? Core.Theme.good
+                    : glanceRow.tone === "urgent" ? Core.Theme.urgent
+                    : glanceRow.tone === "secondary" ? Core.Theme.accent2
+                    : glanceRow.tone === "muted" ? Core.Theme.muted
+                    : Core.Theme.accent
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.compact ? 32 : 36
+                radius: 9
+                color: Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.34)
+                border.width: 1
+                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.28)
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 7
+                    spacing: 7
+                    Text { text: glanceRow.icon; color: glanceRow.toneColor; font.pixelSize: 13 }
+                    Text { text: glanceRow.label; color: Core.Theme.muted; font.pixelSize: 9; font.bold: true }
+                    Item { Layout.fillWidth: true }
+                    Text { text: glanceRow.valueText; color: Core.Theme.foreground; font.pixelSize: 10; font.bold: true; elide: Text.ElideRight }
+                }
+            }
+
+            component PulseTile: Rectangle {
+                id: pulseTile
+                property string label: ""
+                property string icon: ""
+                property string valueText: ""
+                property var samples: []
+                property color toneColor: Core.Theme.accent
+
+                Layout.minimumHeight: root.compact ? 84 : 110
+                radius: 11
+                color: Core.Theme.alphaColor(Core.Theme.surfaceOverlay, 0.42)
+                border.width: 1
+                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.34)
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 5
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text { text: pulseTile.icon; color: pulseTile.toneColor; font.pixelSize: 16 }
+                        Text { text: pulseTile.label; color: Core.Theme.muted; font.pixelSize: 9; font.bold: true }
+                        Item { Layout.fillWidth: true }
+                        Text { text: pulseTile.valueText; color: Core.Theme.foreground; font.pixelSize: 18; font.bold: true }
+                    }
+
+                    Sparkline {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumHeight: 34
+                        samples: pulseTile.samples
+                        lineColor: pulseTile.toneColor
                     }
                 }
             }
