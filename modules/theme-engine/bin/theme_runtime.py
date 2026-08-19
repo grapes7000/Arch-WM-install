@@ -196,6 +196,29 @@ def _ensure_line(path: Path, line: str) -> None:
     _atomic_text(path, text + line + "\n")
 
 
+def _ensure_css_import(path: Path, line: str) -> None:
+    """Place a CSS @import before normal rules while preserving user content.
+
+    Firefox-family userChrome.css files may already contain @charset and
+    @-moz-document blocks. CSS requires @import to appear before ordinary rules;
+    appending it at EOF makes Floorp ignore the generated theme entirely.
+    Existing copies are removed and one canonical import is inserted immediately
+    after @charset when present, otherwise at the start of the file.
+    """
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    lines = [existing for existing in text.splitlines() if existing.strip() != line]
+    insert_at = 0
+    for index, existing in enumerate(lines):
+        stripped = existing.strip()
+        if not stripped:
+            continue
+        if stripped.lower().startswith("@charset"):
+            insert_at = index + 1
+        break
+    lines.insert(insert_at, line)
+    _atomic_text(path, "\n".join(lines) + "\n")
+
+
 def _mozilla_roots() -> list[Path]:
     return [
         HOME / ".mozilla/firefox",
@@ -283,7 +306,7 @@ def _apply_firefox(theme: dict[str, Any]) -> int:
         chrome = profile / "chrome"
         chrome.mkdir(parents=True, exist_ok=True)
         _atomic_text(chrome / "theme-engine.css", css)
-        _ensure_line(chrome / "userChrome.css", '@import url("theme-engine.css");')
+        _ensure_css_import(chrome / "userChrome.css", '@import url("theme-engine.css");')
         _ensure_line(
             profile / "user.js",
             'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);',
