@@ -21,9 +21,9 @@ Rectangle {
     implicitWidth: chipRow.implicitWidth + 14
     implicitHeight: 24
     radius: 12
-    color: Core.Theme.alphaColor(root.toneColor, 0.12)
+    color: Qt.rgba(root.toneColor.r, root.toneColor.g, root.toneColor.b, 0.12)
     border.width: 1
-    border.color: Core.Theme.alphaColor(root.toneColor, 0.34)
+    border.color: Qt.rgba(root.toneColor.r, root.toneColor.g, root.toneColor.b, 0.34)
     visible: root.text.length > 0
 
     RowLayout {
