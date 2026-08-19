@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Io
 import Quickshell.Widgets
 import "../../core" as Core
 import "../../components" as Components
@@ -23,8 +22,6 @@ Scope {
                 const configured = Core.Theme.data.wallpapers || []
                 if (Array.isArray(configured) && configured.length > 0)
                     return configured
-                // theme.json exposes wallpaper as { path, generator }; only
-                // fall back to it while the homepage images are loading.
                 const wallpaper = Core.Theme.data.wallpaper || ""
                 if (typeof wallpaper === "string" && wallpaper)
                     return [wallpaper]
@@ -34,31 +31,17 @@ Scope {
                 ? String(slides[Math.min(slideIndex, slides.length - 1)]) : ""
             readonly property bool mediaActive: Services.MprisService.status !== "Stopped"
             readonly property bool heroHasArt: mediaActive && !!Services.MprisService.artUrl
-
-            // Switch between the two hero card behaviors here:
-            //  - false (current default): the hero card only shows while
-            //    media is actively playing with artwork, and disappears
-            //    entirely otherwise (Quick Access expands to fill the space).
-            //  - true: restores the previous always-visible hero card that
-            //    falls back to a wallpaper slideshow when nothing is playing.
             property bool heroSlideshowEnabled: false
-
             readonly property bool heroVisible: root.heroSlideshowEnabled ? true : root.heroHasArt
             readonly property string heroSource: root.heroHasArt
                 ? Services.MprisService.artUrl
                 : (root.heroSlideshowEnabled ? root.currentSlide : "")
+
             readonly property bool compact: width < 1180 || height < 700
             readonly property real gap: compact ? 8 : Math.max(10, Core.Theme.gap)
-            // Roughly 18% / 62% / 20% of the available width, clamped to
-            // sane min/max so the rails stay usable on very small or very
-            // large screens without starving the center column.
             readonly property real leftWidth: compact ? 200 : Math.max(220, Math.min(300, width * 0.18))
-            readonly property real rightWidth: compact ? 220 : Math.max(240, Math.min(320, width * 0.20))
+            readonly property real rightWidth: compact ? 230 : Math.max(250, Math.min(330, width * 0.21))
 
-            // Quick Access apps shown on the homepage. Edit this list to change what shows up:
-            // - icon: fallback glyph used only if no matching .desktop entry is found
-            // - name: label under the icon
-            // - command: shell command used both to launch the app and to match it to a .desktop entry
             property var quickAccessApps: [
                 { icon: "󰉋", name: "Files", command: "thunar" },
                 { icon: "󰆍", name: "Terminal", command: "kitty" },
@@ -72,12 +55,11 @@ Scope {
                 { icon: "󱓧", name: "Obsidian", command: "obsidian" }
             ]
 
-            // Hide the dashboard whenever any real window is open so the
-            // theme wallpaper shows through instead. Polled by a timer rather
-            // than bound to the toplevel model: reacting synchronously to the
-            // model's update group crashes this Quickshell version.
             property bool anyWindowOpen: false
             property bool hiddenForWindows: false
+            property var cpuHistory: []
+            property var memoryHistory: []
+            property var diskHistory: []
 
             screen: modelData
             anchors { top: true; bottom: true; left: true; right: true }
@@ -93,6 +75,45 @@ Scope {
             color: "transparent"
             visible: !hiddenForWindows && !Services.LockStateService.locked
                 && Core.InteractiveShellController.homepageVisible
+
+            function select(page) {
+                selectedPage = selectedPage === page ? "home" : page
+            }
+
+            function pageTitle(page) {
+                if (!page || page === "home")
+                    return "Quick Access"
+                return page.charAt(0).toUpperCase() + page.slice(1)
+            }
+
+            function pageIcon(page) {
+                switch (page) {
+                    case "system": return "󰍛"
+                    case "network": return "󰖩"
+                    case "audio": return "󰕾"
+                    case "calendar": return "󰃭"
+                    case "media": return "󰎈"
+                }
+                return "󰆍"
+            }
+
+            function panelSourceFor(page) {
+                switch (page) {
+                    case "network": return Qt.resolvedUrl("../../widgets/network/Panel.qml")
+                    case "system": return Qt.resolvedUrl("../../widgets/system-stats/Panel.qml")
+                    case "media": return Qt.resolvedUrl("../../widgets/media/Panel.qml")
+                    case "audio": return Qt.resolvedUrl("../../widgets/volume/Panel.qml")
+                    case "calendar": return Qt.resolvedUrl("../../widgets/clock/Panel.qml")
+                }
+                return ""
+            }
+
+            function appendHistory(values, sample) {
+                const next = Array.isArray(values) ? values.slice(-29) : []
+                next.push(Math.max(0, Math.min(100, Number(sample) || 0)))
+                return next
+            }
+
             Timer {
                 id: windowProbe
                 interval: 600
@@ -100,17 +121,9 @@ Scope {
                 triggeredOnStart: true
                 running: !Services.LockStateService.locked
                 onTriggered: {
-                    // Only windows on the workspace currently shown by this
-                    // screen should hide the dashboard. Hyprland.toplevels
-                    // lists every workspace, so windows elsewhere must not
-                    // keep an empty workspace's homepage hidden.
                     const monitor = Hyprland.monitorFor(root.screen)
-                    const workspace = monitor
-                        ? monitor.activeWorkspace
-                        : Hyprland.focusedWorkspace
-                    const open = workspace
-                        ? workspace.toplevels.values.length > 0
-                        : false
+                    const workspace = monitor ? monitor.activeWorkspace : Hyprland.focusedWorkspace
+                    const open = workspace ? workspace.toplevels.values.length > 0 : false
                     if (open === root.anyWindowOpen)
                         return
                     root.anyWindowOpen = open
@@ -122,49 +135,35 @@ Scope {
                     }
                 }
             }
+
             Timer {
                 id: fadeOutTimer
                 interval: Core.Theme.animationMs * 2
                 onTriggered: root.hiddenForWindows = true
             }
 
-            function select(page) {
-                selectedPage = selectedPage === page ? "home" : page
+            Timer {
+                interval: 2000
+                repeat: true
+                running: root.visible
+                triggeredOnStart: true
+                onTriggered: {
+                    root.cpuHistory = root.appendHistory(root.cpuHistory, Services.SystemStatsService.cpuPercent)
+                    root.memoryHistory = root.appendHistory(root.memoryHistory, Services.SystemStatsService.memoryPercent)
+                    root.diskHistory = root.appendHistory(root.diskHistory, Services.SystemStatsService.diskPercent)
+                }
             }
 
-            function launch(command) {
-                if (!command || launchProcess.running) return
-                launchProcess.command = ["sh", "-lc", command]
-                launchProcess.running = true
-            }
-
-            function desktopIconFor(command) {
-                if (!command) return ""
-                const bin = command.trim().split(" ")[0].split("/").pop().toLowerCase()
-                const entries = [...DesktopEntries.applications.values]
-                const match = entries.find(entry => {
-                    const id = String(entry.id || "").toLowerCase()
-                    const execBin = String(entry.execString || "").trim().split(" ")[0].split("/").pop().toLowerCase()
-                    return execBin === bin || id === bin || id === bin + ".desktop"
-                })
-                return match ? match.icon : ""
-            }
-
-            Process {
-                id: launchProcess
-                onExited: command = []
-            }
-
-            // Fades the whole dashboard out when windows are open so the theme
-            // wallpaper shows through. PanelWindow has no opacity in this
-            // Quickshell version, so the fade lives on a content layer and the
-            // window itself is hidden once the fade finishes.
             Item {
                 id: contentLayer
                 anchors.fill: parent
                 opacity: root.anyWindowOpen ? 0 : 1
+
                 Behavior on opacity {
-                    NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: Core.Theme.animationMs * 2
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
                 Rectangle {
@@ -176,110 +175,82 @@ Scope {
                     border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
                 }
 
-            Image {
-                anchors.fill: parent
-                source: root.heroSource
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                cache: true
-                opacity: status === Image.Ready ? 0.10 : 0
-                scale: 1.08
-                Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
-            }
+                Image {
+                    anchors.fill: parent
+                    source: root.heroSource
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: true
+                    opacity: status === Image.Ready ? 0.09 : 0
+                    scale: 1.08
+                    Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
+                }
 
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: root.gap
-                spacing: root.gap
-
-                ColumnLayout {
-                    Layout.minimumWidth: root.leftWidth
-                    Layout.preferredWidth: root.leftWidth
-                    Layout.maximumWidth: root.leftWidth
-                    Layout.fillHeight: true
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: root.gap
                     spacing: root.gap
 
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 105 : 128
-                        Column {
-                            anchors.fill: parent
-                            anchors.margins: 18
-                            spacing: 6
-                            Text {
-                                text: Services.TimeService.timeShort
-                                color: Core.Theme.foreground
-                                font.pixelSize: root.compact ? 26 : 34
-                                font.bold: true
-                            }
-                            Text {
-                                text: Services.TimeService.dateLong
-                                color: Core.Theme.muted
-                                font.pixelSize: 13
-                            }
-                            Text {
-                                text: Core.Theme.data.name || "Current theme"
-                                color: Core.Theme.accent
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
-                        }
-                    }
+                    ColumnLayout {
+                        Layout.minimumWidth: root.leftWidth
+                        Layout.preferredWidth: root.leftWidth
+                        Layout.maximumWidth: root.leftWidth
+                        Layout.fillHeight: true
+                        spacing: root.gap
 
-                    Repeater {
-                        model: [
-                            { icon: "󰍛", title: "System", subtitle: "CPU, memory and system info", page: "system" },
-                            { icon: "󰖩", title: "Network", subtitle: "Network & connectivity", page: "network" },
-                            { icon: "󰕾", title: "Audio", subtitle: "Audio mixer and devices", page: "audio" },
-                            { icon: "󰃭", title: "Calendar", subtitle: "Events and upcoming agenda", page: "calendar" },
-                            { icon: "󰎈", title: "Media", subtitle: "Now playing", page: "media" }
-                        ]
-                        RailCard {
-                            required property var modelData
+                        ProCard {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: root.compact ? 64 : 76
-                            icon: modelData.icon
-                            title: modelData.title
-                            subtitle: modelData.subtitle
-                            active: root.selectedPage === modelData.page
-                            onActivated: root.select(modelData.page)
+                            Layout.preferredHeight: root.compact ? 108 : 126
+                            eyebrow: "Desktop"
+                            icon: "󰥔"
+                            title: Services.TimeService.timeShort
+                            subtitle: Services.TimeService.dateLong
+                            statusText: Core.Theme.data.name || "Theme"
+                            statusTone: "secondary"
+                            heroStyle: true
+                            contentPadding: root.compact ? 12 : 14
                         }
-                    }
 
-                    Item { Layout.fillHeight: true }
+                        Repeater {
+                            model: [
+                                { icon: "󰍛", title: "System", subtitle: "Performance & processes", page: "system" },
+                                { icon: "󰖩", title: "Network", subtitle: "Wi-Fi & connectivity", page: "network" },
+                                { icon: "󰕾", title: "Audio", subtitle: "Mixer & output devices", page: "audio" },
+                                { icon: "󰃭", title: "Calendar", subtitle: "Agenda & upcoming events", page: "calendar" },
+                                { icon: "󰎈", title: "Media", subtitle: "Playback & players", page: "media" }
+                            ]
 
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 170 : 210
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 14
-                            spacing: 7
-
-                            Text {
-                                text: "Now Playing"
-                                color: Core.Theme.accent
-                                font.pixelSize: 16
-                                font.bold: true
-                            }
-                            Text {
+                            RailCard {
+                                required property var modelData
                                 Layout.fillWidth: true
-                                text: Services.MprisService.title || "Nothing playing"
-                                color: Core.Theme.foreground
-                                font.pixelSize: 16
-                                font.bold: true
-                                elide: Text.ElideRight
+                                Layout.preferredHeight: root.compact ? 62 : 72
+                                icon: modelData.icon
+                                title: modelData.title
+                                subtitle: modelData.subtitle
+                                active: root.selectedPage === modelData.page
+                                onActivated: root.select(modelData.page)
                             }
-                            Text {
-                                Layout.fillWidth: true
-                                text: Services.MprisService.artist || "Your wallpaper slideshow is active"
-                                color: Core.Theme.muted
-                                font.pixelSize: 13
-                                elide: Text.ElideRight
-                            }
+                        }
+
+                        Item { Layout.fillHeight: true }
+
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.compact ? 165 : 198
+                            eyebrow: "Media"
+                            icon: "󰎈"
+                            title: Services.MprisService.title || "Nothing playing"
+                            subtitle: Services.MprisService.artist || "Waiting for a media player"
+                            statusText: root.mediaActive ? Services.MprisService.status.toUpperCase() : "IDLE"
+                            statusTone: Services.MprisService.status === "Playing" ? "good" : "muted"
+                            contentPadding: root.compact ? 11 : 13
+                            contentSpacing: 7
+
                             Item {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                Layout.minimumHeight: root.compact ? 38 : 52
+
                                 Row {
                                     anchors.fill: parent
                                     spacing: 2
@@ -293,240 +264,297 @@ Scope {
                                             anchors.bottom: parent.bottom
                                             radius: width / 2
                                             color: index % 2 ? Core.Theme.accent2 : Core.Theme.accent
+                                            opacity: 0.88
                                             Behavior on height { NumberAnimation { duration: 70 } }
                                         }
                                     }
                                 }
                             }
+
                             RowLayout {
                                 Layout.alignment: Qt.AlignHCenter
-                                spacing: 22
+                                spacing: 20
+
                                 Text {
                                     text: "󰒮"
-                                    color: Core.Theme.muted
-                                    font.pixelSize: 23
-                                    MouseArea { id: hpPrevArea; anchors.fill: parent; onClicked: Services.MprisService.previous() }
+                                    color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted
+                                    font.pixelSize: 20
+                                    opacity: Services.MprisService.canPrev ? 1 : 0.45
+                                    MouseArea {
+                                        id: hpPrevArea
+                                        anchors.fill: parent
+                                        enabled: Services.MprisService.canPrev
+                                        onClicked: Services.MprisService.previous()
+                                    }
                                     Components.PressBounce { pressed: hpPrevArea.pressed }
                                 }
-                                Text {
-                                    text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
-                                    color: Core.Theme.accent
-                                    font.pixelSize: 31
+
+                                Rectangle {
+                                    Layout.preferredWidth: 38
+                                    Layout.preferredHeight: 38
+                                    radius: 19
+                                    color: Core.Theme.alphaColor(Core.Theme.accent, 0.16)
+                                    border.width: 1
+                                    border.color: Core.Theme.alphaColor(Core.Theme.accent, 0.36)
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
+                                        color: Core.Theme.accent
+                                        font.pixelSize: 21
+                                    }
                                     MouseArea { id: hpPlayPauseArea; anchors.fill: parent; onClicked: Services.MprisService.playPause() }
                                     Components.PressBounce { pressed: hpPlayPauseArea.pressed }
                                 }
+
                                 Text {
                                     text: "󰒭"
-                                    color: Core.Theme.muted
-                                    font.pixelSize: 23
-                                    MouseArea { id: hpNextArea; anchors.fill: parent; onClicked: Services.MprisService.next() }
+                                    color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted
+                                    font.pixelSize: 20
+                                    opacity: Services.MprisService.canNext ? 1 : 0.45
+                                    MouseArea {
+                                        id: hpNextArea
+                                        anchors.fill: parent
+                                        enabled: Services.MprisService.canNext
+                                        onClicked: Services.MprisService.next()
+                                    }
                                     Components.PressBounce { pressed: hpNextArea.pressed }
                                 }
                             }
                         }
                     }
-                }
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.minimumWidth: 360
-                    spacing: root.gap
-
-                    GlassCard {
-                        visible: root.heroVisible
+                    ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.minimumHeight: root.compact ? 240 : 320
-                        clip: true
+                        Layout.minimumWidth: 360
+                        spacing: root.gap
 
-                        // ClippingRectangle (unlike a plain Rectangle) always
-                        // paints its border on top of its content and insets
-                        // the content inside that border automatically, so
-                        // the frame stays visible even though the image
-                        // fills the same bounds -- a plain child Image with
-                        // anchors.fill: parent would otherwise paint over
-                        // and hide a Rectangle's border.
-                        ClippingRectangle {
-                            anchors.fill: parent
-                            radius: Core.Theme.homepageCardRadius
-                            color: Core.Theme.surfaceBase
-                            border.width: Core.Theme.borderWidth
-                            border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
+                        GlassCard {
+                            visible: root.heroVisible
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: root.compact ? 230 : 300
+                            clip: true
 
-                            Image {
+                            ClippingRectangle {
                                 anchors.fill: parent
-                                source: root.heroSource
-                                fillMode: Image.PreserveAspectFit
-                                asynchronous: true
-                                cache: true
-                                opacity: status === Image.Ready ? 1 : 0
-                                Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
-                            }
+                                radius: Core.Theme.homepageCardRadius
+                                color: Core.Theme.surfaceBase
+                                border.width: Core.Theme.borderWidth
+                                border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
 
-                            // A light vignette only, so the artwork itself stays
-                            // the strongest visual focal point on the homepage
-                            // instead of being dimmed by a heavy scrim (the
-                            // Quick Access controls now live in their own card
-                            // below, not overlaid on top of the image).
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "transparent"
-                                gradient: Gradient {
-                                    GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
-                                    GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.0) }
-                                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.22) }
+                                Image {
+                                    anchors.fill: parent
+                                    source: root.heroSource
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    cache: true
+                                    opacity: status === Image.Ready ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
+                                }
+
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: root.compact ? 84 : 98
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
+                                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.76) }
+                                    }
+                                }
+
+                                RowLayout {
+                                    visible: root.heroHasArt
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    anchors.margins: root.compact ? 13 : 17
+                                    spacing: 10
+
+                                    StatusChip {
+                                        text: Services.MprisService.status === "Playing" ? "NOW PLAYING" : "PAUSED"
+                                        tone: Services.MprisService.status === "Playing" ? "good" : "muted"
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 0
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: Services.MprisService.title
+                                            color: "white"
+                                            font.pixelSize: root.compact ? 14 : 16
+                                            font.bold: true
+                                            elide: Text.ElideRight
+                                        }
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: Services.MprisService.artist
+                                            color: Qt.rgba(1, 1, 1, 0.72)
+                                            font.pixelSize: 11
+                                            elide: Text.ElideRight
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: !root.heroVisible
-                        fillAlphaBoost: 0.1
-                        implicitHeight: quickAccessCol.implicitHeight + (root.compact ? 22 : 30)
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: root.compact ? 250 : 295
+                            fillAlphaBoost: 0.08
+                            eyebrow: root.selectedPage === "home" ? "Workspace hub" : "Detail panel"
+                            icon: root.pageIcon(root.selectedPage)
+                            title: root.pageTitle(root.selectedPage)
+                            subtitle: root.selectedPage === "home"
+                                ? "Launch apps, open places, and jump into projects"
+                                : "Live controls from the shared shell service"
+                            statusText: root.selectedPage === "home" ? "SUPER SPACE" : "LIVE"
+                            statusTone: root.selectedPage === "home" ? "secondary" : "good"
+                            heroStyle: root.selectedPage === "home"
+                            contentPadding: root.compact ? 12 : 16
+                            contentSpacing: 9
 
-                        ColumnLayout {
-                            id: quickAccessCol
-                            anchors.fill: parent
-                            anchors.margins: root.compact ? 12 : 16
-                            spacing: 10
-
-                            Text {
-                                text: root.selectedPage === "home" ? "Quick Access" : root.selectedPage.charAt(0).toUpperCase() + root.selectedPage.slice(1)
-                                color: Core.Theme.accent
-                                font.pixelSize: 17
-                                font.bold: true
-                            }
-
-                            GridLayout {
+                            QuickAccessPanel {
                                 visible: root.selectedPage === "home"
                                 Layout.fillWidth: true
-                                columns: root.compact ? 4 : 5
-                                rowSpacing: 9
-                                columnSpacing: 9
-
-                                Repeater {
-                                    model: root.quickAccessApps
-
-                                    Item {
-                                        id: appTile
-                                        required property var modelData
-                                        readonly property string desktopIcon: root.desktopIconFor(modelData.command)
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: root.compact ? 68 : 86
-
-                                        Column {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            IconImage {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                visible: appTile.desktopIcon !== ""
-                                                implicitSize: root.compact ? 30 : 40
-                                                source: appTile.desktopIcon !== "" ? Quickshell.iconPath(appTile.desktopIcon, "") : ""
-                                                opacity: appHover.hovered ? 1.0 : 0.9
-                                                scale: appHover.hovered ? 1.08 : 1.0
-                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                            }
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                visible: appTile.desktopIcon === ""
-                                                text: modelData.icon
-                                                color: Core.Theme.accent
-                                                font.pixelSize: root.compact ? 29 : 37
-                                                scale: appHover.hovered ? 1.08 : 1.0
-                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                            }
-                                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 12 }
-                                        }
-                                        HoverHandler { id: appHover; cursorShape: Qt.PointingHandCursor }
-                                        TapHandler { id: appTap; onTapped: root.launch(modelData.command) }
-                                        Components.PressBounce { target: appTile; pressed: appTap.pressed }
-                                    }
-                                }
+                                Layout.fillHeight: true
+                                compact: root.compact
+                                apps: root.quickAccessApps
                             }
 
-                            ColumnLayout {
-                                id: panelHostLayout
-                                visible: root.selectedPage !== "home"
+                            PagePanel { page: "network" }
+                            PagePanel { page: "system" }
+                            PagePanel { page: "media" }
+                            PagePanel { page: "audio" }
+                            PagePanel { page: "calendar" }
+                        }
+
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.compact ? 66 : 76
+                            eyebrow: "Workspaces"
+                            statusText: "HYPRLAND"
+                            statusTone: "muted"
+                            contentPadding: 8
+                            contentSpacing: 0
+
+                            Loader {
+                                id: workspaceStrip
                                 Layout.fillWidth: true
-                                spacing: 0
-
-                                PagePanel { page: "network" }
-                                PagePanel { page: "system" }
-                                PagePanel { page: "media" }
-                                PagePanel { page: "audio" }
-                                PagePanel { page: "calendar" }
-                            }
-                        }
-                    }
-
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 66 : 80
-
-                        // The same workspaces widget the bar renders: identical
-                        // icons, names, focus/active coloring, hover lift, and
-                        // click-to-switch behavior. showLabels reveals every
-                        // slot name since the strip has room for it.
-                        Loader {
-                            id: workspaceStrip
-                            anchors.fill: parent
-                            anchors.margins: 6
-                            source: Qt.resolvedUrl("../../widgets/workspaces/Widget.qml")
-                            onLoaded: {
-                                item.context = {
-                                    variant: "standard",
-                                    settings: { showLabels: true },
-                                    locked: false,
-                                    allows: function(capability) {
-                                        return capability === "workspace.switch"
+                                Layout.fillHeight: true
+                                source: Qt.resolvedUrl("../../widgets/workspaces/Widget.qml")
+                                onLoaded: {
+                                    if (!item)
+                                        return
+                                    item.context = {
+                                        variant: "standard",
+                                        settings: { showLabels: true },
+                                        locked: false,
+                                        allows: function(capability) {
+                                            return capability === "workspace.switch"
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                ColumnLayout {
-                    Layout.minimumWidth: root.rightWidth
-                    Layout.preferredWidth: root.rightWidth
-                    Layout.maximumWidth: root.rightWidth
-                    Layout.fillHeight: true
-                    spacing: root.gap
+                    ColumnLayout {
+                        Layout.minimumWidth: root.rightWidth
+                        Layout.preferredWidth: root.rightWidth
+                        Layout.maximumWidth: root.rightWidth
+                        Layout.fillHeight: true
+                        spacing: root.gap
 
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 150 : 200
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 10
-                            Text { text: "System Overview"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
-                            StatBar { label: "CPU"; value: Services.SystemStatsService.cpuPercent }
-                            StatBar { label: "Memory"; value: Services.SystemStatsService.memoryPercent }
-                            StatBar { label: "Disk"; value: Services.SystemStatsService.diskPercent }
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.compact ? 218 : 258
+                            eyebrow: "System"
+                            icon: "󰍛"
+                            title: "System Overview"
+                            subtitle: "Uptime " + Services.SystemStatsService.uptime
+                            statusText: Services.SystemStatsService.cpuPercent >= 85 ? "HIGH LOAD" : "STABLE"
+                            statusTone: Services.SystemStatsService.cpuPercent >= 85 ? "urgent" : "good"
+                            contentPadding: root.compact ? 11 : 13
+                            contentSpacing: 7
+
+                            GridLayout {
+                                Layout.fillWidth: true
+                                columns: 2
+                                rowSpacing: 6
+                                columnSpacing: 6
+
+                                MetricTile {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    Layout.preferredHeight: root.compact ? 66 : 72
+                                    label: "CPU"
+                                    icon: "󰻠"
+                                    value: Services.SystemStatsService.cpuPercent
+                                    valueText: Services.SystemStatsService.cpuPercent + "%"
+                                }
+
+                                MetricTile {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    Layout.preferredHeight: root.compact ? 66 : 72
+                                    label: "MEMORY"
+                                    icon: "󰘚"
+                                    tone: "secondary"
+                                    value: Services.SystemStatsService.memoryPercent
+                                    valueText: Services.SystemStatsService.memoryPercent + "%"
+                                }
+
+                                MetricTile {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    Layout.columnSpan: 2
+                                    Layout.preferredHeight: root.compact ? 60 : 66
+                                    label: "DISK"
+                                    icon: "󰋊"
+                                    value: Services.SystemStatsService.diskPercent
+                                    valueText: Services.SystemStatsService.diskPercent + "%"
+                                    detail: "root filesystem"
+                                }
+                            }
+
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Uptime"; color: Core.Theme.muted; font.pixelSize: 13 }
-                                Item { Layout.fillWidth: true }
-                                Text { text: Services.SystemStatsService.uptime; color: Core.Theme.foreground; font.pixelSize: 13; font.bold: true }
+                                spacing: 8
+                                ColumnLayout {
+                                    Layout.preferredWidth: 58
+                                    spacing: 0
+                                    Text { text: "CPU"; color: Core.Theme.foreground; font.pixelSize: 10; font.bold: true }
+                                    Text { text: "60 sec"; color: Core.Theme.muted; font.pixelSize: 8 }
+                                }
+                                Sparkline {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: root.compact ? 28 : 34
+                                    samples: root.cpuHistory
+                                    lineColor: Qt.color(Core.Theme.accent)
+                                }
                             }
                         }
-                    }
 
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 90 : 125
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 14
-                            spacing: 8
-                            Text { text: "Audio Visualizer"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.compact ? 100 : 124
+                            eyebrow: "Signal"
+                            icon: "󰓃"
+                            title: "Audio Visualizer"
+                            subtitle: Services.CavaService.available ? "Live spectrum" : "Waiting for Cava"
+                            statusText: Services.CavaService.available ? "LIVE" : "IDLE"
+                            statusTone: Services.CavaService.available ? "good" : "muted"
+                            contentPadding: root.compact ? 10 : 12
+                            contentSpacing: 5
+
                             Item {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                Layout.minimumHeight: 34
                                 Row {
                                     anchors.fill: parent
                                     spacing: 2
@@ -546,99 +574,85 @@ Scope {
                                 }
                             }
                         }
-                    }
 
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 210 : 230
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 11
-                            Text { text: "Quick Controls"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.compact ? 198 : 226
+                            eyebrow: "Controls"
+                            icon: "󰒓"
+                            title: "Quick Controls"
+                            subtitle: "Frequently changed shell state"
+                            statusText: "ACTIVE"
+                            statusTone: "secondary"
+                            contentPadding: root.compact ? 10 : 12
+                            contentSpacing: 8
+
                             ControlRow {
-                                icon: "󰖩"; title: "Wi-Fi"
-                                subtitle: !Services.NetworkService.radioEnabled ? "Off" : (Services.NetworkService.connected ? "Connected" : "Disconnected")
+                                icon: "󰖩"
+                                title: "Wi-Fi"
+                                subtitle: !Services.NetworkService.radioEnabled
+                                    ? "Off"
+                                    : (Services.NetworkService.connected ? "Connected" : "Disconnected")
                                 enabledState: Services.NetworkService.radioEnabled
                                 onToggled: Services.NetworkService.setWifiRadio(!Services.NetworkService.radioEnabled)
                             }
+
                             ControlRow {
-                                icon: "󰂯"; title: "Bluetooth"
+                                icon: "󰂯"
+                                title: "Bluetooth"
                                 subtitle: Services.BluetoothService.powered ? "On" : "Off"
                                 enabledState: Services.BluetoothService.powered
                                 onToggled: Services.BluetoothService.setPower(!Services.BluetoothService.powered)
                             }
-                            ControlRow { icon: "󰖔"; title: "Night Light"; subtitle: "Not available"; enabledState: false; interactive: false }
+
                             ControlRow {
-                                icon: "󰂛"; title: "Do Not Disturb"; subtitle: "Notifications"
+                                icon: "󰂛"
+                                title: "Do Not Disturb"
+                                subtitle: Services.NotificationService.dndEnabled ? "Silencing notifications" : "Notifications enabled"
                                 enabledState: Services.NotificationService.dndEnabled
                                 onToggled: Services.NotificationService.toggleDnd()
                             }
                         }
-                    }
 
-                    GlassCard {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.minimumHeight: root.compact ? 300 : 380
-                        Layout.preferredHeight: root.compact ? 340 : 440
-                        clip: true
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: root.compact ? 12 : 14
-                            spacing: root.compact ? 6 : 8
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: "Weather"; color: Core.Theme.accent; font.bold: true; font.pixelSize: 17 }
-                                Item { Layout.fillWidth: true }
-                                Text {
-                                    visible: Services.WeatherService.available && Services.WeatherService.locationName
-                                    text: Services.WeatherService.locationName
-                                    color: Core.Theme.muted
-                                    font.pixelSize: 12
-                                    elide: Text.ElideRight
-                                }
-                            }
+                        ProCard {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: root.compact ? 235 : 270
+                            eyebrow: "Forecast"
+                            icon: Services.WeatherService.icon || "󰖐"
+                            title: Services.WeatherService.available ? Services.WeatherService.temp : "Weather"
+                            subtitle: Services.WeatherService.available
+                                ? Services.WeatherService.condition + (Services.WeatherService.locationName ? " · " + Services.WeatherService.locationName : "")
+                                : "Weather service unavailable"
+                            statusText: Services.WeatherService.available ? "LIVE" : "OFFLINE"
+                            statusTone: Services.WeatherService.available ? "good" : "muted"
+                            heroStyle: true
+                            contentPadding: root.compact ? 10 : 12
+                            contentSpacing: 7
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: 10
-                                Text {
-                                    text: Services.WeatherService.icon || "󰖐"
-                                    color: Core.Theme.foreground
-                                    font.pixelSize: root.compact ? 26 : 30
-                                }
-                                ColumnLayout {
+                                spacing: 8
+
+                                MetricTile {
                                     Layout.fillWidth: true
-                                    spacing: 0
-                                    Text {
-                                        text: Services.WeatherService.available ? Services.WeatherService.temp : "--"
-                                        color: Core.Theme.foreground
-                                        font.pixelSize: root.compact ? 24 : 28
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        text: Services.WeatherService.available ? Services.WeatherService.condition : "Unavailable"
-                                        color: Core.Theme.muted
-                                        font.pixelSize: 12
-                                        elide: Text.ElideRight
-                                    }
+                                    Layout.minimumWidth: 0
+                                    Layout.preferredHeight: root.compact ? 58 : 64
+                                    label: "HIGH"
+                                    icon: "󰔄"
+                                    valueText: Services.WeatherService.available ? Services.WeatherService.high : "--"
+                                    showProgress: false
                                 }
-                                ColumnLayout {
-                                    spacing: 1
-                                    Text {
-                                        text: "H " + (Services.WeatherService.available ? Services.WeatherService.high : "--")
-                                        color: Core.Theme.foreground
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        text: "L " + (Services.WeatherService.available ? Services.WeatherService.low : "--")
-                                        color: Core.Theme.muted
-                                        font.pixelSize: 12
-                                    }
+
+                                MetricTile {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    Layout.preferredHeight: root.compact ? 58 : 64
+                                    label: "LOW"
+                                    icon: "󰔃"
+                                    tone: "secondary"
+                                    valueText: Services.WeatherService.available ? Services.WeatherService.low : "--"
+                                    showProgress: false
                                 }
                             }
 
@@ -653,34 +667,7 @@ Scope {
                 }
             }
 
-            }
-
-            component StatBar: ColumnLayout {
-                property string label: ""
-                property int value: 0
-                spacing: 4
-                RowLayout {
-                    Layout.fillWidth: true
-                    Text { text: label; color: Core.Theme.foreground; font.pixelSize: 13 }
-                    Item { Layout.fillWidth: true }
-                    Text { text: value + "%"; color: Core.Theme.foreground; font.pixelSize: 13; font.bold: true }
-                }
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 6
-                    radius: 3
-                    color: Core.Theme.surfaceHover
-                    Rectangle {
-                        width: parent.width * Math.max(0, Math.min(100, value)) / 100
-                        height: parent.height
-                        radius: parent.radius
-                        color: Core.Theme.accent
-                        Behavior on width { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
-                    }
-                }
-            }
-
-            component ControlRow: RowLayout {
+            component ControlRow: Rectangle {
                 id: controlRow
                 property string icon: ""
                 property string title: ""
@@ -688,61 +675,79 @@ Scope {
                 property bool enabledState: false
                 property bool interactive: true
                 signal toggled()
+
                 Layout.fillWidth: true
-                spacing: 9
-                Text { text: icon; color: Core.Theme.accent; font.pixelSize: 21 }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 1
-                    Text { text: title; color: Core.Theme.foreground; font.pixelSize: 13; font.bold: true }
-                    Text { text: subtitle; color: Core.Theme.muted; font.pixelSize: 11 }
-                }
-                Rectangle {
-                    width: 34
-                    height: 18
-                    radius: 9
-                    readonly property color mutedTint: Qt.color(Core.Theme.muted)
-                    color: enabledState ? Core.Theme.accent : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.22)
-                    border.width: 1
-                    border.color: enabledState ? Core.Theme.accent : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.6)
+                Layout.preferredHeight: root.compact ? 42 : 46
+                radius: 10
+                color: Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.42)
+                border.width: 1
+                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.38)
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 8
+
                     Rectangle {
-                        width: 14
-                        height: 14
-                        radius: 7
-                        anchors.verticalCenter: parent.verticalCenter
-                        x: enabledState ? parent.width - width - 2 : 2
-                        color: enabledState ? Core.Theme.background : Core.Theme.muted
-                        Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-                    }
-                    MouseArea {
-                        id: toggleArea
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        enabled: controlRow.interactive
-                        cursorShape: controlRow.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: controlRow.toggled()
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+                        radius: 9
+                        color: Core.Theme.alphaColor(controlRow.enabledState ? Core.Theme.accent : Core.Theme.muted, 0.11)
+                        Text {
+                            anchors.centerIn: parent
+                            text: controlRow.icon
+                            color: controlRow.enabledState ? Core.Theme.accent : Core.Theme.muted
+                            font.pixelSize: 15
+                        }
                     }
 
-                    Components.PressBounce { pressed: toggleArea.pressed }
-                }
-            }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+                        Text { Layout.fillWidth: true; text: controlRow.title; color: Core.Theme.foreground; font.pixelSize: 11; font.bold: true; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; text: controlRow.subtitle; color: Core.Theme.muted; font.pixelSize: 8; elide: Text.ElideRight }
+                    }
 
-            // Homepage pages reuse the same shared panels the bar's drawers
-            // render, so a page is never a stale summary of its widget.
-            function panelSourceFor(page) {
-                switch (page) {
-                    case "network": return Qt.resolvedUrl("../../widgets/network/Panel.qml")
-                    case "system": return Qt.resolvedUrl("../../widgets/system-stats/Panel.qml")
-                    case "media": return Qt.resolvedUrl("../../widgets/media/Panel.qml")
-                    case "audio": return Qt.resolvedUrl("../../widgets/volume/Panel.qml")
-                    case "calendar": return Qt.resolvedUrl("../../widgets/clock/Panel.qml")
+                    Rectangle {
+                        width: 34
+                        height: 18
+                        radius: 9
+                        readonly property color mutedTint: Qt.color(Core.Theme.muted)
+                        color: controlRow.enabledState
+                            ? Core.Theme.accent
+                            : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.18)
+                        border.width: 1
+                        border.color: controlRow.enabledState
+                            ? Core.Theme.accent
+                            : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.48)
+
+                        Rectangle {
+                            width: 14
+                            height: 14
+                            radius: 7
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: controlRow.enabledState ? parent.width - width - 2 : 2
+                            color: controlRow.enabledState ? Core.Theme.background : Core.Theme.muted
+                            Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                        }
+
+                        MouseArea {
+                            id: toggleArea
+                            anchors.fill: parent
+                            anchors.margins: -4
+                            enabled: controlRow.interactive
+                            cursorShape: controlRow.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: controlRow.toggled()
+                        }
+                        Components.PressBounce { pressed: toggleArea.pressed }
+                    }
                 }
-                return ""
             }
 
             component PagePanel: Loader {
                 property string page: ""
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 Layout.preferredHeight: item ? item.implicitHeight : 0
                 visible: root.selectedPage === page
                 active: visible

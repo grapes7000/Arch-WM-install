@@ -96,12 +96,14 @@ Scope {
                             Repeater {
                                 model: Services.LayoutService.bar.regions.start || []
 
-                                BarMotionHost {
+                                WidgetHost {
                                     required property var modelData
-                                    required property int index
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -125,21 +127,18 @@ Scope {
                             Repeater {
                                 model: Services.LayoutService.bar.regions.center || []
 
-                                BarMotionHost {
+                                WidgetHost {
                                     required property var modelData
-                                    required property int index
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 5 + index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
                                     Layout.preferredWidth: implicitWidth
-                                    // The clock pill fills almost the full bar
-                                    // height (rather than shrink-wrapping its
-                                    // text) so its larger font has room to
-                                    // breathe; every other bar pill keeps its
-                                    // natural content height.
                                     Layout.preferredHeight: modelData.widget === "clock"
                                         ? Math.max(implicitHeight, Core.Theme.barHeight - Core.Theme.barPadding)
                                         : implicitHeight
@@ -161,20 +160,18 @@ Scope {
                             }
                             spacing: Core.Theme.barWidgetSpacing
 
-                            // The session/power widget is rendered after the
-                            // hamburger menu trigger (see below) instead of
-                            // via this repeater, so the two switch places:
-                            // hamburger now sits to the left of power.
                             Repeater {
                                 model: (Services.LayoutService.bar.regions.end || [])
                                     .filter(function(entry) { return entry.instance !== "session-main" })
 
-                                BarMotionHost {
+                                WidgetHost {
                                     required property var modelData
-                                    required property int index
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 8 + index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -223,9 +220,6 @@ Scope {
                                 }
                             }
 
-                            // Toggles the homepage dashboard on/off. Same
-                            // capability as the SUPER+D keybind, exposed here
-                            // as a bar switch for mouse-driven use.
                             Item {
                                 Layout.preferredWidth: homepageTrigger.implicitWidth + 8
                                 Layout.fillHeight: true
@@ -260,12 +254,14 @@ Scope {
                                 model: (Services.LayoutService.bar.regions.end || [])
                                     .filter(function(entry) { return entry.instance === "session-main" })
 
-                                BarMotionHost {
+                                WidgetHost {
                                     required property var modelData
-                                    required property int index
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 14 + index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }

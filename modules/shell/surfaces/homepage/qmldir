@@ -1,3 +1,8 @@
 HomepageSurface 1.0 HomepageSurface.qml
 GlassCard 1.0 GlassCard.qml
+ProCard 1.0 ProCard.qml
 RailCard 1.0 RailCard.qml
+StatusChip 1.0 StatusChip.qml
+MetricTile 1.0 MetricTile.qml
+Sparkline 1.0 Sparkline.qml
+QuickAccessPanel 1.0 QuickAccessPanel.qml
