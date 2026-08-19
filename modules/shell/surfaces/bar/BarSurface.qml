@@ -96,11 +96,14 @@ Scope {
                             Repeater {
                                 model: Services.LayoutService.bar.regions.start || []
 
-                                BarMotionHost {
-                                    entry: modelData
+                                WidgetHost {
+                                    required property var modelData
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 0
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -124,11 +127,14 @@ Scope {
                             Repeater {
                                 model: Services.LayoutService.bar.regions.center || []
 
-                                BarMotionHost {
-                                    entry: modelData
+                                WidgetHost {
+                                    required property var modelData
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 5
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -158,11 +164,14 @@ Scope {
                                 model: (Services.LayoutService.bar.regions.end || [])
                                     .filter(function(entry) { return entry.instance !== "session-main" })
 
-                                BarMotionHost {
-                                    entry: modelData
+                                WidgetHost {
+                                    required property var modelData
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 8
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -245,11 +254,14 @@ Scope {
                                 model: (Services.LayoutService.bar.regions.end || [])
                                     .filter(function(entry) { return entry.instance === "session-main" })
 
-                                BarMotionHost {
-                                    entry: modelData
+                                WidgetHost {
+                                    required property var modelData
+                                    widgetId: modelData.widget
                                     surfaceKind: "bar"
+                                    instanceId: modelData.instance
+                                    variant: modelData.variant || "compact"
+                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
-                                    entranceOrder: 14
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
