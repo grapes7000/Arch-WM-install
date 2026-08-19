@@ -29,6 +29,8 @@ Item {
             text: "⏻"
             color: Core.Theme.foreground
             font.pixelSize: context.variant === "compact" ? 19 : 23
+            Layout.alignment: Qt.AlignVCenter
+            transform: Translate { y: context.variant === "compact" ? 1 : 0 }
 
             MouseArea {
                 id: lockArea
@@ -109,4 +111,3 @@ Item {
         }
     }
 }
-
