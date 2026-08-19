@@ -45,8 +45,6 @@ def legacy_command() -> list[str] | None:
     sibling = Path(__file__).resolve().with_name("theme-legacy")
     if sibling.exists():
         return [str(sibling)]
-    # Development checkout: original engine is named bin/theme while the studio
-    # entry point is bin/theme-studio.
     source = Path(__file__).resolve().with_name("theme")
     if source.exists() and source.name != Path(sys.argv[0]).name:
         return [str(source)]
@@ -89,7 +87,6 @@ def write_preview(data: dict[str, Any]) -> Path:
 
 def cleanup_preview() -> None:
     PREVIEW_FILE.unlink(missing_ok=True)
-    # Remove drafts left behind by versions that wrote into the themes dir.
     (THEME_DIR / f"{PREVIEW_NAME}.json").unlink(missing_ok=True)
 
 
@@ -98,8 +95,7 @@ def _run_legacy(name: str) -> tuple[bool, str]:
     if not command:
         return False, "legacy generator not found"
     try:
-        proc = subprocess.run(command + [name], text=True, capture_output=True,
-                              timeout=20)
+        proc = subprocess.run(command + [name], text=True, capture_output=True, timeout=20)
     except subprocess.TimeoutExpired:
         return False, "legacy generator timed out"
     stdout = (proc.stdout or "").strip()
@@ -111,7 +107,6 @@ def _run_legacy(name: str) -> tuple[bool, str]:
 
 
 def _atomic_symlink(target: Path, link: Path) -> None:
-    """Atomically point *link* at *target*, replacing the previous link/file."""
     target = target.expanduser().resolve()
     link.parent.mkdir(parents=True, exist_ok=True)
     temporary = link.with_name(f".{link.name}.{os.getpid()}.tmp")
@@ -124,13 +119,6 @@ def _atomic_symlink(target: Path, link: Path) -> None:
 
 
 def _publish_current_wallpaper(rendered: Path) -> tuple[Path, Path]:
-    """Publish stable links for consumers that should follow the active wallpaper.
-
-    ~/.cache/theme-engine/wallpapers/current.png always points at the most
-    recently rendered semantic wallpaper; the Quickshell homepage image
-    symlink then follows that, so both retarget on every theme switch
-    without either consumer needing to know the per-theme filename.
-    """
     rendered = rendered.expanduser().resolve()
     if not rendered.is_file():
         raise OSError(f"rendered wallpaper does not exist: {rendered}")
@@ -142,19 +130,13 @@ def _publish_current_wallpaper(rendered: Path) -> tuple[Path, Path]:
 
 
 def _sync_semantic_wallpaper(name: str) -> tuple[bool, str]:
-    """Re-render the active wallpaper template (if any) for the new theme.
-
-    wallgen no-ops safely when no semantic template is active, so this is
-    harmless to call unconditionally on every theme switch.
-    """
     if name == PREVIEW_NAME:
         return False, ""
     command = wallgen_command()
     if not command:
         return False, ""
     try:
-        proc = subprocess.run(command + ["semantic", "apply", name, "--set"],
-                              text=True, capture_output=True, timeout=20)
+        proc = subprocess.run(command + ["semantic", "apply", name, "--set"], text=True, capture_output=True, timeout=20)
     except subprocess.TimeoutExpired:
         return False, "wallgen semantic apply timed out"
     message = (proc.stdout or proc.stderr or "").strip()
@@ -170,9 +152,6 @@ def _sync_semantic_wallpaper(name: str) -> tuple[bool, str]:
 
 
 # ── Application adapters ────────────────────────────────────────────
-# These intentionally own only generated snippets/import lines. Existing user
-# CSS/settings remain user-owned, so a theme switch never bulldozes app config.
-
 def _atomic_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=str(path.parent), text=True)
@@ -197,14 +176,6 @@ def _ensure_line(path: Path, line: str) -> None:
 
 
 def _ensure_css_import(path: Path, line: str) -> None:
-    """Place a CSS @import before normal rules while preserving user content.
-
-    Firefox-family userChrome.css files may already contain @charset and
-    @-moz-document blocks. CSS requires @import to appear before ordinary rules;
-    appending it at EOF makes Floorp ignore the generated theme entirely.
-    Existing copies are removed and one canonical import is inserted immediately
-    after @charset when present, otherwise at the start of the file.
-    """
     text = path.read_text(encoding="utf-8") if path.is_file() else ""
     lines = [existing for existing in text.splitlines() if existing.strip() != line]
     insert_at = 0
@@ -222,6 +193,7 @@ def _ensure_css_import(path: Path, line: str) -> None:
 def _mozilla_roots() -> list[Path]:
     return [
         HOME / ".mozilla/firefox",
+        CFG / "mozilla/firefox",
         HOME / ".librewolf",
         HOME / ".floorp",
         HOME / ".waterfox",
@@ -307,10 +279,7 @@ def _apply_firefox(theme: dict[str, Any]) -> int:
         chrome.mkdir(parents=True, exist_ok=True)
         _atomic_text(chrome / "theme-engine.css", css)
         _ensure_css_import(chrome / "userChrome.css", '@import url("theme-engine.css");')
-        _ensure_line(
-            profile / "user.js",
-            'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);',
-        )
+        _ensure_line(profile / "user.js", 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);')
     return len(profiles)
 
 
@@ -359,6 +328,30 @@ body {{
   --background-modifier-border-focus: {r['border_strong']};
   --text-selection: {r['accent']}40;
   --text-error: {r['urgent']};
+
+  /* Obsidian gives active/focused window chrome its own palette. Keep the
+     titlebar and tab strip on the Arch-WM semantic colors in both states. */
+  --titlebar-background: {r['surface_1']};
+  --titlebar-background-focused: {r['surface_1']};
+  --titlebar-text-color: {r['text_dim']};
+  --titlebar-text-color-focused: {r['text']};
+  --tab-container-background: {r['surface_1']};
+  --tab-background-active: {r['bg_alt']};
+  --tab-text-color: {r['text_dim']};
+  --tab-text-color-active: {r['text']};
+  --tab-text-color-focused: {r['text']};
+  --tab-text-color-focused-active: {r['accent']};
+}}
+
+/* Some Obsidian versions/themes put explicit backgrounds on these chrome
+   elements instead of relying only on variables. Keep them synchronized too. */
+.titlebar,
+.workspace-tab-header-container {{
+  background-color: {r['surface_1']} !important;
+}}
+body.is-focused .titlebar,
+body.is-focused .workspace-tab-header-container {{
+  background-color: {r['surface_1']} !important;
 }}
 '''
     applied = 0
@@ -369,7 +362,6 @@ body {{
         try:
             data = json.loads(appearance.read_text(encoding="utf-8")) if appearance.is_file() else {}
         except (OSError, json.JSONDecodeError):
-            # Do not overwrite malformed user settings.
             continue
         if not isinstance(data, dict):
             continue
@@ -385,11 +377,6 @@ body {{
 
 
 def _apply_app_themes(theme: dict[str, Any]) -> dict[str, Any]:
-    """Apply safe adapters for installed/detected applications.
-
-    Firefox chrome changes require a browser restart. Obsidian CSS snippets
-    normally hot-reload. Missing apps are simply reported as zero and skipped.
-    """
     firefox = _apply_firefox(theme)
     obsidian = _apply_obsidian(theme)
     return {
@@ -399,9 +386,7 @@ def _apply_app_themes(theme: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def apply_studio_overrides(name: str, *,
-                           components: list[str] | None = None) -> dict[str, Any]:
-    """Apply only Studio-managed component layers after a legacy subcommand."""
+def apply_studio_overrides(name: str, *, components: list[str] | None = None) -> dict[str, Any]:
     theme = load_theme(name)
     component_result = apply_all(theme, components)
     return {"name": name, "components": component_result}
@@ -410,16 +395,8 @@ def apply_studio_overrides(name: str, *,
 def apply_theme(name: str, *, components: list[str] | None = None) -> dict[str, Any]:
     theme = load_theme(name)
     legacy_ok, legacy_message = _run_legacy(name)
-    # A full named-theme apply depends on the legacy generator to write the
-    # canonical generated/theme.json contract plus terminal outputs. Previously
-    # this failure was swallowed, Theme Studio returned success, and the
-    # installer could only report the misleading generic
-    # "verification failed: 40-theme-engine" afterward.
     if not legacy_ok:
-        raise RuntimeError(
-            "legacy theme generator failed"
-            + (f": {legacy_message}" if legacy_message else "")
-        )
+        raise RuntimeError("legacy theme generator failed" + (f": {legacy_message}" if legacy_message else ""))
     wallpaper_ok, wallpaper_message = _sync_semantic_wallpaper(name)
     component_result = apply_all(theme, components)
     app_result = _apply_app_themes(theme)
@@ -437,33 +414,18 @@ def apply_theme(name: str, *, components: list[str] | None = None) -> dict[str, 
 
 
 def _hyprland_reachable() -> bool:
-    """True when a Hyprland instance is running and hyprctl can reach it.
-
-    Trust HYPRLAND_INSTANCE_SIGNATURE when the caller was launched by the
-    compositor, but fall back to probing `hyprctl instances` so previews still
-    work from terminals that never inherited the variable.
-    """
     if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
         return True
     if not shutil.which("hyprctl"):
         return False
     try:
-        proc = subprocess.run(["hyprctl", "instances"], capture_output=True,
-                              text=True, timeout=5)
+        proc = subprocess.run(["hyprctl", "instances"], capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.TimeoutExpired):
         return False
     return bool(proc.stdout and proc.stdout.strip())
 
 
 def _sync_quickshell_contract(theme: dict[str, Any]) -> None:
-    """Refresh the theme.json contract Quickshell watches during live preview.
-
-    Quickshell (Theme.qml) watches CFG/theme-engine/generated/theme.json for
-    "roles"/"style"/"components", which is normally (re)written only by the
-    legacy generator during a full apply. Live preview intentionally skips
-    that path - it can't round-trip Studio drafts - so without this,
-    Quickshell never saw Palette Studio color edits at all, only Hyprland did.
-    """
     from theme_components import GENERATED_THEME_JSON, atomic_text
     try:
         existing = json.loads(GENERATED_THEME_JSON.read_text(encoding="utf-8"))
@@ -483,16 +445,6 @@ def _sync_quickshell_contract(theme: dict[str, Any]) -> None:
 
 
 def preview_theme(data: dict[str, Any], reason: str = "Preview") -> dict[str, Any]:
-    """Live-preview a draft by rendering the Hyprland theme files directly.
-
-    The legacy generator cannot round-trip Studio-schema drafts (its name
-    matching rejects the preview name), so the old path never touched the
-    file Hyprland actually loads. This renders generated/theme.conf and
-    generated/theme.lua from the draft and reloads Hyprland on every change
-    - no full apply, no wallpaper regeneration. It also refreshes the
-    Quickshell contract file directly (see _sync_quickshell_contract) so
-    color/style edits show up live in the shell too, not just Hyprland.
-    """
     from theme_components import atomic_text, render_hypr, render_hypr_lua
     write_preview(data)
     theme = ensure_theme_schema(data)
@@ -503,8 +455,7 @@ def preview_theme(data: dict[str, Any], reason: str = "Preview") -> dict[str, An
     _sync_quickshell_contract(theme)
     if _hyprland_reachable():
         try:
-            subprocess.run(["hyprctl", "reload"], check=False, timeout=5,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["hyprctl", "reload"], check=False, timeout=5, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except subprocess.TimeoutExpired:
             pass
     return {"name": PREVIEW_NAME, "reason": reason, "live": True}
