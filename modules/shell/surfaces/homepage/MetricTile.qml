@@ -37,7 +37,7 @@ Rectangle {
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
                 radius: 8
-                color: Core.Theme.alphaColor(root.toneColor, 0.12)
+                color: Qt.rgba(root.toneColor.r, root.toneColor.g, root.toneColor.b, 0.12)
 
                 Text {
                     anchors.centerIn: parent
