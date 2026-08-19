@@ -18,7 +18,11 @@ GlassCard {
     property bool showHeader: root.eyebrow.length > 0 || root.title.length > 0
         || root.subtitle.length > 0 || root.icon.length > 0 || root.statusText.length > 0
 
+    // A parent layout may request a compact preferred height, but it must
+    // never compress a card below the space needed by its header and body.
+    // This keeps metric tiles and control rows inside the rounded surface.
     implicitHeight: frame.implicitHeight + root.contentPadding * 2
+    Layout.minimumHeight: implicitHeight
 
     ColumnLayout {
         id: frame
