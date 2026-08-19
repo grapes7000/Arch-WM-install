@@ -5,7 +5,7 @@ import "../../core" as Core
 Item {
     id: root
 
-    required property var modelData
+    required property var entry
     required property string surfaceKind
     required property bool locked
     property var requestHandler: null
@@ -74,11 +74,11 @@ Item {
     Components.WidgetHost {
         id: host
         anchors.centerIn: parent
-        widgetId: root.modelData.widget
+        widgetId: root.entry.widget || ""
         surfaceKind: root.surfaceKind
-        instanceId: root.modelData.instance
-        variant: root.modelData.variant || "compact"
-        settings: root.modelData.settings || ({})
+        instanceId: root.entry.instance || ""
+        variant: root.entry.variant || "compact"
+        settings: root.entry.settings || ({})
         locked: root.locked
         requestHandler: root.requestHandler
     }
