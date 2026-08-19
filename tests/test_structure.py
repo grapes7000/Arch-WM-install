@@ -128,7 +128,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
         self.assertIn("theme-sync.py", autostart)
-        self.assertEqual(version, "2026.08.07.3")
+        self.assertEqual(version, "2026.08.07.4")
 
     def test_universal_theme_contract_drives_shell_and_hyprland(self) -> None:
         schema = json.loads(
@@ -258,7 +258,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.07.20")
+        self.assertEqual(version, "2026.08.07.21")
 
 
 if __name__ == "__main__":
