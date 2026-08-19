@@ -5,7 +5,21 @@
 -- choices. Hyprland 0.55 remains the compatibility baseline.
 
 local low_motion = os.getenv("ARCH_WM_LOW_MOTION") == "1"
-local profile = string.lower(os.getenv("ARCH_WM_EFFECTS_PROFILE") or "cinematic")
+
+local function persisted_effects_profile()
+    local config_home = os.getenv("XDG_CONFIG_HOME")
+        or ((os.getenv("HOME") or "") .. "/.config")
+    local handle = io.open(config_home .. "/hypr/effects-profile", "r")
+    if not handle then
+        return nil
+    end
+    local value = handle:read("*l")
+    handle:close()
+    return value and string.lower(value) or nil
+end
+
+local profile = persisted_effects_profile()
+    or string.lower(os.getenv("ARCH_WM_EFFECTS_PROFILE") or "cinematic")
 if profile ~= "performance" and profile ~= "balanced" and profile ~= "cinematic" then
     profile = "cinematic"
 end
