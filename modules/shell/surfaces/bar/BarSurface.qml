@@ -97,8 +97,7 @@ Scope {
                                 model: Services.LayoutService.bar.regions.start || []
 
                                 BarMotionHost {
-                                    required property var modelData
-                                    required property int index
+                                    entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
                                     entranceOrder: index
@@ -126,8 +125,7 @@ Scope {
                                 model: Services.LayoutService.bar.regions.center || []
 
                                 BarMotionHost {
-                                    required property var modelData
-                                    required property int index
+                                    entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
                                     entranceOrder: 5 + index
@@ -170,8 +168,7 @@ Scope {
                                     .filter(function(entry) { return entry.instance !== "session-main" })
 
                                 BarMotionHost {
-                                    required property var modelData
-                                    required property int index
+                                    entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
                                     entranceOrder: 8 + index
@@ -261,8 +258,7 @@ Scope {
                                     .filter(function(entry) { return entry.instance === "session-main" })
 
                                 BarMotionHost {
-                                    required property var modelData
-                                    required property int index
+                                    entry: modelData
                                     surfaceKind: "bar"
                                     locked: Services.LockStateService.locked
                                     entranceOrder: 14 + index
