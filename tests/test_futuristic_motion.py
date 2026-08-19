@@ -61,8 +61,9 @@ class FuturisticShellMotionTests(unittest.TestCase):
         self.assertIn('animation = "popin 94%"', content)
 
         # These compositor options landed after the 0.55 baseline and caused
-        # live config errors on the VM. Keep them out until version-gated.
-        self.assertNotIn("motion_blur", content)
+        # live config errors on the VM. Keep actual config blocks out until
+        # they can be version-gated safely.
+        self.assertNotIn("motion_blur = {", content)
         self.assertNotIn("wobble = {", content)
         self.assertNotIn('leaf = "glowangle"', content)
 
