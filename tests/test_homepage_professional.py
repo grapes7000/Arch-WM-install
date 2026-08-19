@@ -17,12 +17,13 @@ class ProfessionalHomepageTests(unittest.TestCase):
 
     def test_pro_card_has_visual_hierarchy_and_status_slot(self) -> None:
         content = (HOMEPAGE / "ProCard.qml").read_text(encoding="utf-8")
+        self.assertIn("GlassCard {", content)
         self.assertIn("default property alias bodyData", content)
         self.assertIn("property string eyebrow", content)
         self.assertIn("property string title", content)
         self.assertIn("property string subtitle", content)
         self.assertIn("StatusChip {", content)
-        self.assertIn("Core.Theme.surface", content)
+        self.assertIn("Core.Theme.alphaColor(Core.Theme.accent", content)
         self.assertIn("anchors.top: parent.top", content)
 
     def test_metric_and_sparkline_components_are_data_driven(self) -> None:
@@ -40,9 +41,9 @@ class ProfessionalHomepageTests(unittest.TestCase):
         self.assertIn('key: "apps"', content)
         self.assertIn('key: "places"', content)
         self.assertIn('key: "projects"', content)
-        self.assertIn('"$HOME/Projects"', content)
-        self.assertIn('"$HOME/Code"', content)
-        self.assertIn('"$HOME/Developer"', content)
+        self.assertIn("$HOME/Projects", content)
+        self.assertIn("$HOME/Code", content)
+        self.assertIn("$HOME/Developer", content)
         self.assertIn('["xdg-open", path]', content)
         self.assertIn('["kitty", "--directory", path]', content)
         self.assertNotIn("eval(", content)
