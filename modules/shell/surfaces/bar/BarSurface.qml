@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import "../../core" as Core
 import "../../services" as Services
 import "../../components"
@@ -41,6 +42,8 @@ Scope {
             id: root
 
             required property var modelData
+            readonly property bool isPrimary: Quickshell.screens.length === 0
+                || root.screen === Quickshell.screens[0]
             screen: modelData
 
             anchors {
@@ -61,6 +64,8 @@ Scope {
             focusable: false
             color: "transparent"
             visible: !Services.LockStateService.locked
+            WlrLayershell.layer: WlrLayer.Top
+            WlrLayershell.namespace: root.isPrimary ? "arch-wm:bar" : "arch-wm:bar-secondary"
 
             Rectangle {
                 id: background
@@ -91,14 +96,12 @@ Scope {
                             Repeater {
                                 model: Services.LayoutService.bar.regions.start || []
 
-                                WidgetHost {
+                                BarMotionHost {
                                     required property var modelData
-                                    widgetId: modelData.widget
+                                    required property int index
                                     surfaceKind: "bar"
-                                    instanceId: modelData.instance
-                                    variant: modelData.variant || "compact"
-                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
+                                    entranceOrder: index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -122,14 +125,12 @@ Scope {
                             Repeater {
                                 model: Services.LayoutService.bar.regions.center || []
 
-                                WidgetHost {
+                                BarMotionHost {
                                     required property var modelData
-                                    widgetId: modelData.widget
+                                    required property int index
                                     surfaceKind: "bar"
-                                    instanceId: modelData.instance
-                                    variant: modelData.variant || "compact"
-                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
+                                    entranceOrder: 5 + index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -168,14 +169,12 @@ Scope {
                                 model: (Services.LayoutService.bar.regions.end || [])
                                     .filter(function(entry) { return entry.instance !== "session-main" })
 
-                                WidgetHost {
+                                BarMotionHost {
                                     required property var modelData
-                                    widgetId: modelData.widget
+                                    required property int index
                                     surfaceKind: "bar"
-                                    instanceId: modelData.instance
-                                    variant: modelData.variant || "compact"
-                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
+                                    entranceOrder: 8 + index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
@@ -195,7 +194,23 @@ Scope {
                                     text: "󰍜"
                                     color: menuPopup.menuOpen ? Core.Theme.accent : Core.Theme.foreground
                                     font.pixelSize: Core.Theme.barIconSize
+                                    scale: menuHover.hovered ? 1.14 : 1.0
+                                    rotation: menuHover.hovered ? -5 : 0
 
+                                    Behavior on scale {
+                                        NumberAnimation {
+                                            duration: Math.round(Math.max(80, Core.Theme.animationMs * 0.7) * Core.Theme.motionScale)
+                                            easing.type: Easing.OutBack
+                                            easing.overshoot: 1.3
+                                        }
+                                    }
+                                    Behavior on rotation {
+                                        NumberAnimation {
+                                            duration: Math.round(Math.max(80, Core.Theme.animationMs * 0.7) * Core.Theme.motionScale)
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
+                                    HoverHandler { id: menuHover }
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -223,7 +238,16 @@ Scope {
                                     color: Core.InteractiveShellController.homepageVisible
                                         ? Core.Theme.accent : Core.Theme.muted
                                     font.pixelSize: Core.Theme.barIconSize
+                                    scale: homeHover.hovered ? 1.14 : 1.0
 
+                                    Behavior on scale {
+                                        NumberAnimation {
+                                            duration: Math.round(Math.max(80, Core.Theme.animationMs * 0.7) * Core.Theme.motionScale)
+                                            easing.type: Easing.OutBack
+                                            easing.overshoot: 1.3
+                                        }
+                                    }
+                                    HoverHandler { id: homeHover }
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -236,14 +260,12 @@ Scope {
                                 model: (Services.LayoutService.bar.regions.end || [])
                                     .filter(function(entry) { return entry.instance === "session-main" })
 
-                                WidgetHost {
+                                BarMotionHost {
                                     required property var modelData
-                                    widgetId: modelData.widget
+                                    required property int index
                                     surfaceKind: "bar"
-                                    instanceId: modelData.instance
-                                    variant: modelData.variant || "compact"
-                                    settings: modelData.settings || ({})
                                     locked: Services.LockStateService.locked
+                                    entranceOrder: 14 + index
                                     requestHandler: function(capability, payload) {
                                         return barScope.requestFromWidget(capability, payload, root.screen)
                                     }
