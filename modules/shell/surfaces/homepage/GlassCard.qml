@@ -23,11 +23,13 @@ Rectangle {
     readonly property string effectiveAssemblyDirection: root.assemblyDirection !== "auto"
         ? root.assemblyDirection : root.automaticAssemblyDirection()
     readonly property int assemblyDelay: Math.round(
-        (45 + root.effectiveAssemblyOrder * 145) * Core.Theme.motionScale)
+        (32 + root.effectiveAssemblyOrder * 112) * Core.Theme.motionScale)
     readonly property real revealScale: 0.975 + (0.025 * root.revealProgress)
     readonly property real revealDistance: Math.round(
-        (54 + Math.min(18, root.effectiveAssemblyOrder * 2))
+        (50 + Math.min(16, root.effectiveAssemblyOrder * 1.8))
         * Math.max(0.25, Core.Theme.motionScale))
+    readonly property real landingPulse: Math.max(
+        0.0, 1.0 - Math.abs(root.revealProgress - 0.84) * 7.0)
     readonly property real revealOffsetX: {
         const remaining = 1.0 - root.revealProgress
         if (root.effectiveAssemblyDirection === "left")
@@ -166,7 +168,7 @@ Rectangle {
         property: "revealProgress"
         to: 1.0
         duration: Math.round(
-            Math.max(420, Core.Theme.homepageTransitionMs) * Math.max(0.25, Core.Theme.motionScale))
+            Math.max(350, Core.Theme.homepageTransitionMs) * Math.max(0.25, Core.Theme.motionScale))
         easing.type: Core.Theme.animationProfile === "snappy"
             ? Easing.OutCubic : Easing.OutBack
         easing.overshoot: 1.45
@@ -223,6 +225,19 @@ Rectangle {
         duration: 140
         easing.type: Easing.OutBack
         easing.overshoot: 2.2
+    }
+
+    // A brief accent flash follows each card through the last part of its
+    // landing. It is progress-derived, so it cannot leave a timer or looping
+    // animation running once the card has settled.
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: -1
+        radius: root.radius + 1
+        color: "transparent"
+        border.width: 1
+        border.color: Core.Theme.alphaColor(Core.Theme.accent, 0.8)
+        opacity: root.landingPulse * 0.55
     }
 
     Rectangle {
