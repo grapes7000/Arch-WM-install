@@ -16,24 +16,13 @@ class ProfessionalHomepageTests(unittest.TestCase):
             self.assertTrue(path.is_file(), name)
             self.assertIn(f"{name} 1.0 {name}.qml", qmldir)
 
-    def test_bar_motion_host_is_registered_for_runtime_loading(self) -> None:
-        qmldir = (BAR / "qmldir").read_text(encoding="utf-8")
-        self.assertTrue((BAR / "BarMotionHost.qml").is_file())
-        self.assertIn("BarMotionHost 1.0 BarMotionHost.qml", qmldir)
-
-    def test_bar_motion_is_fail_open_and_uses_original_layout_entries(self) -> None:
-        host = (BAR / "BarMotionHost.qml").read_text(encoding="utf-8")
+    def test_bar_runtime_uses_known_good_direct_widget_hosts(self) -> None:
         surface = (BAR / "BarSurface.qml").read_text(encoding="utf-8")
-        self.assertIn("property var entry: ({})", host)
-        self.assertNotIn("required property var modelData", host)
-        self.assertIn("opacity: 1.0", host)
-        self.assertNotIn("revealProgress", host)
-        self.assertIn("root.entry.widget", host)
-        self.assertEqual(surface.count("BarMotionHost {"), 4)
-        self.assertEqual(surface.count("entry: modelData"), 4)
-        self.assertNotIn("withEntranceOrder", surface)
-        self.assertNotIn("Object.assign", surface)
-        self.assertNotIn("required property int index", surface)
+        self.assertEqual(surface.count("WidgetHost {"), 4)
+        self.assertNotIn("BarMotionHost {", surface)
+        self.assertGreaterEqual(surface.count("required property var modelData"), 5)
+        self.assertGreaterEqual(surface.count("widgetId: modelData.widget"), 4)
+        self.assertGreaterEqual(surface.count("instanceId: modelData.instance"), 4)
         for token in (
             "Services.LayoutService.bar.regions.start || []",
             "Services.LayoutService.bar.regions.center || []",
