@@ -2,11 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Widgets
 import "../../core" as Core
-import "../../components" as Components
 import "../../services" as Services
-import "../../widgets/weather" as WeatherWidgets
 
 Scope {
     Variants {
@@ -16,58 +13,47 @@ Scope {
             id: root
             required property var modelData
 
-            property string selectedPage: "home"
-            property int slideIndex: 0
-            property var slides: {
-                const configured = Core.Theme.data.wallpapers || []
-                if (Array.isArray(configured) && configured.length > 0)
-                    return configured
-                const wallpaper = Core.Theme.data.wallpaper || ""
-                if (typeof wallpaper === "string" && wallpaper)
-                    return [wallpaper]
-                return wallpaper && wallpaper.path ? [wallpaper.path] : []
-            }
-            readonly property string currentSlide: slides.length > 0
-                ? String(slides[Math.min(slideIndex, slides.length - 1)]) : ""
-            readonly property bool mediaActive: Services.MprisService.status !== "Stopped"
-            readonly property bool heroHasArt: mediaActive && !!Services.MprisService.artUrl
-            property bool heroSlideshowEnabled: false
-            readonly property bool heroVisible: root.heroSlideshowEnabled ? true : root.heroHasArt
-            readonly property string heroSource: root.heroHasArt
-                ? Services.MprisService.artUrl
-                : (root.heroSlideshowEnabled ? root.currentSlide : "")
-
-            readonly property bool compact: width < 1180 || height < 700
-            readonly property real gap: compact ? 8 : Math.max(10, Core.Theme.gap)
-            readonly property real leftWidth: compact ? 200 : Math.max(220, Math.min(300, width * 0.18))
-            readonly property real rightWidth: compact ? 230 : Math.max(250, Math.min(330, width * 0.21))
-
-            property var quickAccessApps: [
-                { icon: "󰉋", name: "Files", command: "thunar" },
-                { icon: "󰆍", name: "Terminal", command: "kitty" },
-                { icon: "󰈹", name: "Browser", command: "firefox" },
-                { icon: "󰙯", name: "Discord", command: "discord" },
-                { icon: "󰓇", name: "Spotify", command: "spotify" },
-                { icon: "󰒓", name: "Settings", command: "nwg-look" },
-                { icon: "󰓓", name: "Steam", command: "steam" },
-                { icon: "󰖲", name: "Hyprland", command: "kitty -e sh -lc 'hyprctl clients; read'" },
-                { icon: "󰨞", name: "VS Code", command: "code" },
-                { icon: "󱓧", name: "Obsidian", command: "obsidian" }
-            ]
-
+            property string selectedPage: "system"
             property bool anyWindowOpen: false
             property bool hiddenForWindows: false
             property var cpuHistory: []
             property var memoryHistory: []
             property var diskHistory: []
 
+            readonly property bool compact: width < 1400 || height < 760
+            readonly property real outerMargin: compact ? 16 : 24
+            readonly property real clusterHeight: Math.min(height - outerMargin * 2,
+                compact ? 680 : 840)
+            readonly property real homeWidth: compact ? 620 : 720
+            readonly property real homeHeight: compact
+                ? Math.min(540, clusterHeight - 140) : 650
+            readonly property real sideGap: compact ? 80 : 112
+            readonly property real sideWidth: compact ? 310 : 340
+            readonly property real clusterWidth: homeWidth + sideGap + sideWidth
+            readonly property real sideTop: compact ? 52 : 90
+            readonly property real mediaHeight: compact ? 180 : 195
+            readonly property real activityTop: sideTop + mediaHeight + (compact ? 14 : 16)
+            readonly property real activityHeight: compact ? 220 : 235
+            readonly property real appClusterTop: activityTop + activityHeight
+                + (compact ? 20 : 24)
+            readonly property int surfacePadding: compact ? 18 : 24
+
+            property var fallbackApps: [
+                { icon: "󰆍", name: "Terminal", command: "kitty" },
+                { icon: "󰈹", name: "Firefox", command: "firefox" },
+                { icon: "󰉋", name: "Files", command: "thunar" },
+                { icon: "󰨞", name: "VS Code", command: "code" },
+                { icon: "󰙯", name: "Discord", command: "discord" },
+                { icon: "󰓇", name: "Spotify", command: "spotify" }
+            ]
+
             screen: modelData
             anchors { top: true; bottom: true; left: true; right: true }
             margins {
-                top: Core.Theme.barHeight + root.gap
-                bottom: root.gap
-                left: root.gap
-                right: root.gap
+                top: Core.Theme.barHeight + Core.Theme.gap
+                bottom: Core.Theme.gap
+                left: Core.Theme.gap
+                right: Core.Theme.gap
             }
             aboveWindows: false
             focusable: true
@@ -76,42 +62,29 @@ Scope {
             visible: !hiddenForWindows && !Services.LockStateService.locked
                 && Core.InteractiveShellController.homepageVisible
 
-            function select(page) {
-                selectedPage = selectedPage === page ? "home" : page
-            }
-
-            function pageTitle(page) {
-                if (!page || page === "home")
-                    return "Quick Access"
-                return page.charAt(0).toUpperCase() + page.slice(1)
-            }
-
-            function pageIcon(page) {
-                switch (page) {
-                    case "system": return "󰍛"
-                    case "network": return "󰖩"
-                    case "audio": return "󰕾"
-                    case "calendar": return "󰃭"
-                    case "media": return "󰎈"
-                }
-                return "󰆍"
-            }
-
             function panelSourceFor(page) {
                 switch (page) {
-                    case "network": return Qt.resolvedUrl("../../widgets/network/Panel.qml")
-                    case "system": return Qt.resolvedUrl("../../widgets/system-stats/Panel.qml")
-                    case "media": return Qt.resolvedUrl("../../widgets/media/Panel.qml")
-                    case "audio": return Qt.resolvedUrl("../../widgets/volume/Panel.qml")
-                    case "calendar": return Qt.resolvedUrl("../../widgets/clock/Panel.qml")
+                case "network": return Qt.resolvedUrl("../../widgets/network/Panel.qml")
+                case "audio": return Qt.resolvedUrl("../../widgets/volume/Panel.qml")
+                case "calendar": return Qt.resolvedUrl("../../widgets/clock/Panel.qml")
+                case "media": return Qt.resolvedUrl("../../widgets/media/Panel.qml")
+                default: return ""
                 }
-                return ""
             }
 
             function appendHistory(values, sample) {
-                const next = Array.isArray(values) ? values.slice(-29) : []
+                const next = Array.isArray(values) ? values.slice(-39) : []
                 next.push(Math.max(0, Math.min(100, Number(sample) || 0)))
                 return next
+            }
+
+            function greeting() {
+                const hour = Services.TimeService.date.getHours()
+                if (hour < 12)
+                    return "Good morning"
+                if (hour < 18)
+                    return "Good afternoon"
+                return "Good evening"
             }
 
             Timer {
@@ -148,9 +121,12 @@ Scope {
                 running: root.visible
                 triggeredOnStart: true
                 onTriggered: {
-                    root.cpuHistory = root.appendHistory(root.cpuHistory, Services.SystemStatsService.cpuPercent)
-                    root.memoryHistory = root.appendHistory(root.memoryHistory, Services.SystemStatsService.memoryPercent)
-                    root.diskHistory = root.appendHistory(root.diskHistory, Services.SystemStatsService.diskPercent)
+                    root.cpuHistory = root.appendHistory(root.cpuHistory,
+                        Services.SystemStatsService.cpuPercent)
+                    root.memoryHistory = root.appendHistory(root.memoryHistory,
+                        Services.SystemStatsService.memoryPercent)
+                    root.diskHistory = root.appendHistory(root.diskHistory,
+                        Services.SystemStatsService.diskPercent)
                 }
             }
 
@@ -161,844 +137,245 @@ Scope {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: Core.Theme.animationMs * 2
+                        duration: Math.round(Core.Theme.animationMs * 2
+                            * Core.Theme.motionScale)
                         easing.type: Easing.OutCubic
                     }
                 }
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Core.Theme.radius + 10
-                    color: Core.Theme.background
-                    opacity: 0.86
-                    border.width: Core.Theme.borderWidth
-                    border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
-                }
+                Item {
+                    id: orbit
+                    width: Math.min(root.clusterWidth, contentLayer.width - root.outerMargin * 2)
+                    height: Math.min(root.clusterHeight, contentLayer.height - root.outerMargin * 2)
+                    anchors.centerIn: parent
 
-                Image {
-                    anchors.fill: parent
-                    source: root.heroSource
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    cache: true
-                    opacity: status === Image.Ready ? 0.09 : 0
-                    scale: 1.08
-                    Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
-                }
+                    GlassCard {
+                        id: homeSurface
+                        x: 0
+                        y: 0
+                        width: Math.min(root.homeWidth, orbit.width * 0.64)
+                        height: root.homeHeight
+                        fillAlphaBoost: -0.10
+                        angledShadow: true
+                        superDraggable: true
+                        assemblyOrder: 0
+                        assemblyDirection: "top"
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: root.gap
-                    spacing: root.gap
-
-                    ColumnLayout {
-                        Layout.minimumWidth: root.leftWidth
-                        Layout.preferredWidth: root.leftWidth
-                        Layout.maximumWidth: root.leftWidth
-                        Layout.fillHeight: true
-                        spacing: root.gap
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: root.compact ? 108 : 126
-                            eyebrow: "Desktop"
-                            icon: "󰥔"
-                            title: Services.TimeService.timeShort
-                            subtitle: Services.TimeService.dateLong
-                            statusText: Core.Theme.data.name || "Theme"
-                            statusTone: "secondary"
-                            heroStyle: true
-                            contentPadding: root.compact ? 12 : 14
-                        }
-
-                        Repeater {
-                            model: [
-                                { icon: "󰍛", title: "System", subtitle: "Performance & processes", page: "system" },
-                                { icon: "󰖩", title: "Network", subtitle: "Wi-Fi & connectivity", page: "network" },
-                                { icon: "󰕾", title: "Audio", subtitle: "Mixer & output devices", page: "audio" },
-                                { icon: "󰃭", title: "Calendar", subtitle: "Agenda & upcoming events", page: "calendar" },
-                                { icon: "󰎈", title: "Media", subtitle: "Playback & players", page: "media" }
-                            ]
-
-                            RailCard {
-                                required property var modelData
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: root.compact ? 62 : 72
-                                icon: modelData.icon
-                                title: modelData.title
-                                subtitle: modelData.subtitle
-                                active: root.selectedPage === modelData.page
-                                onActivated: root.select(modelData.page)
-                            }
-                        }
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: root.compact ? 138 : 172
-                            eyebrow: "At a glance"
-                            icon: "󰋼"
-                            title: "Desktop Pulse"
-                            subtitle: "Useful state without opening a panel"
-                            statusText: Services.NetworkService.connected ? "ONLINE" : "OFFLINE"
-                            statusTone: Services.NetworkService.connected ? "good" : "muted"
-                            contentPadding: root.compact ? 10 : 12
-                            contentSpacing: 6
-
-                            GlanceRow {
-                                icon: "󰖩"
-                                label: "Network"
-                                valueText: Services.NetworkService.connected ? "Connected" : "Offline"
-                                tone: Services.NetworkService.connected ? "good" : "muted"
-                            }
-
-                            GlanceRow {
-                                icon: "󰻠"
-                                label: "CPU"
-                                valueText: Services.SystemStatsService.cpuPercent + "%"
-                                tone: Services.SystemStatsService.cpuPercent >= 85 ? "urgent" : "accent"
-                            }
-
-                            GlanceRow {
-                                icon: Services.WeatherService.icon || "󰖐"
-                                label: "Outside"
-                                valueText: Services.WeatherService.available ? Services.WeatherService.temp : "--"
-                                tone: "secondary"
-                            }
-
-                            GlanceRow {
-                                icon: "󰔛"
-                                label: "Uptime"
-                                valueText: Services.SystemStatsService.uptime
-                                tone: "muted"
-                            }
-                        }
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: root.compact ? 165 : 198
-                            eyebrow: "Media"
-                            icon: "󰎈"
-                            title: Services.MprisService.title || "Nothing playing"
-                            subtitle: Services.MprisService.artist || "Waiting for a media player"
-                            statusText: root.mediaActive ? Services.MprisService.status.toUpperCase() : "IDLE"
-                            statusTone: Services.MprisService.status === "Playing" ? "good" : "muted"
-                            contentPadding: root.compact ? 11 : 13
-                            contentSpacing: 7
-
-                            Item {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                Layout.minimumHeight: root.compact ? 38 : 52
-
-                                Row {
-                                    anchors.fill: parent
-                                    spacing: 2
-                                    Repeater {
-                                        model: Services.CavaService.bars
-                                        Rectangle {
-                                            required property real modelData
-                                            required property int index
-                                            width: Math.max(2, (parent.width - (Services.CavaService.bars.length - 1) * parent.spacing) / Math.max(1, Services.CavaService.bars.length))
-                                            height: Math.max(3, parent.height * modelData)
-                                            anchors.bottom: parent.bottom
-                                            radius: width / 2
-                                            color: index % 2 ? Core.Theme.accent2 : Core.Theme.accent
-                                            opacity: 0.88
-                                            Behavior on height { NumberAnimation { duration: 70 } }
-                                        }
-                                    }
-                                }
-                            }
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: root.surfacePadding
+                            spacing: root.compact ? 12 : 16
 
                             RowLayout {
-                                Layout.alignment: Qt.AlignHCenter
-                                spacing: 20
-
-                                Text {
-                                    text: "󰒮"
-                                    color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted
-                                    font.pixelSize: 20
-                                    opacity: Services.MprisService.canPrev ? 1 : 0.45
-                                    MouseArea {
-                                        id: hpPrevArea
-                                        anchors.fill: parent
-                                        enabled: Services.MprisService.canPrev
-                                        onClicked: Services.MprisService.previous()
-                                    }
-                                    Components.PressBounce { pressed: hpPrevArea.pressed }
-                                }
-
-                                Rectangle {
-                                    Layout.preferredWidth: 38
-                                    Layout.preferredHeight: 38
-                                    radius: 19
-                                    color: Core.Theme.alphaColor(Core.Theme.accent, 0.16)
-                                    border.width: 1
-                                    border.color: Core.Theme.alphaColor(Core.Theme.accent, 0.36)
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
-                                        color: Core.Theme.accent
-                                        font.pixelSize: 21
-                                    }
-                                    MouseArea { id: hpPlayPauseArea; anchors.fill: parent; onClicked: Services.MprisService.playPause() }
-                                    Components.PressBounce { pressed: hpPlayPauseArea.pressed }
-                                }
-
-                                Text {
-                                    text: "󰒭"
-                                    color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted
-                                    font.pixelSize: 20
-                                    opacity: Services.MprisService.canNext ? 1 : 0.45
-                                    MouseArea {
-                                        id: hpNextArea
-                                        anchors.fill: parent
-                                        enabled: Services.MprisService.canNext
-                                        onClicked: Services.MprisService.next()
-                                    }
-                                    Components.PressBounce { pressed: hpNextArea.pressed }
-                                }
-                            }
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.minimumWidth: 360
-                        spacing: root.gap
-
-                        GlassCard {
-                            visible: root.heroVisible
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: root.compact ? 230 : 300
-                            clip: true
-
-                            ClippingRectangle {
-                                anchors.fill: parent
-                                radius: Core.Theme.homepageCardRadius
-                                color: Core.Theme.surfaceBase
-                                border.width: Core.Theme.borderWidth
-                                border.color: Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor
-
-                                Image {
-                                    anchors.fill: parent
-                                    source: root.heroSource
-                                    fillMode: Image.PreserveAspectFit
-                                    asynchronous: true
-                                    cache: true
-                                    opacity: status === Image.Ready ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs * 2 } }
-                                }
-
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.bottom: parent.bottom
-                                    height: root.compact ? 84 : 98
-                                    gradient: Gradient {
-                                        GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
-                                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.76) }
-                                    }
-                                }
-
-                                RowLayout {
-                                    visible: root.heroHasArt
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.bottom: parent.bottom
-                                    anchors.margins: root.compact ? 13 : 17
-                                    spacing: 10
-
-                                    StatusChip {
-                                        text: Services.MprisService.status === "Playing" ? "NOW PLAYING" : "PAUSED"
-                                        tone: Services.MprisService.status === "Playing" ? "good" : "muted"
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 0
-                                        Text {
-                                            Layout.fillWidth: true
-                                            text: Services.MprisService.title
-                                            color: "white"
-                                            font.pixelSize: root.compact ? 14 : 16
-                                            font.bold: true
-                                            elide: Text.ElideRight
-                                        }
-                                        Text {
-                                            Layout.fillWidth: true
-                                            text: Services.MprisService.artist
-                                            color: Qt.rgba(1, 1, 1, 0.72)
-                                            font.pixelSize: 11
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: root.compact ? 250 : 295
-                            fillAlphaBoost: 0.08
-                            eyebrow: root.selectedPage === "home" ? "Workspace hub" : "Detail panel"
-                            icon: root.pageIcon(root.selectedPage)
-                            title: root.pageTitle(root.selectedPage)
-                            subtitle: root.selectedPage === "home"
-                                ? "Launch apps, open places, and jump into projects"
-                                : "Live controls from the shared shell service"
-                            statusText: root.selectedPage === "home" ? "SUPER SPACE" : "LIVE"
-                            statusTone: root.selectedPage === "home" ? "secondary" : "good"
-                            heroStyle: root.selectedPage === "home"
-                            contentPadding: root.compact ? 12 : 16
-                            contentSpacing: 9
-
-                            QuickAccessPanel {
-                                visible: root.selectedPage === "home"
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: implicitHeight
-                                compact: root.compact
-                                apps: root.quickAccessApps
+                                spacing: 12
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: root.greeting() + ", " + (Core.Theme.data.name || "desktop")
+                                        color: Core.Theme.foreground
+                                        font.family: Core.Theme.fontFamily
+                                        font.pixelSize: Core.Theme.shellFontSize + 3
+                                        font.bold: true
+                                        elide: Text.ElideRight
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: Services.TimeService.timeShort + "  ·  " + Services.TimeService.dateLong
+                                        color: Core.Theme.muted
+                                        font.family: Core.Theme.fontFamily
+                                        font.pixelSize: Core.Theme.shellFontSize
+                                        elide: Text.ElideRight
+                                    }
+                                }
                             }
 
                             Rectangle {
-                                id: desktopActivityDeck
-                                visible: root.selectedPage === "home"
+                                id: searchSurface
                                 Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                Layout.minimumHeight: root.compact ? 150 : 190
-                                radius: Math.max(12, Core.Theme.homepageCardRadius - 3)
-                                color: Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.34)
-                                border.width: 1
-                                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.42)
+                                Layout.preferredHeight: root.compact ? 44 : 50
+                                radius: Math.max(10, Core.Theme.homepageCardRadius - 4)
+                                color: Core.Theme.alphaColor(Core.Theme.surfaceOverlay,
+                                    searchHover.hovered ? 0.54 : 0.36)
+                                border.width: Core.Theme.borderWidth
+                                border.color: Core.Theme.alphaColor(
+                                    searchHover.hovered ? Core.Theme.accent
+                                    : (Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor),
+                                    searchHover.hovered ? 0.62 : 0.36)
 
-                                ColumnLayout {
+                                RowLayout {
                                     anchors.fill: parent
-                                    anchors.margins: root.compact ? 11 : 14
+                                    anchors.margins: 12
                                     spacing: 10
-
-                                    RowLayout {
+                                    Text {
+                                        text: "󰍉"
+                                        color: searchHover.hovered ? Core.Theme.accent : Core.Theme.muted
+                                        font.family: Core.Theme.fontFamily
+                                        font.pixelSize: Core.Theme.shellFontSize + 4
+                                    }
+                                    Text {
                                         Layout.fillWidth: true
-                                        spacing: 8
-
-                                        ColumnLayout {
-                                            Layout.fillWidth: true
-                                            spacing: 1
-                                            Text {
-                                                text: "DESKTOP PULSE"
-                                                color: Core.Theme.accent
-                                                font.family: Core.Theme.fontFamily
-                                                font.pixelSize: 10
-                                                font.bold: true
-                                                font.letterSpacing: 1.0
-                                            }
-                                            Text {
-                                                text: "Live activity and session context"
-                                                color: Core.Theme.muted
-                                                font.family: Core.Theme.fontFamily
-                                                font.pixelSize: 9
-                                            }
-                                        }
-
-                                        StatusChip {
-                                            text: "UP " + Services.SystemStatsService.uptime
-                                            tone: "muted"
-                                        }
+                                        text: "Search apps and files"
+                                        color: Core.Theme.muted
+                                        font.family: Core.Theme.fontFamily
+                                        font.pixelSize: Core.Theme.shellFontSize + 1
                                     }
-
-                                    GridLayout {
-                                        Layout.fillWidth: true
-                                        Layout.fillHeight: true
-                                        columns: root.compact ? 1 : 3
-                                        rowSpacing: 8
-                                        columnSpacing: 8
-
-                                        PulseTile {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            label: "CPU LOAD"
-                                            icon: "󰻠"
-                                            valueText: Services.SystemStatsService.cpuPercent + "%"
-                                            samples: root.cpuHistory
-                                            toneColor: Core.Theme.accent
-                                        }
-
-                                        PulseTile {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            label: "MEMORY"
-                                            icon: "󰘚"
-                                            valueText: Services.SystemStatsService.memoryPercent + "%"
-                                            samples: root.memoryHistory
-                                            toneColor: Core.Theme.accent2
-                                        }
-
-                                        Rectangle {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            Layout.minimumHeight: root.compact ? 84 : 110
-                                            radius: 11
-                                            color: Core.Theme.alphaColor(Core.Theme.surfaceOverlay, 0.42)
-                                            border.width: 1
-                                            border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.34)
-
-                                            ColumnLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 10
-                                                spacing: 5
-
-                                                RowLayout {
-                                                    Layout.fillWidth: true
-                                                    Text { text: Services.WeatherService.icon || "󰖐"; color: Core.Theme.accent2; font.pixelSize: 17 }
-                                                    Text { text: "SESSION"; color: Core.Theme.muted; font.pixelSize: 9; font.bold: true }
-                                                    Item { Layout.fillWidth: true }
-                                                    Text {
-                                                        text: Services.WeatherService.available ? Services.WeatherService.temp : "--"
-                                                        color: Core.Theme.foreground
-                                                        font.pixelSize: 18
-                                                        font.bold: true
-                                                    }
-                                                }
-
-                                                Text {
-                                                    Layout.fillWidth: true
-                                                    text: Services.WeatherService.available
-                                                        ? Services.WeatherService.condition
-                                                        : "Weather unavailable"
-                                                    color: Core.Theme.foreground
-                                                    font.pixelSize: 10
-                                                    elide: Text.ElideRight
-                                                }
-
-                                                Rectangle {
-                                                    Layout.fillWidth: true
-                                                    Layout.preferredHeight: 1
-                                                    color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.42)
-                                                }
-
-                                                RowLayout {
-                                                    Layout.fillWidth: true
-                                                    spacing: 6
-                                                    Text { text: "󰖩"; color: Services.NetworkService.connected ? Core.Theme.accent : Core.Theme.muted; font.pixelSize: 13 }
-                                                    Text {
-                                                        Layout.fillWidth: true
-                                                        text: Services.NetworkService.connected ? "Network connected" : "Network offline"
-                                                        color: Core.Theme.muted
-                                                        font.pixelSize: 9
-                                                        elide: Text.ElideRight
-                                                    }
-                                                }
-                                            }
-                                        }
+                                    Text {
+                                        text: "SUPER  SPACE"
+                                        color: Core.Theme.muted
+                                        font.family: Core.Theme.fontFamily
+                                        font.pixelSize: Math.max(9, Core.Theme.shellFontSize - 1)
                                     }
                                 }
-                            }
 
-                            PagePanel { page: "network" }
-                            PagePanel { page: "system" }
-                            PagePanel { page: "media" }
-                            PagePanel { page: "audio" }
-                            PagePanel { page: "calendar" }
-                        }
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: root.compact ? 66 : 76
-                            eyebrow: "Workspaces"
-                            statusText: "HYPRLAND"
-                            statusTone: "muted"
-                            contentPadding: 8
-                            contentSpacing: 0
-
-                            Loader {
-                                id: workspaceStrip
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                source: Qt.resolvedUrl("../../widgets/workspaces/Widget.qml")
-                                onLoaded: {
-                                    if (!item)
-                                        return
-                                    item.context = {
-                                        variant: "standard",
-                                        settings: { showLabels: true },
-                                        locked: false,
-                                        allows: function(capability) {
-                                            return capability === "workspace.switch"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.minimumWidth: root.rightWidth
-                        Layout.preferredWidth: root.rightWidth
-                        Layout.maximumWidth: root.rightWidth
-                        Layout.fillHeight: true
-                        spacing: root.gap
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: root.compact ? 218 : 258
-                            eyebrow: "System"
-                            icon: "󰍛"
-                            title: "System Overview"
-                            subtitle: "Uptime " + Services.SystemStatsService.uptime
-                            statusText: Services.SystemStatsService.cpuPercent >= 85 ? "HIGH LOAD" : "STABLE"
-                            statusTone: Services.SystemStatsService.cpuPercent >= 85 ? "urgent" : "good"
-                            contentPadding: root.compact ? 11 : 13
-                            contentSpacing: 7
-
-                            GridLayout {
-                                Layout.fillWidth: true
-                                columns: 2
-                                rowSpacing: 6
-                                columnSpacing: 6
-
-                                MetricTile {
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredHeight: root.compact ? 66 : 72
-                                    label: "CPU"
-                                    icon: "󰻠"
-                                    value: Services.SystemStatsService.cpuPercent
-                                    valueText: Services.SystemStatsService.cpuPercent + "%"
-                                }
-
-                                MetricTile {
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredHeight: root.compact ? 66 : 72
-                                    label: "MEMORY"
-                                    icon: "󰘚"
-                                    tone: "secondary"
-                                    value: Services.SystemStatsService.memoryPercent
-                                    valueText: Services.SystemStatsService.memoryPercent + "%"
-                                }
-
-                                MetricTile {
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.columnSpan: 2
-                                    Layout.preferredHeight: root.compact ? 60 : 66
-                                    label: "DISK"
-                                    icon: "󰋊"
-                                    value: Services.SystemStatsService.diskPercent
-                                    valueText: Services.SystemStatsService.diskPercent + "%"
-                                    detail: "root filesystem"
+                                HoverHandler { id: searchHover; cursorShape: Qt.PointingHandCursor }
+                                TapHandler {
+                                    onTapped: Core.InteractiveShellController.launcher("open")
                                 }
                             }
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: 8
-                                ColumnLayout {
-                                    Layout.preferredWidth: 58
-                                    spacing: 0
-                                    Text { text: "CPU"; color: Core.Theme.foreground; font.pixelSize: 10; font.bold: true }
-                                    Text { text: "60 sec"; color: Core.Theme.muted; font.pixelSize: 8 }
-                                }
-                                Sparkline {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: root.compact ? 28 : 34
-                                    samples: root.cpuHistory
-                                    lineColor: Qt.color(Core.Theme.accent)
+                                spacing: 2
+
+                                Repeater {
+                                    model: [
+                                        { key: "home", icon: "󰋜", label: "Home" },
+                                        { key: "system", icon: "󰍛", label: "System" },
+                                        { key: "network", icon: "󰖩", label: "Network" },
+                                        { key: "audio", icon: "󰕾", label: "Audio" },
+                                        { key: "calendar", icon: "󰃭", label: "Calendar" },
+                                        { key: "media", icon: "󰎈", label: "Media" }
+                                    ]
+
+                                    SectionToggle {
+                                        required property var modelData
+                                        Layout.fillWidth: true
+                                        icon: modelData.icon
+                                        label: modelData.label
+                                        active: root.selectedPage === modelData.key
+                                        onActivated: root.selectedPage = modelData.key
+                                    }
                                 }
                             }
-                        }
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: root.compact ? 100 : 124
-                            eyebrow: "Signal"
-                            icon: "󰓃"
-                            title: "Audio Visualizer"
-                            subtitle: Services.CavaService.available ? "Live spectrum" : "Waiting for Cava"
-                            statusText: Services.CavaService.available ? "LIVE" : "IDLE"
-                            statusTone: Services.CavaService.available ? "good" : "muted"
-                            contentPadding: root.compact ? 10 : 12
-                            contentSpacing: 5
 
                             Item {
+                                id: detailStage
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                Layout.minimumHeight: 34
-                                Row {
+                                clip: true
+
+                                HomeOverviewStage {
                                     anchors.fill: parent
-                                    spacing: 2
-                                    Repeater {
-                                        model: Services.CavaService.bars
-                                        Rectangle {
-                                            required property real modelData
-                                            required property int index
-                                            width: Math.max(2, (parent.width - (Services.CavaService.bars.length - 1) * parent.spacing) / Math.max(1, Services.CavaService.bars.length))
-                                            height: Math.max(3, parent.height * modelData)
-                                            anchors.bottom: parent.bottom
-                                            radius: width / 2
-                                            color: index % 2 ? Core.Theme.accent2 : Core.Theme.accent
-                                            Behavior on height { NumberAnimation { duration: 70 } }
+                                    visible: root.selectedPage === "home"
+                                }
+
+                                SystemOverviewStage {
+                                    anchors.fill: parent
+                                    visible: root.selectedPage === "system"
+                                    cpuHistory: root.cpuHistory
+                                    memoryHistory: root.memoryHistory
+                                }
+
+                                Flickable {
+                                    id: panelViewport
+                                    anchors.fill: parent
+                                    visible: !["home", "system"].includes(root.selectedPage)
+                                    clip: true
+                                    boundsBehavior: Flickable.StopAtBounds
+                                    contentWidth: width
+                                    contentHeight: panelLoader.height
+
+                                    Loader {
+                                        id: panelLoader
+                                        width: panelViewport.width
+                                        height: Math.max(panelViewport.height,
+                                            item ? item.implicitHeight : 0)
+                                        source: panelViewport.visible
+                                            ? root.panelSourceFor(root.selectedPage) : ""
+                                        onLoaded: {
+                                            if (item)
+                                                item.width = width
+                                        }
+                                        onWidthChanged: {
+                                            if (item)
+                                                item.width = width
                                         }
                                     }
                                 }
                             }
                         }
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: root.compact ? 198 : 226
-                            eyebrow: "Controls"
-                            icon: "󰒓"
-                            title: "Quick Controls"
-                            subtitle: "Frequently changed shell state"
-                            statusText: "ACTIVE"
-                            statusTone: "secondary"
-                            contentPadding: root.compact ? 10 : 12
-                            contentSpacing: 8
-
-                            ControlRow {
-                                icon: "󰖩"
-                                title: "Wi-Fi"
-                                subtitle: !Services.NetworkService.radioEnabled
-                                    ? "Off"
-                                    : (Services.NetworkService.connected ? "Connected" : "Disconnected")
-                                enabledState: Services.NetworkService.radioEnabled
-                                onToggled: Services.NetworkService.setWifiRadio(!Services.NetworkService.radioEnabled)
-                            }
-
-                            ControlRow {
-                                icon: "󰂯"
-                                title: "Bluetooth"
-                                subtitle: Services.BluetoothService.powered ? "On" : "Off"
-                                enabledState: Services.BluetoothService.powered
-                                onToggled: Services.BluetoothService.setPower(!Services.BluetoothService.powered)
-                            }
-
-                            ControlRow {
-                                icon: "󰂛"
-                                title: "Do Not Disturb"
-                                subtitle: Services.NotificationService.dndEnabled ? "Silencing notifications" : "Notifications enabled"
-                                enabledState: Services.NotificationService.dndEnabled
-                                onToggled: Services.NotificationService.toggleDnd()
-                            }
-                        }
-
-                        ProCard {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: root.compact ? 235 : 270
-                            eyebrow: "Forecast"
-                            icon: Services.WeatherService.icon || "󰖐"
-                            title: Services.WeatherService.available ? Services.WeatherService.temp : "Weather"
-                            subtitle: Services.WeatherService.available
-                                ? Services.WeatherService.condition + (Services.WeatherService.locationName ? " · " + Services.WeatherService.locationName : "")
-                                : "Weather service unavailable"
-                            statusText: Services.WeatherService.available ? "LIVE" : "OFFLINE"
-                            statusTone: Services.WeatherService.available ? "good" : "muted"
-                            heroStyle: true
-                            contentPadding: root.compact ? 10 : 12
-                            contentSpacing: 7
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-
-                                MetricTile {
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredHeight: root.compact ? 58 : 64
-                                    label: "HIGH"
-                                    icon: "󰔄"
-                                    valueText: Services.WeatherService.available ? Services.WeatherService.high : "--"
-                                    showProgress: false
-                                }
-
-                                MetricTile {
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    Layout.preferredHeight: root.compact ? 58 : 64
-                                    label: "LOW"
-                                    icon: "󰔃"
-                                    tone: "secondary"
-                                    valueText: Services.WeatherService.available ? Services.WeatherService.low : "--"
-                                    showProgress: false
-                                }
-                            }
-
-                            WeatherWidgets.ForecastSection {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                compact: root.compact
-                                expand: true
-                            }
-                        }
-                    }
-                }
-            }
-
-            component GlanceRow: Rectangle {
-                id: glanceRow
-                property string icon: ""
-                property string label: ""
-                property string valueText: ""
-                property string tone: "accent"
-                readonly property color toneColor: glanceRow.tone === "good" ? Core.Theme.good
-                    : glanceRow.tone === "urgent" ? Core.Theme.urgent
-                    : glanceRow.tone === "secondary" ? Core.Theme.accent2
-                    : glanceRow.tone === "muted" ? Core.Theme.muted
-                    : Core.Theme.accent
-
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.compact ? 32 : 36
-                radius: 9
-                color: Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.34)
-                border.width: 1
-                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.28)
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 7
-                    spacing: 7
-                    Text { text: glanceRow.icon; color: glanceRow.toneColor; font.pixelSize: 13 }
-                    Text { text: glanceRow.label; color: Core.Theme.muted; font.pixelSize: 9; font.bold: true }
-                    Item { Layout.fillWidth: true }
-                    Text { text: glanceRow.valueText; color: Core.Theme.foreground; font.pixelSize: 10; font.bold: true; elide: Text.ElideRight }
-                }
-            }
-
-            component PulseTile: Rectangle {
-                id: pulseTile
-                property string label: ""
-                property string icon: ""
-                property string valueText: ""
-                property var samples: []
-                property color toneColor: Core.Theme.accent
-
-                Layout.minimumHeight: root.compact ? 84 : 110
-                radius: 11
-                color: Core.Theme.alphaColor(Core.Theme.surfaceOverlay, 0.42)
-                border.width: 1
-                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.34)
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 5
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Text { text: pulseTile.icon; color: pulseTile.toneColor; font.pixelSize: 16 }
-                        Text { text: pulseTile.label; color: Core.Theme.muted; font.pixelSize: 9; font.bold: true }
-                        Item { Layout.fillWidth: true }
-                        Text { text: pulseTile.valueText; color: Core.Theme.foreground; font.pixelSize: 18; font.bold: true }
                     }
 
-                    Sparkline {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.minimumHeight: 34
-                        samples: pulseTile.samples
-                        lineColor: pulseTile.toneColor
-                    }
-                }
-            }
-
-            component ControlRow: Rectangle {
-                id: controlRow
-                property string icon: ""
-                property string title: ""
-                property string subtitle: ""
-                property bool enabledState: false
-                property bool interactive: true
-                signal toggled()
-
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.compact ? 42 : 46
-                radius: 10
-                color: Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.42)
-                border.width: 1
-                border.color: Core.Theme.alphaColor(Core.Theme.roles.border_subtle || Core.Theme.barOutlineColor, 0.38)
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 8
-
-                    Rectangle {
-                        Layout.preferredWidth: 28
-                        Layout.preferredHeight: 28
-                        radius: 9
-                        color: Core.Theme.alphaColor(controlRow.enabledState ? Core.Theme.accent : Core.Theme.muted, 0.11)
-                        Text {
-                            anchors.centerIn: parent
-                            text: controlRow.icon
-                            color: controlRow.enabledState ? Core.Theme.accent : Core.Theme.muted
-                            font.pixelSize: 15
-                        }
+                    NowPlayingCard {
+                        x: homeSurface.width + root.sideGap
+                        y: root.sideTop
+                        width: root.sideWidth
+                        height: root.mediaHeight
+                        angledShadow: true
+                        superDraggable: true
+                        assemblyOrder: 1
+                        assemblyDirection: "right"
                     }
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-                        Text { Layout.fillWidth: true; text: controlRow.title; color: Core.Theme.foreground; font.pixelSize: 11; font.bold: true; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; text: controlRow.subtitle; color: Core.Theme.muted; font.pixelSize: 8; elide: Text.ElideRight }
+                    LiveActivityCard {
+                        x: homeSurface.width + root.sideGap
+                        y: root.activityTop
+                        width: root.sideWidth
+                        height: root.activityHeight
+                        cpuHistory: root.cpuHistory
+                        memoryHistory: root.memoryHistory
+                        diskHistory: root.diskHistory
+                        angledShadow: true
+                        superDraggable: true
+                        assemblyOrder: 2
+                        assemblyDirection: "right"
                     }
 
-                    Rectangle {
-                        width: 34
-                        height: 18
-                        radius: 9
-                        readonly property color mutedTint: Qt.color(Core.Theme.muted)
-                        color: controlRow.enabledState
-                            ? Core.Theme.accent
-                            : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.18)
-                        border.width: 1
-                        border.color: controlRow.enabledState
-                            ? Core.Theme.accent
-                            : Qt.rgba(mutedTint.r, mutedTint.g, mutedTint.b, 0.48)
+                    FloatingAppCluster {
+                        x: Math.min(homeSurface.width + root.sideGap,
+                            orbit.width - width)
+                        y: root.appClusterTop
+                        width: 246
+                        height: 156
+                        z: 0
+                        fallbackApps: root.fallbackApps
+                    }
 
-                        Rectangle {
-                            width: 14
-                            height: 14
-                            radius: 7
-                            anchors.verticalCenter: parent.verticalCenter
-                            x: controlRow.enabledState ? parent.width - width - 2 : 2
-                            color: controlRow.enabledState ? Core.Theme.background : Core.Theme.muted
-                            Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-                        }
+                    GlassCard {
+                        id: workspacePill
+                        x: (homeSurface.width - width) / 2
+                        y: homeSurface.height + (root.compact ? 24 : 28)
+                        width: root.compact ? 400 : 440
+                        height: 54
+                        fillAlphaBoost: -0.06
+                        angledShadow: true
+                        superDraggable: true
+                        assemblyOrder: 3
+                        assemblyDirection: "bottom"
 
-                        MouseArea {
-                            id: toggleArea
+                        Loader {
                             anchors.fill: parent
-                            anchors.margins: -4
-                            enabled: controlRow.interactive
-                            cursorShape: controlRow.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: controlRow.toggled()
+                            anchors.margins: 6
+                            source: Qt.resolvedUrl("../../widgets/workspaces/Widget.qml")
+                            onLoaded: {
+                                if (!item)
+                                    return
+                                item.context = {
+                                    variant: "compact",
+                                    settings: { showLabels: false },
+                                    locked: false,
+                                    allows: function(capability) {
+                                        return capability === "workspace.switch"
+                                    }
+                                }
+                            }
                         }
-                        Components.PressBounce { pressed: toggleArea.pressed }
                     }
                 }
-            }
-
-            component PagePanel: Loader {
-                property string page: ""
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.preferredHeight: item ? item.implicitHeight : 0
-                visible: root.selectedPage === page
-                active: visible
-                source: active ? root.panelSourceFor(page) : ""
-            }
-
-            Timer {
-                interval: 30000
-                running: root.heroSlideshowEnabled && root.slides.length > 1 && !root.mediaActive
-                repeat: true
-                onTriggered: root.slideIndex = (root.slideIndex + 1) % root.slides.length
             }
         }
     }

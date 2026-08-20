@@ -92,7 +92,7 @@ end
 
 hl.bind(main .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(main .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
-hl.bind(main .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
+hl.bind(main .. " + mouse:272", hl.dsp.window.drag(), { drag = true, non_consuming = true })
 hl.bind(main .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 hl.bind("Print", hl.dsp.exec_cmd(

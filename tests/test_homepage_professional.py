@@ -6,6 +6,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 HOMEPAGE = ROOT / "modules/shell/surfaces/homepage"
 BAR = ROOT / "modules/shell/surfaces/bar"
+HYPRLAND_BINDS = ROOT / "modules/hyprland/config/conf/keybinds.lua"
 
 
 class ProfessionalHomepageTests(unittest.TestCase):
@@ -64,16 +65,37 @@ class ProfessionalHomepageTests(unittest.TestCase):
         self.assertIn('["kitty", "--directory", path]', content)
         self.assertNotIn("eval(", content)
 
-    def test_homepage_uses_professional_cards_and_live_history(self) -> None:
+    def test_homepage_uses_centered_orbit_and_live_history(self) -> None:
         content = (HOMEPAGE / "HomepageSurface.qml").read_text(encoding="utf-8")
-        self.assertGreaterEqual(content.count("ProCard {"), 6)
-        self.assertIn("QuickAccessPanel {", content)
-        self.assertGreaterEqual(content.count("MetricTile {"), 5)
-        self.assertIn("Sparkline {", content)
+        glass = (HOMEPAGE / "GlassCard.qml").read_text(encoding="utf-8")
+        self.assertEqual(content.count("GlassCard {"), 2)
+        self.assertIn("NowPlayingCard {", content)
+        self.assertIn("LiveActivityCard {", content)
+        self.assertIn("FloatingAppCluster {", content)
+        self.assertNotIn("ProCard {", content)
         self.assertIn("property var cpuHistory", content)
+        self.assertIn("property var memoryHistory", content)
+        self.assertIn("property var diskHistory", content)
         self.assertIn("function appendHistory", content)
         self.assertIn("interval: 2000", content)
         self.assertNotIn("component StatBar", content)
+        self.assertIn("x: Math.min(homeSurface.width + root.sideGap,", content)
+        self.assertIn("y: root.appClusterTop", content)
+        self.assertIn("width: root.compact ? 400 : 440", content)
+        self.assertGreaterEqual(content.count("superDraggable: true"), 4)
+        self.assertIn("property bool angledShadow", glass)
+        self.assertIn("Core.Theme.shadowEnabled", glass)
+        self.assertIn("Core.Theme.shadowColor", glass)
+        self.assertIn("Core.Theme.shadowOpacity", glass)
+        self.assertIn("DragHandler {", glass)
+        self.assertIn("acceptedModifiers: Qt.MetaModifier", glass)
+
+        keybinds = HYPRLAND_BINDS.read_text(encoding="utf-8")
+        self.assertIn(
+            'hl.bind(main .. " + mouse:272", hl.dsp.window.drag(), '
+            "{ drag = true, non_consuming = true })",
+            keybinds,
+        )
 
     def test_managed_shell_version_is_bumped(self) -> None:
         version = (ROOT / "modules/shell/.arch-wm-version").read_text(encoding="utf-8").strip()

@@ -9,6 +9,11 @@ Rectangle {
     property real fillAlphaBoost: 0
     property alias hoverHandler: hover
     property real bounce: 1.0
+    property bool angledShadow: false
+    property bool superDraggable: false
+    readonly property bool dragging: superDrag.active
+    readonly property real depthOffset: Math.max(7, Math.min(14,
+        Math.round(Core.Theme.shadowRadius * 0.52)))
 
     // Homepage assembly motion. Cards derive a clockwise reveal order and
     // entrance direction from their position in the three-column homepage:
@@ -133,6 +138,7 @@ Rectangle {
     }
 
     radius: Core.Theme.homepageCardRadius
+    z: root.dragging ? 100 : 1
     color: {
         const token = root.active ? Core.Theme.surfaceElevated : Core.Theme.surfaceRaised
         const c = Qt.color(token)
@@ -153,6 +159,67 @@ Rectangle {
     transform: Translate {
         x: root.revealOffsetX
         y: root.revealOffsetY
+    }
+
+    // Two theme-driven, diagonally offset silhouettes make each enabled card
+    // read as a physical layer. They remain children of the card, so they move
+    // with it and never become separately interactive.
+    Rectangle {
+        anchors.fill: parent
+        radius: root.radius
+        color: Core.Theme.alphaColor(Core.Theme.shadowColor,
+            Math.min(0.54, Core.Theme.shadowOpacity * 0.82))
+        border.width: Math.max(1, Core.Theme.borderWidth)
+        border.color: Core.Theme.alphaColor(Core.Theme.shadowColor,
+            Math.min(0.66, Core.Theme.shadowOpacity))
+        visible: root.angledShadow && Core.Theme.shadowEnabled
+        z: -2
+        transform: [
+            Translate {
+                x: root.depthOffset
+                y: root.depthOffset
+            },
+            Rotation {
+                origin.x: width / 2
+                origin.y: height / 2
+                angle: 1.15
+            }
+        ]
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: root.radius
+        color: "transparent"
+        border.width: Math.max(1, Core.Theme.borderWidth)
+        border.color: Core.Theme.alphaColor(Core.Theme.accent2,
+            Math.min(0.32, 0.10 + Core.Theme.shadowOpacity * 0.28))
+        visible: root.angledShadow && Core.Theme.shadowEnabled
+        z: -1
+        transform: [
+            Translate {
+                x: -Math.max(3, root.depthOffset * 0.36)
+                y: Math.max(3, root.depthOffset * 0.44)
+            },
+            Rotation {
+                origin.x: width / 2
+                origin.y: height / 2
+                angle: -0.72
+            }
+        ]
+    }
+
+    DragHandler {
+        id: superDrag
+        enabled: root.superDraggable
+        target: root
+        acceptedButtons: Qt.LeftButton
+        acceptedModifiers: Qt.MetaModifier
+        cursorShape: active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+        xAxis.minimum: 0
+        xAxis.maximum: root.parent ? Math.max(0, root.parent.width - root.width) : 0
+        yAxis.minimum: 0
+        yAxis.maximum: root.parent ? Math.max(0, root.parent.height - root.height) : 0
     }
 
     Timer {
