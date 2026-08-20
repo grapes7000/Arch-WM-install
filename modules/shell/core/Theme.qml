@@ -56,7 +56,9 @@ Singleton {
             blur_strength: 6,
             blur_passes: 2,
             shadow_on: true,
-            shadow_radius: 20
+            shadow_radius: 20,
+            shadow_opacity: 0.40,
+            shadow_color: "#000000"
         },
         components: {
             homepage: {
@@ -194,6 +196,9 @@ Singleton {
     readonly property int blurPasses: style.blur_passes === undefined ? 2 : Math.max(1, Number(style.blur_passes))
     readonly property bool shadowEnabled: style.shadow_on === undefined ? true : Boolean(style.shadow_on)
     readonly property int shadowRadius: style.shadow_radius === undefined ? 20 : Math.max(0, Number(style.shadow_radius))
+    readonly property real shadowOpacity: style.shadow_opacity === undefined
+        ? 0.40 : Math.max(0, Math.min(1, Number(style.shadow_opacity)))
+    readonly property string shadowColor: style.shadow_color || roles.shadow || background
 
     readonly property string fontFamily: "Inter"
 

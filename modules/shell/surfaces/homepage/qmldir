@@ -6,3 +6,12 @@ StatusChip 1.0 StatusChip.qml
 MetricTile 1.0 MetricTile.qml
 Sparkline 1.0 Sparkline.qml
 QuickAccessPanel 1.0 QuickAccessPanel.qml
+SectionToggle 1.0 SectionToggle.qml
+FloatingAppShortcut 1.0 FloatingAppShortcut.qml
+FloatingAppCluster 1.0 FloatingAppCluster.qml
+OrbitCard 1.0 OrbitCard.qml
+EmbeddedMetric 1.0 EmbeddedMetric.qml
+SystemOverviewStage 1.0 SystemOverviewStage.qml
+HomeOverviewStage 1.0 HomeOverviewStage.qml
+NowPlayingCard 1.0 NowPlayingCard.qml
+LiveActivityCard 1.0 LiveActivityCard.qml
