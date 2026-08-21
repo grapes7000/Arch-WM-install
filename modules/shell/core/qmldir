@@ -1,4 +1,5 @@
 singleton Theme 1.0 Theme.qml
+singleton UiStyle 1.0 UiStyle.qml
 singleton WidgetRegistry 1.0 WidgetRegistry.qml
 singleton SurfaceRegistry 1.0 SurfaceRegistry.qml
 singleton ScreenResolver 1.0 ScreenResolver.qml
