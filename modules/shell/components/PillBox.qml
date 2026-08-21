@@ -1,57 +1,67 @@
 import QtQuick
 import "../core" as Core
 
-// Animated pill background used behind bar widgets and buttons. Colors come
-// entirely from the shared theme contract so Theme Studio changes are visible
-// on the shell instead of being washed out by hard-coded white overlays.
+// Semantic interactive surface for compact bar controls. The active UI-style
+// contract decides whether this behaves like a filled legacy pill or a quiet
+// precision control; colors remain entirely theme-role driven.
 Rectangle {
     id: root
 
     property bool active: false
     property bool scaleEnabled: true
-    property real growScale: 1.02
-    property real pressScale: 0.97
+    readonly property bool quiet: Core.UiStyle.quietButtons
+    property real growScale: quiet ? 1.0 : 1.02
+    property real pressScale: quiet ? 0.99 : 0.97
     property real stateScale: root.scaleEnabled
         ? (root.active ? pressScale : (hover.hovered ? growScale : 1.0))
         : 1.0
     property real pressPop: 1.0
 
-    readonly property color idleColor: Core.Theme.alphaColor(Core.Theme.surfaceRaised, 0.72)
-    readonly property color hoverColor: Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.94)
-    readonly property color pressColor: Core.Theme.alphaColor(Core.Theme.selected, 0.34)
-    readonly property color idleBorder: Core.Theme.alphaColor(
-        Core.Theme.barOutlineColor,
-        Math.max(0.24, Core.Theme.barOutlineOpacity * 0.72)
+    readonly property color idleColor: quiet
+        ? Core.Theme.alphaColor(Core.Theme.surfaceRaised, 0.0)
+        : Core.Theme.alphaColor(Core.Theme.surfaceRaised, 0.72)
+    readonly property color hoverColor: quiet
+        ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.42)
+        : Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.94)
+    readonly property color pressColor: Core.Theme.alphaColor(
+        Core.Theme.selected,
+        quiet ? 0.18 : 0.34
     )
-    readonly property color hoverBorder: Core.Theme.alphaColor(Core.Theme.accent, 0.62)
-    readonly property color pressBorder: Core.Theme.alphaColor(Core.Theme.selected, 0.90)
+    readonly property color idleBorder: quiet
+        ? Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.0)
+        : Core.Theme.alphaColor(
+            Core.Theme.barOutlineColor,
+            Math.max(0.24, Core.Theme.barOutlineOpacity * 0.72)
+        )
+    readonly property color hoverBorder: Core.Theme.alphaColor(
+        Core.Theme.accent,
+        quiet ? 0.34 : 0.62
+    )
+    readonly property color pressBorder: Core.Theme.alphaColor(
+        Core.Theme.selected,
+        quiet ? 0.62 : 0.90
+    )
 
-    radius: Math.max(6, Core.Theme.barRadius - 2)
+    radius: Core.UiStyle.radiusControl
     color: root.active ? pressColor
         : (hover.hovered ? (tap.pressed ? pressColor : hoverColor) : idleColor)
-    opacity: tap.pressed ? 0.88 : 1.0
-    border.width: Math.max(1, Core.Theme.barOutlineWidth)
+    opacity: tap.pressed ? (quiet ? 0.96 : 0.88) : 1.0
+    border.width: Core.UiStyle.borderWidth
     border.color: root.active ? pressBorder
         : (hover.hovered ? (tap.pressed ? pressBorder : hoverBorder) : idleBorder)
     scale: root.stateScale * root.pressPop
 
     Behavior on stateScale {
-        NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: quiet ? Core.Theme.animationMs : Core.Theme.animationMs * 2
+            easing.type: Easing.OutCubic
+        }
     }
-    Behavior on opacity {
-        NumberAnimation { duration: 60; easing.type: Easing.OutQuad }
-    }
-    Behavior on color {
-        ColorAnimation { duration: 120 }
-    }
-    Behavior on border.color {
-        ColorAnimation { duration: 120 }
-    }
+    Behavior on opacity { NumberAnimation { duration: 60; easing.type: Easing.OutQuad } }
+    Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
+    Behavior on border.color { ColorAnimation { duration: Core.Theme.animationMs } }
 
-    HoverHandler {
-        id: hover
-        blocking: false
-    }
+    HoverHandler { id: hover; blocking: false }
 
     TapHandler {
         id: tap
@@ -74,7 +84,7 @@ Rectangle {
         id: pressAnim
         target: root
         property: "pressPop"
-        to: 0.97
+        to: quiet ? 0.99 : 0.97
         duration: 60
         easing.type: Easing.OutQuad
     }
@@ -84,8 +94,8 @@ Rectangle {
         target: root
         property: "pressPop"
         to: 1.0
-        duration: 140
-        easing.type: Easing.OutBack
-        easing.overshoot: 2.2
+        duration: quiet ? 90 : 140
+        easing.type: quiet ? Easing.OutCubic : Easing.OutBack
+        easing.overshoot: quiet ? 0.0 : 2.2
     }
 }
