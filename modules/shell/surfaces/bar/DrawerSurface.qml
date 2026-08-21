@@ -33,7 +33,6 @@ Scope {
 
     PanelWindow {
         id: drawerWindow
-
         property real revealProgress: 1.0
 
         function startReveal() {
@@ -72,9 +71,9 @@ Scope {
             property: "revealProgress"
             from: 0.0
             to: 1.0
-            duration: Math.round(Math.max(190, Core.Theme.animationMs * 1.35) * Core.Theme.motionScale)
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.18
+            duration: Math.round((Core.UiStyle.quietButtons ? 120 : Math.max(190, Core.Theme.animationMs * 1.35)) * Core.Theme.motionScale)
+            easing.type: Core.UiStyle.quietButtons ? Easing.OutCubic : Easing.OutBack
+            easing.overshoot: Core.UiStyle.quietButtons ? 0.0 : 1.18
         }
 
         Item {
@@ -120,7 +119,7 @@ Scope {
                     : drawerWindow.height - height - Core.Theme.barHeight
                         - Core.Theme.barOuterMargin * 2 - Core.Theme.drawerOffset
                 width: Math.min(
-                    drawerWindow.width - Math.max(8, Core.Theme.drawerOffset) * 2,
+                    drawerWindow.width - Math.max(Core.UiStyle.spacingSm, Core.Theme.drawerOffset) * 2,
                     Core.Theme.drawerWidth
                 )
                 height: Math.min(
@@ -135,11 +134,11 @@ Scope {
                     Core.Theme.drawerOutlineOpacity
                 )
                 opacity: Math.max(0.0, Math.min(1.0, drawerWindow.revealProgress))
-                scale: 0.96 + drawerWindow.revealProgress * 0.04
+                scale: Core.UiStyle.quietButtons ? 1.0 : (0.96 + drawerWindow.revealProgress * 0.04)
                 transform: Translate {
-                    x: (1.0 - drawerWindow.revealProgress) * 26
+                    x: (1.0 - drawerWindow.revealProgress) * (Core.UiStyle.quietButtons ? 8 : 26)
                     y: (1.0 - drawerWindow.revealProgress)
-                        * (Core.Theme.barPosition === "top" ? -5 : 5)
+                        * (Core.Theme.barPosition === "top" ? -Core.UiStyle.grid : Core.UiStyle.grid)
                 }
                 MouseArea { anchors.fill: parent }
 
