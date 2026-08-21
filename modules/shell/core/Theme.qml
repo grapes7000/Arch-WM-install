@@ -63,35 +63,21 @@ Singleton {
         components: {
             homepage: {
                 bar_position: "top",
-                bar_height: 48,
-                bar_padding: 8,
-                bar_outer_margin: 8,
-                bar_radius: 10,
                 bar_surface_role: "surface_0",
                 bar_opacity: 0.96,
                 bar_outline_role: "border_subtle",
                 bar_outline_opacity: 0.72,
-                bar_outline_width: 1,
-                bar_widget_spacing: 6,
-                bar_icon_size: 16,
-                bar_font_size: 11,
                 drawer_width: 420,
-                drawer_offset: 12,
-                drawer_padding: 16,
-                drawer_radius: 14,
                 drawer_surface_role: "surface_1",
                 drawer_opacity: 0.97,
                 drawer_outline_role: "border_subtle",
                 drawer_outline_opacity: 0.76,
-                drawer_outline_width: 1,
-                card_radius: 16,
                 card_opacity: 0.92,
                 image_fit: "cover",
                 slideshow_seconds: 30,
                 image_overlay_opacity: 0.10,
                 image_dimming: 0.28,
-                transition_ms: 320,
-                font_size: 11
+                transition_ms: 320
             }
         }
     })
@@ -108,22 +94,23 @@ Singleton {
     readonly property string surfaceOverlay: roles.overlay || surfaceElevated
     readonly property string surfaceHover: roles.hover || surfaceElevated
     readonly property string selected: roles.selected || roles.accent || "#4f8cff"
-    // Compatibility alias used by existing components. New components should
-    // prefer the explicit hierarchy above.
     readonly property string surface: surfaceBase
     readonly property string foreground: roles.text || "#f4f7fb"
     readonly property string muted: roles.text_dim || foreground
     readonly property string accent: roles.accent || "#4f8cff"
     readonly property string accent2: roles.accent2 || "#8b5cf6"
     readonly property string urgent: roles.urgent || "#ff4d6d"
-    readonly property int radius: style.corner_radius === undefined ? 10 : style.corner_radius
+
+    // Application/shell geometry belongs to the UI-style contract. Theme JSON
+    // remains the source of semantic color and desktop compositor effects.
+    readonly property int radius: UiStyle.radiusSurface
+    readonly property int controlRadius: UiStyle.radiusControl
+    readonly property int overlayRadius: UiStyle.radiusOverlay
     readonly property int windowGap: style.window_gap === undefined
         ? (style.gaps === undefined ? 8 : Math.max(0, Number(style.gaps)))
         : Math.max(0, Number(style.window_gap))
-    // Compatibility alias for existing layout code. It now means window gap,
-    // never internal bar padding.
-    readonly property int gap: windowGap
-    readonly property int borderWidth: style.border_width === undefined ? 1 : style.border_width
+    readonly property int gap: UiStyle.spacingSm
+    readonly property int borderWidth: UiStyle.borderWidth
 
     function roleColor(roleName, fallback) {
         if (typeof roleName === "string" && roleName.charAt(0) === "#")
@@ -136,57 +123,49 @@ Singleton {
         return Qt.rgba(c.r, c.g, c.b, Math.max(0, Math.min(1, Number(alpha))))
     }
 
-    // Shell room: bar.
+    // Shell room: bar. Metrics are semantic UI-style values, while surface
+    // colors and opacity remain palette/theme concerns.
     readonly property string barPosition: shellConfig.bar_position || "top"
-    readonly property int barHeight: shellConfig.bar_height === undefined
-        ? (style.bar_height === undefined ? 48 : Math.max(24, Number(style.bar_height)))
-        : Math.max(24, Number(shellConfig.bar_height))
-    readonly property int requestedBarPadding: shellConfig.bar_padding === undefined
-        ? (style.bar_padding === undefined ? 8 : Math.max(0, Number(style.bar_padding)))
-        : Math.max(0, Number(shellConfig.bar_padding))
-    // Keep at least 16px of usable vertical content even if a custom theme has
-    // a wild value. This makes malformed/experimental themes unable to crush
-    // the top-bar widgets into a one-pixel strip.
-    readonly property int barPadding: Math.min(requestedBarPadding, Math.max(0, Math.floor((barHeight - 16) / 2)))
-    readonly property int barOuterMargin: shellConfig.bar_outer_margin === undefined ? windowGap : Math.max(0, Number(shellConfig.bar_outer_margin))
-    readonly property int barRadius: shellConfig.bar_radius === undefined ? radius : Math.max(0, Number(shellConfig.bar_radius))
+    readonly property int barHeight: UiStyle.controlHeightLarge
+    readonly property int barPadding: UiStyle.spacingXs
+    readonly property int barOuterMargin: UiStyle.spacingXs
+    readonly property int barRadius: UiStyle.radiusSurface
     readonly property string barSurfaceColor: roleColor(shellConfig.bar_surface_role || "surface_0", surfaceBase)
     readonly property real barOpacity: shellConfig.bar_opacity === undefined
         ? (style.surface_opacity === undefined ? 0.96 : Number(style.surface_opacity))
         : Math.max(0, Math.min(1, Number(shellConfig.bar_opacity)))
     readonly property string barOutlineColor: roleColor(shellConfig.bar_outline_role || "border_subtle", roles.border_subtle || roles.border_normal || accent2)
     readonly property real barOutlineOpacity: shellConfig.bar_outline_opacity === undefined ? 0.72 : Math.max(0, Math.min(1, Number(shellConfig.bar_outline_opacity)))
-    readonly property int barOutlineWidth: shellConfig.bar_outline_width === undefined ? borderWidth : Math.max(0, Number(shellConfig.bar_outline_width))
-    readonly property int barWidgetSpacing: shellConfig.bar_widget_spacing === undefined ? Math.max(4, Math.floor(barPadding / 2)) : Math.max(0, Number(shellConfig.bar_widget_spacing))
-    // Minimum width every bar pill is stretched to, so widgets with very
-    // different natural content widths (a single icon vs. a clock string)
-    // still read as a uniform row of pills instead of a mismatched jumble.
-    readonly property int barPillMinWidth: shellConfig.bar_pill_min_width === undefined ? 56 : Math.max(24, Number(shellConfig.bar_pill_min_width))
-    readonly property int barIconSize: shellConfig.bar_icon_size === undefined ? 16 : Math.max(8, Number(shellConfig.bar_icon_size))
-    readonly property int barFontSize: shellConfig.bar_font_size === undefined ? 11 : Math.max(7, Number(shellConfig.bar_font_size))
+    readonly property int barOutlineWidth: UiStyle.borderWidth
+    readonly property int barWidgetSpacing: UiStyle.spacingXs
+    readonly property int barPillMinWidth: Math.max(UiStyle.controlHeightCompact, UiStyle.iconBox + UiStyle.spacingSm)
+    readonly property int barIconSize: UiStyle.iconSize
+    readonly property int barFontSize: UiStyle.fontCaption
 
     // Shell room: drawers.
     readonly property int drawerWidth: shellConfig.drawer_width === undefined ? 420 : Math.max(260, Number(shellConfig.drawer_width))
-    readonly property int drawerOffset: shellConfig.drawer_offset === undefined ? 12 : Math.max(0, Number(shellConfig.drawer_offset))
-    readonly property int drawerPadding: shellConfig.drawer_padding === undefined ? 16 : Math.max(4, Number(shellConfig.drawer_padding))
-    readonly property int drawerRadius: shellConfig.drawer_radius === undefined ? radius : Math.max(0, Number(shellConfig.drawer_radius))
+    readonly property int drawerOffset: UiStyle.spacingSm
+    readonly property int drawerPadding: UiStyle.spacingMd
+    readonly property int drawerRadius: UiStyle.radiusOverlay
     readonly property string drawerSurfaceColor: roleColor(shellConfig.drawer_surface_role || "surface_1", surfaceRaised)
     readonly property real drawerOpacity: shellConfig.drawer_opacity === undefined ? 0.97 : Math.max(0, Math.min(1, Number(shellConfig.drawer_opacity)))
     readonly property string drawerOutlineColor: roleColor(shellConfig.drawer_outline_role || "border_subtle", roles.border_subtle || roles.border_normal || accent2)
     readonly property real drawerOutlineOpacity: shellConfig.drawer_outline_opacity === undefined ? 0.76 : Math.max(0, Math.min(1, Number(shellConfig.drawer_outline_opacity)))
-    readonly property int drawerOutlineWidth: shellConfig.drawer_outline_width === undefined ? borderWidth : Math.max(0, Number(shellConfig.drawer_outline_width))
+    readonly property int drawerOutlineWidth: UiStyle.borderWidth
 
     // Shell room: homepage and shared typography.
-    readonly property int homepageCardRadius: shellConfig.card_radius === undefined ? radius + 4 : Math.max(0, Number(shellConfig.card_radius))
+    readonly property int homepageCardRadius: UiStyle.radiusSurface
     readonly property real homepageCardOpacity: shellConfig.card_opacity === undefined ? 0.92 : Math.max(0, Math.min(1, Number(shellConfig.card_opacity)))
     readonly property string homepageImageFit: shellConfig.image_fit || "cover"
     readonly property int homepageSlideshowSeconds: shellConfig.slideshow_seconds === undefined ? 30 : Math.max(5, Number(shellConfig.slideshow_seconds))
     readonly property real homepageImageOverlayOpacity: shellConfig.image_overlay_opacity === undefined ? 0.10 : Math.max(0, Math.min(0.5, Number(shellConfig.image_overlay_opacity)))
     readonly property real homepageImageDimming: shellConfig.image_dimming === undefined ? 0.28 : Math.max(0, Math.min(0.85, Number(shellConfig.image_dimming)))
     readonly property int homepageTransitionMs: shellConfig.transition_ms === undefined ? 320 : Math.max(0, Number(shellConfig.transition_ms))
-    readonly property int shellFontSize: shellConfig.font_size === undefined ? 11 : Math.max(8, Number(shellConfig.font_size))
+    readonly property int shellFontSize: UiStyle.fontBody
 
-    readonly property int animationMs: style.animation_ms === undefined ? 160 : style.animation_ms
+    // Motion is deliberately calmer for quiet/precision controls. Desktop
+    // animation profiles still own compositor motion outside Quickshell.
+    readonly property int animationMs: UiStyle.quietButtons ? 110 : (style.animation_ms === undefined ? 160 : style.animation_ms)
     readonly property string animationProfile: style.animation_profile || "smooth"
     readonly property string workspaceAnimation: style.workspace_animation || "slide"
     readonly property real motionScale: style.motion_scale === undefined ? 1.0 : Math.max(0, Math.min(2, Number(style.motion_scale)))
@@ -194,7 +173,9 @@ Singleton {
     readonly property bool blurEnabled: style.blur_on === undefined ? true : Boolean(style.blur_on)
     readonly property int blurStrength: style.blur_strength === undefined ? 6 : Math.max(1, Number(style.blur_strength))
     readonly property int blurPasses: style.blur_passes === undefined ? 2 : Math.max(1, Number(style.blur_passes))
-    readonly property bool shadowEnabled: style.shadow_on === undefined ? true : Boolean(style.shadow_on)
+    readonly property bool shadowEnabled: UiStyle.overlayOnlyShadows
+        ? true
+        : (style.shadow_on === undefined ? true : Boolean(style.shadow_on))
     readonly property int shadowRadius: style.shadow_radius === undefined ? 20 : Math.max(0, Number(style.shadow_radius))
     readonly property real shadowOpacity: style.shadow_opacity === undefined
         ? 0.40 : Math.max(0, Math.min(1, Number(style.shadow_opacity)))
