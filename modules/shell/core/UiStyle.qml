@@ -73,6 +73,8 @@ Singleton {
     readonly property int spacingMd: metric("spacing_md", 12)
     readonly property int spacingLg: metric("spacing_lg", 16)
     readonly property int spacingXl: metric("spacing_xl", 20)
+    readonly property int spacing2xl: metric("spacing_2xl", 24)
+    readonly property int spacing3xl: metric("spacing_3xl", 32)
     readonly property int controlHeightCompact: metric("control_height_compact", 24)
     readonly property int controlHeight: metric("control_height", 30)
     readonly property int controlHeightLarge: metric("control_height_large", 36)
