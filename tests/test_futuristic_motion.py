@@ -99,9 +99,9 @@ class FuturisticShellMotionTests(unittest.TestCase):
         content = PRO_CARD.read_text(encoding="utf-8")
         self.assertIn("id: cardHover", content)
         self.assertIn("blocking: false", content)
-        # Precision stays optically still; card-style profiles retain the
-        # subtle legacy lift. Both paths must be driven by the UI contract.
-        self.assertIn("Core.UiStyle.flatSurfaces ? 1.0", content)
+        # Precision stays optically still; filled/card-style profiles retain
+        # the subtle legacy lift. Both paths come from the semantic contract.
+        self.assertIn("bounce: Core.UiStyle.quietButtons", content)
         self.assertIn("cardHover.hovered && root.revealProgress >= 0.999 ? 1.006 : 1.0", content)
         self.assertIn("Behavior on color", content)
         self.assertIn("Behavior on scale", content)
