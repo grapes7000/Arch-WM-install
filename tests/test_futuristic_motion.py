@@ -21,6 +21,7 @@ class FuturisticShellMotionTests(unittest.TestCase):
         self.assertIn('WlrLayershell.namespace: root.isPrimary ? "arch-wm:bar"', content)
         self.assertIn("HoverHandler { id: menuHover }", content)
         self.assertIn("HoverHandler { id: homeHover }", content)
+        self.assertIn("Core.UiStyle.quietButtons", content)
         self.assertIn("Behavior on scale", content)
 
     def test_drawer_and_launcher_have_internal_reveal_motion(self) -> None:
@@ -31,7 +32,11 @@ class FuturisticShellMotionTests(unittest.TestCase):
         self.assertIn("transform: Translate", drawer)
         self.assertIn("property real revealProgress", launcher)
         self.assertIn("launcherWindow.startReveal", launcher)
-        self.assertIn("scale: 0.91 + launcherWindow.revealProgress * 0.09", launcher)
+        # Precision suppresses the legacy zoom while Legacy keeps it. The test
+        # validates the semantic switch instead of freezing one profile's math.
+        self.assertIn("Core.UiStyle.quietButtons ? 1.0", launcher)
+        self.assertIn("0.91 + launcherWindow.revealProgress * 0.09", launcher)
+        self.assertIn("Core.UiStyle.radiusOverlay", launcher)
         self.assertIn('WlrLayershell.namespace: "arch-wm-launcher"', launcher)
 
     def test_hyprland_motion_loads_after_theme(self) -> None:
@@ -90,10 +95,13 @@ class FuturisticShellMotionTests(unittest.TestCase):
         self.assertIn('"hypr" / "effects-profile"', content)
         self.assertIn('["hyprctl", "reload"]', content)
 
-    def test_professional_cards_have_passive_hover_lighting(self) -> None:
+    def test_professional_cards_have_profile_aware_hover_treatment(self) -> None:
         content = PRO_CARD.read_text(encoding="utf-8")
         self.assertIn("id: cardHover", content)
         self.assertIn("blocking: false", content)
+        # Precision stays optically still; card-style profiles retain the
+        # subtle legacy lift. Both paths must be driven by the UI contract.
+        self.assertIn("Core.UiStyle.flatSurfaces ? 1.0", content)
         self.assertIn("cardHover.hovered && root.revealProgress >= 0.999 ? 1.006 : 1.0", content)
         self.assertIn("Behavior on color", content)
         self.assertIn("Behavior on scale", content)
