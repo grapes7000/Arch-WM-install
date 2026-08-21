@@ -127,7 +127,10 @@ Singleton {
     // colors and opacity remain palette/theme concerns.
     readonly property string barPosition: shellConfig.bar_position || "top"
     readonly property int barHeight: UiStyle.controlHeightLarge
-    readonly property int barPadding: UiStyle.spacingXs
+    readonly property int barPadding: Math.min(
+        UiStyle.spacingXs,
+        Math.max(0, Math.floor((barHeight - 16) / 2))
+    )
     readonly property int barOuterMargin: UiStyle.spacingXs
     readonly property int barRadius: UiStyle.radiusSurface
     readonly property string barSurfaceColor: roleColor(shellConfig.bar_surface_role || "surface_0", surfaceBase)
