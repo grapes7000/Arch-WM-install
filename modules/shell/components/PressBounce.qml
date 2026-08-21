@@ -1,24 +1,17 @@
 import QtQuick
+import "../core" as Core
 
-// Drop this next to any clickable Item to give it the shrink+dim-on-press,
-// bouncy-settle-on-release feel. Deliberately does NOT own its own
-// MouseArea/TapHandler: a second pointer handler sitting alongside the
-// button's real one can grab-conflict with it in Qt6 and silently never
-// fire. Instead, bind `pressed` to the existing MouseArea/TapHandler's own
-// `pressed` property so there is exactly one thing tracking the press.
+// Shared press feedback. Precision keeps motion almost imperceptible and
+// settles linearly; legacy profiles retain the springier bounce.
 Item {
     id: root
 
-    // Defaults to the immediate parent, which is right for icons wrapped
-    // directly in a Text/Item; pass an explicit target for anything else.
     property Item target: parent
     property bool pressed: false
-    property real pressScale: 0.94
-    // Settles back to exactly 1.0 (the target's normal size) rather than
-    // overshooting past it — the bounce comes from the OutBack easing
-    // curve's own overshoot-and-settle character, not an inflated peak.
-    property int pressDuration: 60
-    property int reboundDuration: 140
+    readonly property bool quiet: Core.UiStyle.quietButtons
+    property real pressScale: quiet ? 0.99 : 0.94
+    property int pressDuration: quiet ? 45 : 60
+    property int reboundDuration: quiet ? 80 : 140
 
     onPressedChanged: {
         if (pressed) {
@@ -45,7 +38,7 @@ Item {
         property: "scale"
         to: 1.0
         duration: root.reboundDuration
-        easing.type: Easing.OutBack
-        easing.overshoot: 2.2
+        easing.type: root.quiet ? Easing.OutCubic : Easing.OutBack
+        easing.overshoot: root.quiet ? 0.0 : 2.2
     }
 }
