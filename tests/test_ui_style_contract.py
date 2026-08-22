@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import pathlib
 import unittest
 
@@ -8,6 +9,7 @@ CORE = ROOT / "modules/shell/core"
 COMPONENTS = ROOT / "modules/shell/components"
 BAR = ROOT / "modules/shell/surfaces/bar"
 HOMEPAGE = ROOT / "modules/shell/surfaces/homepage"
+PROFILES = ROOT / "modules/theme-engine/ui-styles"
 
 
 class UiStyleContractTests(unittest.TestCase):
@@ -33,18 +35,27 @@ class UiStyleContractTests(unittest.TestCase):
             "UiStyle.fontCaption",
         ):
             self.assertIn(token, theme)
-        # Keep bar contents usable even if a future profile provides an
-        # unusually small control height.
         self.assertIn("barHeight - 16", theme)
 
-    def test_bar_controls_use_semantic_geometry_and_interaction(self) -> None:
+    def test_bar_controls_use_semantic_geometry_and_motion(self) -> None:
         pill = (COMPONENTS / "PillBox.qml").read_text(encoding="utf-8")
         self.assertIn("radius: Core.UiStyle.radiusControl", pill)
         self.assertIn("border.width: Core.UiStyle.borderWidth", pill)
         self.assertIn("readonly property bool quiet: Core.UiStyle.quietButtons", pill)
+        self.assertIn("Core.UiStyle.motionNone", pill)
+        self.assertIn("Core.UiStyle.motionRestrained", pill)
+        self.assertIn("Core.UiStyle.motionPlayful", pill)
         self.assertIn("Core.Theme.surfaceRaised", pill)
         self.assertIn("Core.Theme.surfaceHover", pill)
         self.assertNotIn("radius: Math.max(6", pill)
+
+    def test_profiles_define_distinct_motion_personalities(self) -> None:
+        precision = json.loads((PROFILES / "precision.json").read_text(encoding="utf-8"))
+        legacy = json.loads((PROFILES / "legacy.json").read_text(encoding="utf-8"))
+        win95 = json.loads((PROFILES / "win95.json").read_text(encoding="utf-8"))
+        self.assertEqual(precision["patterns"]["motion"], "restrained")
+        self.assertEqual(legacy["patterns"]["motion"], "playful")
+        self.assertEqual(win95["patterns"]["motion"], "none")
 
     def test_launcher_exposes_precision_and_legacy_paths(self) -> None:
         launcher = (BAR / "LauncherOverlay.qml").read_text(encoding="utf-8")
