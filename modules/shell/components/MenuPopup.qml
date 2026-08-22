@@ -23,7 +23,13 @@ PanelWindow {
     visible: menuOpen
     screen: Quickshell.screens[0]
 
-    anchors { top: true; bottom: true; left: true; right: true }
+    anchors {
+        top: true
+        bottom: true
+        left: true
+        right: true
+    }
+
     exclusionMode: ExclusionMode.Ignore
     focusable: true
     color: "transparent"
@@ -35,8 +41,11 @@ PanelWindow {
     }
 
     function toggle() {
-        if (menuOpen) close()
-        else menuOpen = true
+        if (menuOpen) {
+            close()
+        } else {
+            menuOpen = true
+        }
     }
 
     function openTo(kind) {
@@ -46,7 +55,11 @@ PanelWindow {
         currentWidgetName = definition ? definition.name : kind
     }
 
-    MouseArea { anchors.fill: parent; onClicked: popup.close() }
+    MouseArea {
+        id: backdrop
+        anchors.fill: parent
+        onClicked: popup.close()
+    }
 
     Item {
         anchors.fill: parent
@@ -56,7 +69,10 @@ PanelWindow {
 
     Rectangle {
         id: card
-        anchors { top: parent.top; right: parent.right }
+        anchors {
+            top: parent.top
+            right: parent.right
+        }
         anchors.topMargin: Core.Theme.barHeight + Core.UiStyle.spacingMd
         anchors.rightMargin: Core.UiStyle.spacingSm
         width: 340
@@ -66,7 +82,11 @@ PanelWindow {
         border.width: Core.UiStyle.borderWidth
         border.color: Core.Theme.barOutlineColor
 
-        MouseArea { anchors.fill: parent; onClicked: {} }
+        MouseArea {
+            id: cardClickShield
+            anchors.fill: parent
+            onClicked: {}
+        }
 
         ColumnLayout {
             id: mainCol
@@ -84,6 +104,7 @@ PanelWindow {
                     text: "←"
                     color: Core.Theme.foreground
                     font.pixelSize: Core.UiStyle.iconSize + 3
+
                     MouseArea {
                         id: backArea
                         anchors.fill: parent
@@ -105,338 +126,403 @@ PanelWindow {
                 }
             }
 
-            Item {
+            ColumnLayout {
+                id: overviewCol
                 Layout.fillWidth: true
-                Layout.preferredHeight: overviewCol.implicitHeight
+                spacing: Core.UiStyle.spacingSm
                 visible: popup.currentWidget === ""
 
-                ColumnLayout {
-                    id: overviewCol
-                    anchors.left: parent.left
-                    anchors.right: parent.right
+                RowLayout {
+                    Layout.fillWidth: true
                     spacing: Core.UiStyle.spacingSm
 
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
+                        spacing: Core.UiStyle.spacingXs / 2
+
+                        // Deliberately oversized: the clock is a high-salience desktop affordance.
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            text: Services.TimeService.timeLong
+                            color: Core.Theme.foreground
+                            font.pixelSize: 31
+                            font.bold: true
+                        }
+
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            text: Services.TimeService.dateLong
+                            color: Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.fontSecondary
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    ColumnLayout {
+                        spacing: 0
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            text: {
+                                if (!Services.PowerService.available) return "󰁹"
+                                if (Services.PowerService.charging) return "󰂄"
+                                const p = Services.PowerService.percent
+                                if (p >= 90) return "󰁹"
+                                if (p >= 70) return "󰂁"
+                                if (p >= 50) return "󰁾"
+                                if (p >= 30) return "󰁼"
+                                if (p >= 10) return "󰁺"
+                                return "󰂃"
+                            }
+                            color: Services.PowerService.percent <= 15 && !Services.PowerService.charging
+                                ? Core.Theme.urgent : Core.Theme.foreground
+                            font.pixelSize: Core.UiStyle.iconSize + 6
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            text: Services.PowerService.available ? Services.PowerService.percent + "%" : "--"
+                            color: Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.fontBody
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+
+                    ColumnLayout {
+                        spacing: 0
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            text: Services.NotificationService.dndEnabled
+                                ? "󰂛"
+                                : (Services.NotificationService.count > 0 ? "󰂚" : "󰂜")
+                            color: Services.NotificationService.count > 0
+                                ? Core.Theme.accent : Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.iconSize + 6
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            text: Services.NotificationService.count > 0
+                                ? Services.NotificationService.count : ""
+                            color: Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.fontBody
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: Core.UiStyle.controlHeightLarge + Core.UiStyle.spacingMd
+                    radius: Core.UiStyle.radiusSurface
+                    color: popup.insetFill
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: popup.insetBorder
+
+                    MouseArea {
+                        id: systemStatsArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            popup.currentWidget = "system-stats"
+                            popup.currentWidgetName = "System"
+                        }
+                    }
+                    PressBounce { pressed: systemStatsArea.pressed }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: Core.UiStyle.spacingSm
+                        spacing: Core.UiStyle.spacingLg
+
+                        RowLayout {
+                            spacing: Core.UiStyle.spacingXs
+                            Text {
+                                text: "CPU"
+                                color: Core.Theme.muted
+                                font.pixelSize: Core.UiStyle.fontBody
+                            }
+                            Text {
+                                text: Services.SystemStatsService.cpuPercent + "%"
+                                color: Services.SystemStatsService.cpuPercent >= 90
+                                    ? Core.Theme.urgent : Core.Theme.foreground
+                                font.pixelSize: Core.UiStyle.fontSection
+                                font.bold: true
+                            }
+                        }
+                        RowLayout {
+                            spacing: Core.UiStyle.spacingXs
+                            Text {
+                                text: "RAM"
+                                color: Core.Theme.muted
+                                font.pixelSize: Core.UiStyle.fontBody
+                            }
+                            Text {
+                                text: Services.SystemStatsService.memoryPercent + "%"
+                                color: Services.SystemStatsService.memoryPercent >= 90
+                                    ? Core.Theme.urgent : Core.Theme.foreground
+                                font.pixelSize: Core.UiStyle.fontSection
+                                font.bold: true
+                            }
+                        }
+                        RowLayout {
+                            spacing: Core.UiStyle.spacingXs
+                            Text {
+                                text: "DISK"
+                                color: Core.Theme.muted
+                                font.pixelSize: Core.UiStyle.fontBody
+                            }
+                            Text {
+                                text: Services.SystemStatsService.diskPercent + "%"
+                                color: Services.SystemStatsService.diskPercent >= 90
+                                    ? Core.Theme.urgent : Core.Theme.foreground
+                                font.pixelSize: Core.UiStyle.fontSection
+                                font.bold: true
+                            }
+                        }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            text: "›"
+                            color: Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.iconSize + 2
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: mediaRow.implicitHeight + Core.UiStyle.spacingLg
+                    radius: Core.UiStyle.radiusSurface
+                    color: popup.insetFill
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: popup.insetBorder
+                    visible: Services.MprisService.status !== "Stopped"
+
+                    MouseArea {
+                        id: mediaCardArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            popup.currentWidget = "media"
+                            popup.currentWidgetName = "Now Playing"
+                        }
+                    }
+                    PressBounce { pressed: mediaCardArea.pressed }
+
+                    RowLayout {
+                        id: mediaRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: Core.UiStyle.spacingSm
                         spacing: Core.UiStyle.spacingSm
 
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: Core.UiStyle.spacingXs / 2
-
-                            // Clock remains intentionally oversized as a high-salience
-                            // desktop affordance; it is not part of the ordinary type scale.
                             Text {
-                                font.family: Core.Theme.fontFamily
-                                text: Services.TimeService.timeLong
+                                Layout.fillWidth: true
+                                text: Services.MprisService.title || "Unknown"
                                 color: Core.Theme.foreground
-                                font.pixelSize: 31
+                                font.pixelSize: Core.UiStyle.fontTitle
                                 font.bold: true
+                                elide: Text.ElideRight
                             }
-
                             Text {
-                                font.family: Core.Theme.fontFamily
-                                text: Services.TimeService.dateLong
+                                Layout.fillWidth: true
+                                text: Services.MprisService.artist || "Unknown Artist"
                                 color: Core.Theme.muted
                                 font.pixelSize: Core.UiStyle.fontSecondary
+                                elide: Text.ElideRight
                             }
                         }
 
-                        Item { Layout.fillWidth: true }
-
-                        RowLayout {
-                            spacing: Core.UiStyle.spacingMd
-
-                            ColumnLayout {
-                                spacing: 0
-                                Text {
-                                    font.family: Core.Theme.fontFamily
-                                    text: {
-                                        if (!Services.PowerService.available) return "󰁹"
-                                        if (Services.PowerService.charging) return "󰂄"
-                                        const p = Services.PowerService.percent
-                                        if (p >= 90) return "󰁹"
-                                        if (p >= 70) return "󰂁"
-                                        if (p >= 50) return "󰁾"
-                                        if (p >= 30) return "󰁼"
-                                        if (p >= 10) return "󰁺"
-                                        return "󰂃"
-                                    }
-                                    color: {
-                                        if (!Services.PowerService.available) return Core.Theme.muted
-                                        if (Services.PowerService.percent <= 15 && !Services.PowerService.charging)
-                                            return Core.Theme.urgent
-                                        return Core.Theme.foreground
-                                    }
-                                    font.pixelSize: Core.UiStyle.iconSize + 6
-                                    horizontalAlignment: Text.AlignHCenter
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-                                Text {
-                                    font.family: Core.Theme.fontFamily
-                                    text: Services.PowerService.available ? Services.PowerService.percent + "%" : "--"
-                                    color: Core.Theme.muted
-                                    font.pixelSize: Core.UiStyle.fontBody
-                                    horizontalAlignment: Text.AlignHCenter
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
+                        Text {
+                            text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
+                            color: Core.Theme.accent
+                            font.pixelSize: Core.UiStyle.iconSize + 7
+                            MouseArea {
+                                id: mpPlayPauseArea
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Services.MprisService.playPause()
                             }
-
-                            ColumnLayout {
-                                spacing: 0
-                                Text {
-                                    font.family: Core.Theme.fontFamily
-                                    text: Services.NotificationService.dndEnabled ? "󰂛"
-                                        : (Services.NotificationService.count > 0 ? "󰂚" : "󰂜")
-                                    color: Services.NotificationService.count > 0 ? Core.Theme.accent : Core.Theme.muted
-                                    font.pixelSize: Core.UiStyle.iconSize + 6
-                                    horizontalAlignment: Text.AlignHCenter
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-                                Text {
-                                    font.family: Core.Theme.fontFamily
-                                    text: Services.NotificationService.count > 0 ? Services.NotificationService.count : ""
-                                    color: Core.Theme.muted
-                                    font.pixelSize: Core.UiStyle.fontBody
-                                    horizontalAlignment: Text.AlignHCenter
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-                            }
+                            PressBounce { pressed: mpPlayPauseArea.pressed }
                         }
                     }
+                }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: Core.UiStyle.controlHeightLarge + Core.UiStyle.spacingMd
-                        radius: Core.UiStyle.radiusSurface
-                        color: popup.insetFill
-                        border.width: Core.UiStyle.borderWidth
-                        border.color: popup.insetBorder
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: weatherRow.implicitHeight + Core.UiStyle.spacingLg
+                    radius: Core.UiStyle.radiusSurface
+                    color: popup.insetFill
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: popup.insetBorder
+                    visible: Services.WeatherService.available
 
-                        MouseArea {
-                            id: systemStatsArea
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: { popup.currentWidget = "system-stats"; popup.currentWidgetName = "System" }
-                        }
-                        PressBounce { pressed: systemStatsArea.pressed }
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: Core.UiStyle.spacingSm
-                            spacing: Core.UiStyle.spacingLg
-
-                            RowLayout {
-                                spacing: Core.UiStyle.spacingXs
-                                Text { font.family: Core.Theme.fontFamily; text: "CPU"; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.fontBody }
-                                Text { font.family: Core.Theme.fontFamily; text: Services.SystemStatsService.cpuPercent + "%"; color: Services.SystemStatsService.cpuPercent >= 90 ? Core.Theme.urgent : Core.Theme.foreground; font.pixelSize: Core.UiStyle.fontSection; font.bold: true }
-                            }
-                            RowLayout {
-                                spacing: Core.UiStyle.spacingXs
-                                Text { font.family: Core.Theme.fontFamily; text: "RAM"; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.fontBody }
-                                Text { font.family: Core.Theme.fontFamily; text: Services.SystemStatsService.memoryPercent + "%"; color: Services.SystemStatsService.memoryPercent >= 90 ? Core.Theme.urgent : Core.Theme.foreground; font.pixelSize: Core.UiStyle.fontSection; font.bold: true }
-                            }
-                            RowLayout {
-                                spacing: Core.UiStyle.spacingXs
-                                Text { font.family: Core.Theme.fontFamily; text: "DISK"; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.fontBody }
-                                Text { font.family: Core.Theme.fontFamily; text: Services.SystemStatsService.diskPercent + "%"; color: Services.SystemStatsService.diskPercent >= 90 ? Core.Theme.urgent : Core.Theme.foreground; font.pixelSize: Core.UiStyle.fontSection; font.bold: true }
-                            }
-                            Item { Layout.fillWidth: true }
-                            Text { font.family: Core.Theme.fontFamily; text: "›"; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.iconSize + 2 }
+                    MouseArea {
+                        id: weatherCardArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            popup.currentWidget = "weather"
+                            popup.currentWidgetName = "Weather"
                         }
                     }
+                    PressBounce { pressed: weatherCardArea.pressed }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: mediaCol.implicitHeight + Core.UiStyle.spacingLg
-                        radius: Core.UiStyle.radiusSurface
-                        color: popup.insetFill
-                        border.width: Core.UiStyle.borderWidth
-                        border.color: popup.insetBorder
-                        visible: Services.MprisService.status !== "Stopped"
+                    RowLayout {
+                        id: weatherRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: Core.UiStyle.spacingSm
+                        spacing: Core.UiStyle.spacingSm
 
-                        MouseArea {
-                            id: mediaCardArea
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: { popup.currentWidget = "media"; popup.currentWidgetName = "Now Playing" }
+                        Text {
+                            text: Services.WeatherService.icon || "🌡"
+                            font.pixelSize: Core.UiStyle.iconSize + 12
                         }
-                        PressBounce { pressed: mediaCardArea.pressed }
-
                         ColumnLayout {
-                            id: mediaCol
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.margins: Core.UiStyle.spacingSm
-                            spacing: Core.UiStyle.spacingSm
-
+                            Layout.fillWidth: true
+                            spacing: Core.UiStyle.spacingXs / 2
                             Text {
-                                font.family: Core.Theme.fontFamily
-                                text: "NOW PLAYING"
-                                color: Core.Theme.accent
-                                font.pixelSize: Core.UiStyle.fontCaption
+                                text: Services.WeatherService.temp
+                                color: Core.Theme.foreground
+                                font.pixelSize: Core.UiStyle.fontTitle + 3
                                 font.bold: true
-                                font.letterSpacing: 1
                             }
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: Core.UiStyle.spacingSm
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Core.UiStyle.spacingXs / 2
-                                    Text { font.family: Core.Theme.fontFamily; text: Services.MprisService.title || "Unknown"; color: Core.Theme.foreground; font.pixelSize: Core.UiStyle.fontTitle; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true }
-                                    Text { font.family: Core.Theme.fontFamily; text: Services.MprisService.artist || "Unknown Artist"; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.fontSecondary; elide: Text.ElideRight; Layout.fillWidth: true }
-                                }
-                                RowLayout {
-                                    spacing: Core.UiStyle.spacingSm
-                                    Text { font.family: Core.Theme.fontFamily; text: "󰒮"; color: Core.Theme.foreground; font.pixelSize: Core.UiStyle.iconSize + 4; visible: Services.MprisService.canPrev; MouseArea { id: mpPrevArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Services.MprisService.previous() }; PressBounce { pressed: mpPrevArea.pressed } }
-                                    Text { font.family: Core.Theme.fontFamily; text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"; color: Core.Theme.accent; font.pixelSize: Core.UiStyle.iconSize + 7; MouseArea { id: mpPlayPauseArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Services.MprisService.playPause() }; PressBounce { pressed: mpPlayPauseArea.pressed } }
-                                    Text { font.family: Core.Theme.fontFamily; text: "󰒭"; color: Core.Theme.foreground; font.pixelSize: Core.UiStyle.iconSize + 4; visible: Services.MprisService.canNext; MouseArea { id: mpNextArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Services.MprisService.next() }; PressBounce { pressed: mpNextArea.pressed } }
-                                }
-                            }
-
-                            Item {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: Core.UiStyle.controlHeightCompact
-                                Row {
-                                    anchors.fill: parent
-                                    anchors.topMargin: Core.UiStyle.spacingXs
-                                    spacing: 2
-                                    Repeater {
-                                        model: 32
-                                        Rectangle {
-                                            required property int index
-                                            width: (parent.width - 31 * 2) / 32
-                                            radius: Math.min(1, Core.UiStyle.radiusControl)
-                                            color: Core.Theme.accent
-                                            opacity: Services.MprisService.status === "Playing" ? barAnim.value : 0.15
-                                            anchors.bottom: parent.bottom
-                                            height: Services.MprisService.status === "Playing" ? parent.height * barAnim.value : parent.height * 0.1
-                                            Timer {
-                                                id: barAnim
-                                                property real value: 0.15
-                                                interval: 80 + index * 7
-                                                running: !Core.UiStyle.motionNone && Services.MprisService.status === "Playing" && popup.menuOpen
-                                                repeat: true
-                                                triggeredOnStart: true
-                                                onTriggered: value = 0.15 + Math.random() * 0.85
-                                            }
-                                            Behavior on height { NumberAnimation { duration: Core.UiStyle.motionFastMs; easing.type: Easing.OutQuad } }
-                                            Behavior on opacity { NumberAnimation { duration: Core.UiStyle.motionFastMs } }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Rectangle { Layout.fillWidth: true; visible: false; implicitHeight: 0 }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: weatherRow.implicitHeight + Core.UiStyle.spacingLg
-                        radius: Core.UiStyle.radiusSurface
-                        color: popup.insetFill
-                        border.width: Core.UiStyle.borderWidth
-                        border.color: popup.insetBorder
-                        visible: Services.WeatherService.available
-                        MouseArea { id: weatherCardArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { popup.currentWidget = "weather"; popup.currentWidgetName = "Weather" } }
-                        PressBounce { pressed: weatherCardArea.pressed }
-                        RowLayout {
-                            id: weatherRow
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.margins: Core.UiStyle.spacingSm
-                            spacing: Core.UiStyle.spacingSm
-                            Text { font.family: Core.Theme.fontFamily; text: Services.WeatherService.icon || "🌡"; font.pixelSize: Core.UiStyle.iconSize + 12 }
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: Core.UiStyle.spacingXs / 2
-                                Text { font.family: Core.Theme.fontFamily; text: Services.WeatherService.temp; color: Core.Theme.foreground; font.pixelSize: Core.UiStyle.fontTitle + 3; font.bold: true }
-                                Text { font.family: Core.Theme.fontFamily; text: Services.WeatherService.condition; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.fontSecondary; elide: Text.ElideRight; Layout.fillWidth: true }
-                            }
-                            Text { font.family: Core.Theme.fontFamily; text: "›"; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.iconSize + 2 }
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: networkRow.implicitHeight + Core.UiStyle.spacingLg
-                        radius: Core.UiStyle.radiusSurface
-                        color: popup.insetFill
-                        border.width: Core.UiStyle.borderWidth
-                        border.color: popup.insetBorder
-                        MouseArea { id: networkCardArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { popup.currentWidget = "network"; popup.currentWidgetName = "Network" } }
-                        PressBounce { pressed: networkCardArea.pressed }
-                        RowLayout {
-                            id: networkRow
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.margins: Core.UiStyle.spacingSm
-                            spacing: Core.UiStyle.spacingSm
                             Text {
-                                font.family: Core.Theme.fontFamily
-                                text: {
-                                    if (!Services.NetworkService.connected) return "󰤭"
-                                    if (Services.NetworkService.type === "ethernet") return "󰈀"
-                                    const s = Services.NetworkService.strength
-                                    if (s >= 75) return "󰤨"
-                                    if (s >= 50) return "󰤥"
-                                    if (s >= 25) return "󰤢"
-                                    return "󰤟"
-                                }
-                                color: Services.NetworkService.connected ? Core.Theme.foreground : Core.Theme.muted
-                                font.pixelSize: Core.UiStyle.iconSize + 7
-                            }
-                            ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: Core.UiStyle.spacingXs / 2
-                                Text { font.family: Core.Theme.fontFamily; text: Services.NetworkService.connected ? (Services.NetworkService.ssid || Services.NetworkService.type) : "Disconnected"; color: Services.NetworkService.connected ? Core.Theme.foreground : Core.Theme.muted; font.pixelSize: Core.UiStyle.fontTitle; font.bold: true }
-                                Text { font.family: Core.Theme.fontFamily; visible: Services.TailscaleService.connected; text: Services.TailscaleService.isMullvad ? "Mullvad VPN active" : "Tailscale connected"; color: Core.Theme.accent; font.pixelSize: Core.UiStyle.fontBody }
+                                text: Services.WeatherService.condition
+                                color: Core.Theme.muted
+                                font.pixelSize: Core.UiStyle.fontSecondary
+                                elide: Text.ElideRight
                             }
-                            Text { font.family: Core.Theme.fontFamily; text: "›"; color: Core.Theme.muted; font.pixelSize: Core.UiStyle.iconSize + 2 }
+                        }
+                        Text {
+                            text: "›"
+                            color: Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.iconSize + 2
                         }
                     }
+                }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: volRow.implicitHeight + Core.UiStyle.spacingLg
-                        radius: Core.UiStyle.radiusSurface
-                        color: popup.insetFill
-                        border.width: Core.UiStyle.borderWidth
-                        border.color: popup.insetBorder
-                        RowLayout {
-                            id: volRow
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.margins: Core.UiStyle.spacingSm
-                            spacing: Core.UiStyle.spacingSm
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: networkRow.implicitHeight + Core.UiStyle.spacingLg
+                    radius: Core.UiStyle.radiusSurface
+                    color: popup.insetFill
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: popup.insetBorder
+
+                    MouseArea {
+                        id: networkCardArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            popup.currentWidget = "network"
+                            popup.currentWidgetName = "Network"
+                        }
+                    }
+                    PressBounce { pressed: networkCardArea.pressed }
+
+                    RowLayout {
+                        id: networkRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: Core.UiStyle.spacingSm
+                        spacing: Core.UiStyle.spacingSm
+
+                        Text {
+                            text: Services.NetworkService.connected ? "󰤨" : "󰤭"
+                            color: Services.NetworkService.connected
+                                ? Core.Theme.foreground : Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.iconSize + 7
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Core.UiStyle.spacingXs / 2
                             Text {
-                                font.family: Core.Theme.fontFamily
-                                text: Services.AudioService.muted ? "󰝟" : (Services.AudioService.volume >= 66 ? "󰕾" : (Services.AudioService.volume >= 33 ? "󰖀" : "󰕿"))
-                                color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
-                                font.pixelSize: Core.UiStyle.iconSize + 7
-                                MouseArea { id: muteToggleArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Services.AudioService.toggleMute() }
-                                PressBounce { pressed: muteToggleArea.pressed }
+                                text: Services.NetworkService.connected
+                                    ? (Services.NetworkService.ssid || Services.NetworkService.type)
+                                    : "Disconnected"
+                                color: Services.NetworkService.connected
+                                    ? Core.Theme.foreground : Core.Theme.muted
+                                font.pixelSize: Core.UiStyle.fontTitle
+                                font.bold: true
                             }
+                            Text {
+                                visible: Services.TailscaleService.connected
+                                text: Services.TailscaleService.isMullvad
+                                    ? "Mullvad VPN active" : "Tailscale connected"
+                                color: Core.Theme.accent
+                                font.pixelSize: Core.UiStyle.fontBody
+                            }
+                        }
+                        Text {
+                            text: "›"
+                            color: Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.iconSize + 2
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: volRow.implicitHeight + Core.UiStyle.spacingLg
+                    radius: Core.UiStyle.radiusSurface
+                    color: popup.insetFill
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: popup.insetBorder
+
+                    RowLayout {
+                        id: volRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: Core.UiStyle.spacingSm
+                        spacing: Core.UiStyle.spacingSm
+
+                        Text {
+                            text: Services.AudioService.muted ? "󰝟" : "󰕾"
+                            color: Services.AudioService.muted
+                                ? Core.Theme.muted : Core.Theme.foreground
+                            font.pixelSize: Core.UiStyle.iconSize + 7
+                            MouseArea {
+                                id: muteToggleArea
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Services.AudioService.toggleMute()
+                            }
+                            PressBounce { pressed: muteToggleArea.pressed }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: Core.UiStyle.grid
+                            radius: Math.min(Core.UiStyle.radiusControl, height / 2)
+                            color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.42)
                             Rectangle {
-                                Layout.fillWidth: true
-                                height: Core.UiStyle.grid
-                                radius: Math.min(Core.UiStyle.radiusControl, height / 2)
-                                color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.42)
-                                Rectangle {
-                                    width: parent.width * Services.AudioService.volume / 100
-                                    height: parent.height
-                                    radius: parent.radius
-                                    color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.accent
-                                }
+                                width: parent.width * Services.AudioService.volume / 100
+                                height: parent.height
+                                radius: parent.radius
+                                color: Services.AudioService.muted
+                                    ? Core.Theme.muted : Core.Theme.accent
                             }
-                            Text { font.family: Core.Theme.fontFamily; text: Services.AudioService.volume + "%"; color: Core.Theme.foreground; font.pixelSize: Core.UiStyle.fontSection; font.bold: true }
+                        }
+
+                        Text {
+                            text: Services.AudioService.volume + "%"
+                            color: Core.Theme.foreground
+                            font.pixelSize: Core.UiStyle.fontSection
+                            font.bold: true
                         }
                     }
                 }
@@ -448,7 +534,9 @@ PanelWindow {
                 Layout.preferredHeight: item ? item.implicitHeight : 0
                 active: popup.currentWidget !== ""
                 visible: active
-                source: active ? Qt.resolvedUrl("../widgets/" + popup.currentWidget + "/Panel.qml") : ""
+                source: active
+                    ? Qt.resolvedUrl("../widgets/" + popup.currentWidget + "/Panel.qml")
+                    : ""
                 onStatusChanged: {
                     if (status === Loader.Error)
                         console.warn("Failed to load panel for", popup.currentWidget)
