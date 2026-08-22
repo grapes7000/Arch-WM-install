@@ -40,7 +40,8 @@
     "field": "filled-outlined",
     "dialog": "rounded-card",
     "status": "semantic-direct",
-    "shadow": "soft"
+    "shadow": "soft",
+    "motion": "playful"
   },
   "rules": {
     "allow_local_spacing": true,
