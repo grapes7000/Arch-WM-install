@@ -7,7 +7,7 @@
   "variants": ["compact", "standard"],
   "lockSafe": true,
   "services": ["power"],
-  "capabilities": [],
+  "capabilities": ["drawer.open"],
   "constraints": {
     "compact": {"minWidth": 56, "minHeight": 24},
     "standard": {"minWidth": 120, "minHeight": 48}
