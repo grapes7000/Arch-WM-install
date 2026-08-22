@@ -21,14 +21,14 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 10
+        spacing: Core.UiStyle.spacingSm
 
         Text {
             font.family: Core.Theme.fontFamily
             Layout.fillWidth: true
             text: "Session"
             color: Core.Theme.foreground
-            font.pixelSize: 16
+            font.pixelSize: Core.UiStyle.fontTitle
             font.bold: true
         }
 
@@ -40,22 +40,23 @@ Item {
                 required property var modelData
                 readonly property bool armed: Services.SessionService.pendingAction === modelData.action
                 Layout.fillWidth: true
-                implicitHeight: 44
+                implicitHeight: Math.max(Core.UiStyle.controlHeight, actionRow.implicitHeight + Core.UiStyle.spacingSm)
                 active: armed
                 tintColor: modelData.urgent ? Core.Theme.urgent : Core.Theme.accent
 
                 RowLayout {
+                    id: actionRow
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.margins: 14
-                    spacing: 12
+                    anchors.margins: Core.UiStyle.spacingMd
+                    spacing: Core.UiStyle.spacingSm
 
                     Text {
                         font.family: Core.Theme.fontFamily
                         text: actionCard.modelData.icon
                         color: actionCard.modelData.urgent ? Core.Theme.urgent : Core.Theme.foreground
-                        font.pixelSize: 19
+                        font.pixelSize: Core.UiStyle.iconSize + 3
                     }
 
                     Text {
@@ -65,7 +66,7 @@ Item {
                             ? "Confirm " + actionCard.modelData.label + "?"
                             : actionCard.modelData.label
                         color: actionCard.modelData.urgent ? Core.Theme.urgent : Core.Theme.foreground
-                        font.pixelSize: 15
+                        font.pixelSize: Core.UiStyle.fontBody
                         font.bold: actionCard.armed
                     }
                 }
@@ -89,7 +90,7 @@ Item {
             visible: Services.SessionService.error !== ""
             text: Services.SessionService.error
             color: Core.Theme.urgent
-            font.pixelSize: 13
+            font.pixelSize: Core.UiStyle.fontBody
             wrapMode: Text.Wrap
         }
     }
