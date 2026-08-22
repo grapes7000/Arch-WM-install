@@ -5,7 +5,10 @@ Item {
     id: root
 
     required property string widgetId
+    // Workspaces are a grouped selector whose individual buttons already own
+    // their interaction chrome. Keep the strip itself bare in every UI style.
     readonly property bool pillEnabled: root.surfaceKind === "bar"
+        && root.widgetId !== "workspaces"
     readonly property real pillPadding: Core.UiStyle.spacingSm
     required property string surfaceKind
     required property string instanceId
