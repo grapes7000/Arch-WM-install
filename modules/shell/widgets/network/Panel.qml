@@ -12,17 +12,21 @@ Item {
     property bool networksExpanded: false
     property bool tailscaleExpanded: false
 
+    readonly property color successColor: Core.Theme.roleColor("success", Core.Theme.accent)
+    readonly property color insetFill: Core.Theme.alphaColor(Core.Theme.surfaceHover, Core.UiStyle.flatSurfaces ? 0.32 : 0.54)
+    readonly property color insetBorder: Core.Theme.alphaColor(Core.Theme.barOutlineColor, Core.UiStyle.flatSurfaces ? 0.30 : 0.52)
+
     implicitHeight: layout.implicitHeight
 
     ColumnLayout {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 10
+        spacing: Core.UiStyle.spacingSm
 
         Components.TintedCard {
             Layout.fillWidth: true
-            implicitHeight: wifiCol.implicitHeight + 24
+            implicitHeight: wifiCol.implicitHeight + Core.UiStyle.spacing2xl
             opacity: Services.NetworkService.connected ? 1.0 : 0.4
 
             ColumnLayout {
@@ -30,11 +34,11 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 RowLayout {
-                    spacing: 12
+                    spacing: Core.UiStyle.spacingMd
 
                     Text {
                         font.family: Core.Theme.fontFamily
@@ -47,23 +51,21 @@ Item {
                             if (s >= 25) return "󰤢"
                             return "󰤟"
                         }
-                        color: Services.NetworkService.connected
-                            ? Core.Theme.accent : Core.Theme.muted
-                        font.pixelSize: 25
+                        color: Services.NetworkService.connected ? Core.Theme.accent : Core.Theme.muted
+                        font.pixelSize: Core.UiStyle.iconSize + 10
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Core.UiStyle.spacingXs / 2
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: Services.NetworkService.connected
                                 ? (Services.NetworkService.ssid || Services.NetworkService.type)
                                 : "Disconnected"
-                            color: Services.NetworkService.connected
-                                ? Core.Theme.foreground : Core.Theme.muted
-                            font.pixelSize: 16
+                            color: Services.NetworkService.connected ? Core.Theme.foreground : Core.Theme.muted
+                            font.pixelSize: Core.UiStyle.fontTitle
                             font.bold: true
                         }
 
@@ -77,13 +79,12 @@ Item {
                                 return info || "Connected"
                             }
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
                     }
 
                     Components.ProgressRing {
-                        visible: Services.NetworkService.connected
-                            && Services.NetworkService.type === "wifi"
+                        visible: Services.NetworkService.connected && Services.NetworkService.type === "wifi"
                         percent: Services.NetworkService.strength / 100
                         label: Services.NetworkService.strength + "%"
                     }
@@ -92,29 +93,29 @@ Item {
                 Rectangle {
                     visible: Services.NetworkService.connected
                     Layout.fillWidth: true
-                    implicitHeight: transferRow.implicitHeight + 8
-                    radius: 999
-                    color: Qt.rgba(1, 1, 1, 0.04)
-                    border.width: 1
-                    border.color: Qt.rgba(1, 1, 1, 0.06)
+                    implicitHeight: transferRow.implicitHeight + Core.UiStyle.spacingSm
+                    radius: Core.UiStyle.radiusControl
+                    color: panel.insetFill
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: panel.insetBorder
 
                     RowLayout {
                         id: transferRow
                         anchors.centerIn: parent
-                        spacing: 20
+                        spacing: Core.UiStyle.spacingXl
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "󰩟 " + Services.NetworkService.downloadRate
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "󰩠 " + Services.NetworkService.uploadRate
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
                     }
                 }
@@ -123,15 +124,15 @@ Item {
 
         Components.TintedCard {
             Layout.fillWidth: true
-            implicitHeight: selectorCol.implicitHeight + 24
+            implicitHeight: selectorCol.implicitHeight + Core.UiStyle.spacing2xl
 
             ColumnLayout {
                 id: selectorCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 Item {
                     Layout.fillWidth: true
@@ -152,19 +153,19 @@ Item {
                         id: headerRow
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        spacing: 8
+                        spacing: Core.UiStyle.spacingSm
 
                         Text {
                             text: panel.networksExpanded ? "󰅀" : "󰅂"
                             color: Core.Theme.muted
-                            font.pixelSize: 15
+                            font.pixelSize: Core.UiStyle.iconSize
                         }
 
                         Text {
                             Layout.fillWidth: true
                             text: "Available Networks"
                             color: Core.Theme.foreground
-                            font.pixelSize: 15
+                            font.pixelSize: Core.UiStyle.fontSection
                             font.bold: true
                         }
 
@@ -172,12 +173,12 @@ Item {
                             visible: panel.networksExpanded
                             text: Services.NetworkService.scanning ? "…" : "󰑐"
                             color: Core.Theme.muted
-                            font.pixelSize: 17
+                            font.pixelSize: Core.UiStyle.iconSize + 2
 
                             MouseArea {
                                 id: networkRescanArea
                                 anchors.fill: parent
-                                anchors.margins: -6
+                                anchors.margins: -Core.UiStyle.spacingSm
                                 cursorShape: Qt.PointingHandCursor
                                 enabled: !Services.NetworkService.scanning
                                 onClicked: Services.NetworkService.scan()
@@ -192,23 +193,23 @@ Item {
 
                     delegate: ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 6
+                        spacing: Core.UiStyle.spacingSm
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 10
+                            spacing: Core.UiStyle.spacingSm
 
                             Text {
                                 text: modelData.active ? "󰤨" : "󰤢"
                                 color: modelData.active ? Core.Theme.accent : Core.Theme.muted
-                                font.pixelSize: 17
+                                font.pixelSize: Core.UiStyle.iconSize + 2
                             }
 
                             Text {
                                 Layout.fillWidth: true
                                 text: modelData.ssid
                                 color: modelData.active ? Core.Theme.foreground : Core.Theme.muted
-                                font.pixelSize: 15
+                                font.pixelSize: Core.UiStyle.fontBody
                                 font.bold: modelData.active
                                 elide: Text.ElideRight
                             }
@@ -217,13 +218,13 @@ Item {
                                 visible: modelData.security !== ""
                                 text: "󰌾"
                                 color: Core.Theme.muted
-                                font.pixelSize: 14
+                                font.pixelSize: Core.UiStyle.iconSize
                             }
 
                             Text {
                                 text: modelData.strength + "%"
                                 color: Core.Theme.muted
-                                font.pixelSize: 13
+                                font.pixelSize: Core.UiStyle.fontCaption
                             }
 
                             MouseArea {
@@ -233,8 +234,7 @@ Item {
                                 enabled: !modelData.active && !Services.NetworkService.connecting
                                 onClicked: {
                                     if (modelData.security !== "") {
-                                        panel.selectedSsid = panel.selectedSsid === modelData.ssid
-                                            ? "" : modelData.ssid
+                                        panel.selectedSsid = panel.selectedSsid === modelData.ssid ? "" : modelData.ssid
                                         panel.passwordDraft = ""
                                     } else {
                                         Services.NetworkService.connectWifi(modelData.ssid, "")
@@ -247,30 +247,29 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             visible: panel.selectedSsid === modelData.ssid
-                            spacing: 8
+                            spacing: Core.UiStyle.spacingSm
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                implicitHeight: pwField.implicitHeight + 10
-                                radius: 999
-                                color: Qt.rgba(1, 1, 1, 0.06)
-                                border.width: 1
-                                border.color: Qt.rgba(1, 1, 1, 0.1)
+                                implicitHeight: Math.max(Core.UiStyle.controlHeight, pwField.implicitHeight + Core.UiStyle.spacingSm)
+                                radius: Core.UiStyle.radiusControl
+                                color: panel.insetFill
+                                border.width: Core.UiStyle.borderWidth
+                                border.color: panel.insetBorder
 
                                 TextInput {
                                     id: pwField
                                     anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
+                                    anchors.leftMargin: Core.UiStyle.spacingMd
+                                    anchors.rightMargin: Core.UiStyle.spacingMd
                                     verticalAlignment: TextInput.AlignVCenter
                                     color: Core.Theme.foreground
-                                    font.pixelSize: 14
+                                    font.pixelSize: Core.UiStyle.fontBody
                                     echoMode: TextInput.Password
                                     text: panel.passwordDraft
                                     onTextChanged: panel.passwordDraft = text
                                     Keys.onReturnPressed: {
-                                        Services.NetworkService.connectWifi(
-                                            modelData.ssid, panel.passwordDraft)
+                                        Services.NetworkService.connectWifi(modelData.ssid, panel.passwordDraft)
                                         panel.selectedSsid = ""
                                         panel.passwordDraft = ""
                                     }
@@ -280,17 +279,16 @@ Item {
                             Text {
                                 text: "Connect"
                                 color: Core.Theme.accent
-                                font.pixelSize: 14
+                                font.pixelSize: Core.UiStyle.fontBody
                                 font.bold: true
 
                                 MouseArea {
                                     id: connectDraftArea
                                     anchors.fill: parent
-                                    anchors.margins: -6
+                                    anchors.margins: -Core.UiStyle.spacingSm
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        Services.NetworkService.connectWifi(
-                                            modelData.ssid, panel.passwordDraft)
+                                        Services.NetworkService.connectWifi(modelData.ssid, panel.passwordDraft)
                                         panel.selectedSsid = ""
                                         panel.passwordDraft = ""
                                     }
@@ -305,20 +303,22 @@ Item {
                     visible: panel.networksExpanded && Services.NetworkService.accessPoints.length === 0
                     text: Services.NetworkService.scanning ? "Scanning…" : "No networks found"
                     color: Core.Theme.muted
-                    font.pixelSize: 14
+                    font.pixelSize: Core.UiStyle.fontSecondary
                 }
             }
         }
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: mullvadCol.implicitHeight + 24
-            radius: Math.max(6, Core.Theme.radius - 2)
+            implicitHeight: mullvadCol.implicitHeight + Core.UiStyle.spacing2xl
+            radius: Core.UiStyle.radiusSurface
             color: Services.TailscaleService.isMullvad
-                ? Qt.rgba(0.2, 0.8, 0.4, 0.06) : Qt.rgba(1, 1, 1, 0.04)
-            border.width: 1
+                ? Core.Theme.alphaColor(panel.successColor, Core.UiStyle.flatSurfaces ? 0.08 : 0.14)
+                : panel.insetFill
+            border.width: Core.UiStyle.borderWidth
             border.color: Services.TailscaleService.isMullvad
-                ? Qt.rgba(0.2, 0.8, 0.4, 0.3) : Qt.rgba(1, 1, 1, 0.06)
+                ? Core.Theme.alphaColor(panel.successColor, 0.42)
+                : panel.insetBorder
             opacity: Services.TailscaleService.isMullvad ? 1.0 : 0.5
 
             ColumnLayout {
@@ -326,38 +326,36 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 RowLayout {
-                    spacing: 12
+                    spacing: Core.UiStyle.spacingMd
 
                     Text {
                         font.family: Core.Theme.fontFamily
                         text: "󰦝"
-                        color: Services.TailscaleService.isMullvad
-                            ? Qt.rgba(0.2, 0.8, 0.4, 1.0) : Core.Theme.muted
-                        font.pixelSize: 25
+                        color: Services.TailscaleService.isMullvad ? panel.successColor : Core.Theme.muted
+                        font.pixelSize: Core.UiStyle.iconSize + 10
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Core.UiStyle.spacingXs / 2
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "Mullvad VPN"
                             color: Core.Theme.foreground
-                            font.pixelSize: 16
+                            font.pixelSize: Core.UiStyle.fontTitle
                             font.bold: true
                         }
 
                         Text {
                             font.family: Core.Theme.fontFamily
-                            text: Services.TailscaleService.isMullvad
-                                ? "Via Tailscale exit node" : "Inactive"
+                            text: Services.TailscaleService.isMullvad ? "Via Tailscale exit node" : "Inactive"
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
                     }
 
@@ -365,30 +363,29 @@ Item {
                         active: Services.TailscaleService.isMullvad
                         activeLabel: "CONNECTED"
                         inactiveLabel: "OFF"
-                        activeColor: Qt.rgba(0.2, 0.8, 0.4, 1.0)
+                        activeColor: panel.successColor
                     }
                 }
 
                 Text {
                     font.family: Core.Theme.fontFamily
-                    visible: Services.TailscaleService.isMullvad
-                        && Services.TailscaleService.mullvadLocation !== ""
+                    visible: Services.TailscaleService.isMullvad && Services.TailscaleService.mullvadLocation !== ""
                     text: "Exit: " + Services.TailscaleService.mullvadLocation
                     color: Core.Theme.muted
-                    font.pixelSize: 13
+                    font.pixelSize: Core.UiStyle.fontBody
                 }
             }
         }
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: tsCol.implicitHeight + 24
-            radius: Math.max(6, Core.Theme.radius - 2)
+            implicitHeight: tsCol.implicitHeight + Core.UiStyle.spacing2xl
+            radius: Core.UiStyle.radiusSurface
             color: Services.TailscaleService.connected
-                ? Qt.rgba(0, 0, 0, 0.2) : Qt.rgba(1, 1, 1, 0.04)
-            border.width: Services.TailscaleService.connected ? 2 : 1
-            border.color: Services.TailscaleService.connected
-                ? Qt.rgba(0, 0, 0, 1.0) : Qt.rgba(1, 1, 1, 0.06)
+                ? Core.Theme.alphaColor(Core.Theme.surfaceRaised, Core.UiStyle.flatSurfaces ? 0.56 : 0.82)
+                : panel.insetFill
+            border.width: Core.UiStyle.borderWidth
+            border.color: Services.TailscaleService.connected ? Core.Theme.barOutlineColor : panel.insetBorder
             opacity: Services.TailscaleService.connected ? 1.0 : 0.4
 
             MouseArea {
@@ -407,29 +404,29 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 RowLayout {
-                    spacing: 12
+                    spacing: Core.UiStyle.spacingMd
 
                     Image {
                         source: "../../assets/icons/tailscale.png"
-                        Layout.preferredWidth: 22
-                        Layout.preferredHeight: 22
+                        Layout.preferredWidth: Core.UiStyle.iconBox + Core.UiStyle.spacingXs
+                        Layout.preferredHeight: Core.UiStyle.iconBox + Core.UiStyle.spacingXs
                         smooth: true
                         opacity: Services.TailscaleService.connected ? 1.0 : 0.5
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Core.UiStyle.spacingXs / 2
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "Tailscale"
                             color: Core.Theme.foreground
-                            font.pixelSize: 16
+                            font.pixelSize: Core.UiStyle.fontTitle
                             font.bold: true
                         }
 
@@ -441,7 +438,7 @@ Item {
                                 return Services.TailscaleService.ipAddress || "Connected"
                             }
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
                     }
 
@@ -450,22 +447,22 @@ Item {
                         visible: Services.TailscaleService.connected
                         text: Services.TailscaleService.peerCount + " peers"
                         color: Core.Theme.muted
-                        font.pixelSize: 13
+                        font.pixelSize: Core.UiStyle.fontBody
                     }
 
                     Rectangle {
                         visible: Services.TailscaleService.connected
-                        width: tsPillText.implicitWidth + 20
-                        height: tsPillText.implicitHeight + 6
-                        radius: 999
-                        color: Qt.rgba(0, 0, 0, 1.0)
+                        width: tsPillText.implicitWidth + Core.UiStyle.spacingLg
+                        height: tsPillText.implicitHeight + Core.UiStyle.spacingXs
+                        radius: Core.UiStyle.radiusControl
+                        color: Core.Theme.accent
 
                         Text {
                             id: tsPillText
                             anchors.centerIn: parent
                             text: "CONNECTED"
-                            color: "white"
-                            font.pixelSize: 11
+                            color: Core.Theme.background
+                            font.pixelSize: Core.UiStyle.fontCaption
                             font.bold: true
                             font.letterSpacing: 0.5
                         }
@@ -473,26 +470,25 @@ Item {
                 }
 
                 Text {
-                    visible: Services.TailscaleService.connected
-                        && Services.TailscaleService.tailnet !== ""
+                    visible: Services.TailscaleService.connected && Services.TailscaleService.tailnet !== ""
                     text: "Tailnet: " + Services.TailscaleService.tailnet
                     color: Core.Theme.muted
-                    font.pixelSize: 13
+                    font.pixelSize: Core.UiStyle.fontBody
                 }
 
                 Rectangle {
                     visible: panel.tailscaleExpanded
                     Layout.fillWidth: true
                     implicitHeight: 140
-                    radius: Math.max(4, Core.Theme.radius - 4)
-                    color: Qt.rgba(0, 0, 0, 0.3)
-                    border.width: 1
-                    border.color: Qt.rgba(1, 1, 1, 0.08)
+                    radius: Core.UiStyle.radiusSurface
+                    color: Core.Theme.alphaColor(Core.Theme.background, 0.52)
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: panel.insetBorder
                     clip: true
 
                     Flickable {
                         anchors.fill: parent
-                        anchors.margins: 8
+                        anchors.margins: Core.UiStyle.spacingSm
                         contentWidth: statusOutput.implicitWidth
                         contentHeight: statusOutput.implicitHeight
                         clip: true
@@ -500,11 +496,10 @@ Item {
 
                         Text {
                             id: statusOutput
-                            text: Services.TailscaleService.statusLoading
-                                ? "Loading…" : (Services.TailscaleService.statusText || "No output")
+                            text: Services.TailscaleService.statusLoading ? "Loading…" : (Services.TailscaleService.statusText || "No output")
                             color: Core.Theme.foreground
                             font.family: "monospace"
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                             wrapMode: Text.NoWrap
                         }
                     }
@@ -513,4 +508,3 @@ Item {
         }
     }
 }
-
