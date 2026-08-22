@@ -40,7 +40,8 @@
     "field": "outlined",
     "dialog": "elevated",
     "status": "semantic-muted",
-    "shadow": "overlay-only"
+    "shadow": "overlay-only",
+    "motion": "restrained"
   },
   "rules": {
     "allow_local_spacing": false,
