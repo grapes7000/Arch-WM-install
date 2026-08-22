@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import "../../core" as Core
 
 Rectangle {
@@ -13,8 +14,6 @@ Rectangle {
     property bool superDraggable: false
     readonly property bool dragging: superDrag.active
     readonly property bool precision: Core.UiStyle.flatSurfaces
-    readonly property real depthOffset: Math.max(7, Math.min(14,
-        Math.round(Core.Theme.shadowRadius * 0.52)))
 
     property bool assemblyEnabled: true
     property real assemblyOrder: -1
@@ -136,9 +135,12 @@ Rectangle {
     color: {
         const token = root.active ? Core.Theme.surfaceElevated : Core.Theme.surfaceRaised
         const c = Qt.color(token)
-        const baseAlpha = root.precision ? 0.54 : Core.Theme.homepageCardOpacity
+        // Homepage cards should read as solid desktop surfaces, not washed-out glass.
+        const baseAlpha = root.precision
+            ? 0.88
+            : Math.max(0.84, Core.Theme.homepageCardOpacity)
         const alpha = Math.min(1.0, baseAlpha + root.fillAlphaBoost
-            + (root.active ? (root.precision ? 0.08 : 0.16) : 0))
+            + (root.active ? (root.precision ? 0.06 : 0.10) : 0))
         return Qt.rgba(c.r, c.g, c.b, alpha)
     }
     border.width: Core.UiStyle.borderWidth
@@ -157,35 +159,23 @@ Rectangle {
         y: root.revealOffsetY
     }
 
-    Rectangle {
+    // Real blurred shadow. This replaces the old translated/rotated duplicate
+    // rectangles that looked like offset cards rather than depth.
+    RectangularShadow {
         anchors.fill: parent
-        radius: root.radius
-        color: Core.Theme.alphaColor(Core.Theme.shadowColor,
-            Math.min(0.54, Core.Theme.shadowOpacity * 0.82))
-        border.width: Core.UiStyle.borderWidth
-        border.color: Core.Theme.alphaColor(Core.Theme.shadowColor,
-            Math.min(0.66, Core.Theme.shadowOpacity))
-        visible: root.angledShadow && Core.Theme.shadowEnabled && !root.precision
-        z: -2
-        transform: [
-            Translate { x: root.depthOffset; y: root.depthOffset },
-            Rotation { origin.x: width / 2; origin.y: height / 2; angle: 1.15 }
-        ]
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        radius: root.radius
-        color: "transparent"
-        border.width: Core.UiStyle.borderWidth
-        border.color: Core.Theme.alphaColor(Core.Theme.accent2,
-            Math.min(0.32, 0.10 + Core.Theme.shadowOpacity * 0.28))
-        visible: root.angledShadow && Core.Theme.shadowEnabled && !root.precision
         z: -1
-        transform: [
-            Translate { x: -Math.max(3, root.depthOffset * 0.36); y: Math.max(3, root.depthOffset * 0.44) },
-            Rotation { origin.x: width / 2; origin.y: height / 2; angle: -0.72 }
-        ]
+        radius: root.radius
+        blur: root.precision ? 18 : 26
+        spread: root.precision ? 0 : 1
+        offset: Qt.vector2d(0, root.precision ? 5 : 7)
+        color: Core.Theme.alphaColor(
+            Core.Theme.shadowColor,
+            Core.Theme.shadowEnabled
+                ? Math.min(root.precision ? 0.28 : 0.38,
+                    Math.max(0.16, Core.Theme.shadowOpacity))
+                : 0
+        )
+        visible: Core.Theme.shadowEnabled
     }
 
     DragHandler {
