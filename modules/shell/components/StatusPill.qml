@@ -8,7 +8,7 @@ Rectangle {
     property string activeLabel: "ON"
     property string inactiveLabel: "OFF"
     property color activeColor: Core.Theme.accent
-    property bool pulse: !Core.UiStyle.quietButtons
+    property bool pulse: Core.UiStyle.motionPlayful
 
     property bool pulseState: false
     readonly property bool mutedStatus: Core.UiStyle.patterns.status === "semantic-muted"
@@ -16,7 +16,7 @@ Rectangle {
 
     width: label.implicitWidth + Core.UiStyle.spacingSm * 2
     height: Math.max(Core.UiStyle.controlHeightCompact, label.implicitHeight + Core.UiStyle.spacingXs)
-    radius: mutedStatus ? Core.UiStyle.radiusControl : height / 2
+    radius: mutedStatus ? Core.UiStyle.radiusControl : (Core.UiStyle.radiusControl === 0 ? 0 : height / 2)
     color: active
         ? (mutedStatus ? Core.Theme.alphaColor(activeColor, 0.14) : activeColor)
         : Qt.rgba(__fg.r, __fg.g, __fg.b, mutedStatus ? 0.0 : 0.06)
@@ -24,14 +24,14 @@ Rectangle {
     border.color: active
         ? Core.Theme.alphaColor(activeColor, mutedStatus ? 0.45 : 0.0)
         : Core.Theme.alphaColor(Core.Theme.muted, mutedStatus ? 0.22 : 0.0)
-    opacity: (active && pulse) ? (pulseState ? 1.0 : 0.6) : 1.0
+    opacity: (active && pulse && !Core.UiStyle.motionNone) ? (pulseState ? 1.0 : 0.6) : 1.0
 
     Behavior on opacity {
-        NumberAnimation { duration: 750; easing.type: Easing.InOutQuad }
+        NumberAnimation { duration: Core.UiStyle.motionPlayful ? 750 : Core.UiStyle.motionFastMs; easing.type: Easing.InOutQuad }
     }
 
     Timer {
-        running: root.active && root.pulse
+        running: root.active && root.pulse && Core.UiStyle.motionPlayful
         interval: 1500
         repeat: true
         onTriggered: root.pulseState = !root.pulseState
