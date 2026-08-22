@@ -6,10 +6,7 @@ Item {
 
     required property string widgetId
     readonly property bool pillEnabled: root.surfaceKind === "bar"
-    // Extra horizontal room the pill reserves beyond the widget's natural
-    // content width, so the pill reads as a pill rather than a tight
-    // outline around the glyphs.
-    readonly property real pillPadding: 10
+    readonly property real pillPadding: Core.UiStyle.spacingSm
     required property string surfaceKind
     required property string instanceId
     property string variant: "standard"
@@ -34,19 +31,16 @@ Item {
         if (loadedItem) {
             const natural = Math.max(0, loadedItem.implicitWidth)
                 + (root.pillEnabled ? root.pillPadding * 2 : 0)
-            // Stretch every bar pill to a shared minimum width so pills read
-            // as a uniform row rather than jumping between widget-specific
-            // sizes (a single glyph vs. a longer clock string).
             return root.pillEnabled ? Math.max(natural, Core.Theme.barPillMinWidth) : natural
         }
-        return loadError ? 24 : 0
+        return loadError ? Core.UiStyle.controlHeightCompact : 0
     }
     implicitHeight: {
         if (!supported || !contentVisible)
             return 0
         if (loadedItem)
             return Math.max(0, loadedItem.implicitHeight)
-        return loadError ? 24 : 0
+        return loadError ? Core.UiStyle.controlHeightCompact : 0
     }
     visible: supported
 
@@ -70,8 +64,6 @@ Item {
         if (component.status !== Component.Ready)
             return
 
-        // Widget content lives inside the pill so hover/press state bubbles up
-        // from the widget's own mouse areas to the pill's passive handler.
         const container = root.pillEnabled ? pill : root
         const item = component.createObject(container, { context: widgetContext })
         if (!item) {
@@ -81,13 +73,6 @@ Item {
         }
 
         root.loadedItem = item
-        // Fill the pill completely rather than inset by the padding: the
-        // widget's own root Item is what carries its click MouseArea, so
-        // shrinking it here would leave the pill's padding band dead to
-        // clicks even though it bounces (PillBox's tap tracking is passive
-        // and covers the full pill). Widgets already center their content
-        // via anchors.centerIn, so filling the larger area doesn't shift
-        // anything visually.
         item.width = Qt.binding(function() { return container.width })
         item.height = Qt.binding(function() { return container.height })
         item.x = 0
@@ -144,9 +129,9 @@ Item {
     Rectangle {
         anchors.fill: parent
         visible: root.supported && root.loadError.length > 0
-        radius: Math.max(4, Core.Theme.radius)
+        radius: Core.UiStyle.radiusControl
         color: Core.Theme.background
-        border.width: 1
+        border.width: Core.UiStyle.borderWidth
         border.color: Core.Theme.urgent
 
         Text {
@@ -155,7 +140,7 @@ Item {
             text: "!"
             color: Core.Theme.urgent
             font.bold: true
-            font.pixelSize: 17
+            font.pixelSize: Core.UiStyle.fontBody
         }
     }
 
