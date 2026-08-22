@@ -21,7 +21,7 @@ Item {
     RowLayout {
         id: content
         anchors.centerIn: parent
-        spacing: 4
+        spacing: Core.UiStyle.spacingXs
 
         Text {
             font.family: Core.Theme.fontFamily
@@ -33,16 +33,15 @@ Item {
                 return "󰕿"
             }
             color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 19 : 23
+            font.pixelSize: context.variant === "compact" ? Core.UiStyle.iconSize + 4 : Core.UiStyle.iconSize + 7
         }
 
         Text {
             font.family: Core.Theme.fontFamily
             text: Services.AudioService.volume + "%"
             color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 15 : 17
+            font.pixelSize: context.variant === "compact" ? Core.UiStyle.fontBody : Core.UiStyle.fontSection
             font.bold: true
         }
     }
 }
-
