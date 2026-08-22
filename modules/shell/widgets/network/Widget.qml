@@ -21,7 +21,7 @@ Item {
     RowLayout {
         id: content
         anchors.centerIn: parent
-        spacing: 4
+        spacing: Core.UiStyle.spacingXs
 
         Text {
             font.family: Core.Theme.fontFamily
@@ -35,7 +35,7 @@ Item {
                 return "󰤟"
             }
             color: Services.NetworkService.connected ? Core.Theme.foreground : Core.Theme.muted
-            font.pixelSize: context.variant === "compact" ? 19 : 23
+            font.pixelSize: context.variant === "compact" ? Core.UiStyle.iconSize + 4 : Core.UiStyle.iconSize + 7
         }
 
         Text {
@@ -45,10 +45,9 @@ Item {
                 ? (Services.NetworkService.ssid || Services.NetworkService.type)
                 : "Disconnected"
             color: Services.NetworkService.connected ? Core.Theme.foreground : Core.Theme.muted
-            font.pixelSize: 15
+            font.pixelSize: Core.UiStyle.fontBody
             elide: Text.ElideRight
             Layout.maximumWidth: 100
         }
     }
 }
-
