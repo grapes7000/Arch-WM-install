@@ -1,19 +1,24 @@
 import QtQuick
 import "../core" as Core
 
-// Shared press feedback. Precision keeps motion almost imperceptible and
-// settles linearly; legacy profiles retain the springier bounce.
+// Shared press feedback. Motion personality comes from the UI-style contract:
+// Win95 is static, Precision restrained, Legacy playful.
 Item {
     id: root
 
     property Item target: parent
     property bool pressed: false
-    readonly property bool quiet: Core.UiStyle.quietButtons
-    property real pressScale: quiet ? 0.99 : 0.94
-    property int pressDuration: quiet ? 45 : 60
-    property int reboundDuration: quiet ? 80 : 140
+    property real pressScale: Core.UiStyle.pressScale
+    property int pressDuration: Core.UiStyle.motionFastMs
+    property int reboundDuration: Core.UiStyle.motionNormalMs
 
     onPressedChanged: {
+        if (Core.UiStyle.motionNone) {
+            pressAnim.stop()
+            reboundAnim.stop()
+            if (root.target) root.target.scale = 1.0
+            return
+        }
         if (pressed) {
             reboundAnim.stop()
             pressAnim.restart()
@@ -38,7 +43,7 @@ Item {
         property: "scale"
         to: 1.0
         duration: root.reboundDuration
-        easing.type: root.quiet ? Easing.OutCubic : Easing.OutBack
-        easing.overshoot: root.quiet ? 0.0 : 2.2
+        easing.type: Core.UiStyle.motionPlayful ? Easing.OutBack : Easing.OutCubic
+        easing.overshoot: Core.UiStyle.releaseOvershoot
     }
 }
