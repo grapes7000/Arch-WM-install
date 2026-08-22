@@ -1,19 +1,19 @@
 import QtQuick
 import "../core" as Core
 
-// Semantic interactive surface for compact bar controls. The active UI-style
-// contract decides whether this behaves like a filled legacy pill or a quiet
-// precision control; colors remain entirely theme-role driven.
+// Semantic interactive surface for compact bar controls. Geometry, colors,
+// and motion personality are resolved independently by the active contracts.
 Rectangle {
     id: root
 
     property bool active: false
     property bool scaleEnabled: true
     readonly property bool quiet: Core.UiStyle.quietButtons
-    property real growScale: quiet ? 1.0 : 1.02
-    property real pressScale: quiet ? 0.99 : 0.97
+    property real growScale: Core.UiStyle.motionNone ? 1.0
+        : (Core.UiStyle.motionRestrained ? 1.015 : 1.02)
+    property real pressScale: Core.UiStyle.pressScale
     property real stateScale: root.scaleEnabled
-        ? (root.active ? pressScale : (hover.hovered ? growScale : 1.0))
+        ? (tap.pressed ? pressScale : (hover.hovered ? growScale : 1.0))
         : 1.0
     property real pressPop: 1.0
 
@@ -45,7 +45,7 @@ Rectangle {
     radius: Core.UiStyle.radiusControl
     color: root.active ? pressColor
         : (hover.hovered ? (tap.pressed ? pressColor : hoverColor) : idleColor)
-    opacity: tap.pressed ? (quiet ? 0.96 : 0.88) : 1.0
+    opacity: tap.pressed && !Core.UiStyle.motionNone ? (quiet ? 0.96 : 0.88) : 1.0
     border.width: Core.UiStyle.borderWidth
     border.color: root.active ? pressBorder
         : (hover.hovered ? (tap.pressed ? pressBorder : hoverBorder) : idleBorder)
@@ -53,13 +53,13 @@ Rectangle {
 
     Behavior on stateScale {
         NumberAnimation {
-            duration: quiet ? Core.Theme.animationMs : Core.Theme.animationMs * 2
+            duration: Core.UiStyle.motionFastMs
             easing.type: Easing.OutCubic
         }
     }
-    Behavior on opacity { NumberAnimation { duration: 60; easing.type: Easing.OutQuad } }
-    Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
-    Behavior on border.color { ColorAnimation { duration: Core.Theme.animationMs } }
+    Behavior on opacity { NumberAnimation { duration: Core.UiStyle.motionFastMs; easing.type: Easing.OutQuad } }
+    Behavior on color { ColorAnimation { duration: Core.UiStyle.motionFastMs } }
+    Behavior on border.color { ColorAnimation { duration: Core.UiStyle.motionFastMs } }
 
     HoverHandler { id: hover; blocking: false }
 
@@ -68,8 +68,10 @@ Rectangle {
         acceptedButtons: Qt.LeftButton
         gesturePolicy: TapHandler.WithinBounds
         onPressedChanged: {
-            if (!root.scaleEnabled)
+            if (!root.scaleEnabled || Core.UiStyle.motionNone) {
+                root.pressPop = 1.0
                 return
+            }
             if (pressed) {
                 bounceAnim.stop()
                 pressAnim.restart()
@@ -84,8 +86,8 @@ Rectangle {
         id: pressAnim
         target: root
         property: "pressPop"
-        to: quiet ? 0.99 : 0.97
-        duration: 60
+        to: Core.UiStyle.pressScale
+        duration: Core.UiStyle.motionFastMs
         easing.type: Easing.OutQuad
     }
 
@@ -94,8 +96,8 @@ Rectangle {
         target: root
         property: "pressPop"
         to: 1.0
-        duration: quiet ? 90 : 140
-        easing.type: quiet ? Easing.OutCubic : Easing.OutBack
-        easing.overshoot: quiet ? 0.0 : 2.2
+        duration: Core.UiStyle.motionNormalMs
+        easing.type: Core.UiStyle.motionPlayful ? Easing.OutBack : Easing.OutCubic
+        easing.overshoot: Core.UiStyle.releaseOvershoot
     }
 }
