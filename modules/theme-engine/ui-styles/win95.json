@@ -40,7 +40,8 @@
     "field": "sunken",
     "dialog": "framed",
     "status": "semantic-direct",
-    "shadow": "hard"
+    "shadow": "hard",
+    "motion": "none"
   },
   "rules": {
     "allow_local_spacing": false,
