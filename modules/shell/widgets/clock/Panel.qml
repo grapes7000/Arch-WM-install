@@ -17,20 +17,21 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 10
+        spacing: Core.UiStyle.spacingSm
 
         Components.TintedCard {
             Layout.fillWidth: true
-            implicitHeight: headerCol.implicitHeight + 24
+            implicitHeight: headerCol.implicitHeight + Core.UiStyle.spacing2xl
 
             ColumnLayout {
                 id: headerCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 2
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingXs / 2
 
+                // Deliberately high-salience: the clock remains large in every style.
                 Text {
                     font.family: Core.Theme.fontFamily
                     text: Services.TimeService.timeShort
@@ -43,36 +44,36 @@ Item {
                     font.family: Core.Theme.fontFamily
                     text: Services.TimeService.dateLong
                     color: Core.Theme.muted
-                    font.pixelSize: 14
+                    font.pixelSize: Core.UiStyle.fontSecondary
                 }
             }
         }
 
         Components.TintedCard {
             Layout.fillWidth: true
-            implicitHeight: calendarCol.implicitHeight + 24
+            implicitHeight: calendarCol.implicitHeight + Core.UiStyle.spacing2xl
 
             ColumnLayout {
                 id: calendarCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 Text {
                     font.family: Core.Theme.fontFamily
                     text: panel.displayedMonth.toLocaleDateString(Qt.locale(), "MMMM yyyy")
                     color: Core.Theme.foreground
-                    font.pixelSize: 16
+                    font.pixelSize: Core.UiStyle.fontTitle
                     font.bold: true
                 }
 
                 GridLayout {
                     Layout.fillWidth: true
                     columns: 7
-                    columnSpacing: 4
-                    rowSpacing: 4
+                    columnSpacing: Core.UiStyle.spacingXs
+                    rowSpacing: Core.UiStyle.spacingXs
 
                     Repeater {
                         model: panel.dayNames
@@ -83,7 +84,7 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                             text: modelData
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontCaption
                         }
                     }
 
@@ -101,8 +102,8 @@ Item {
                             readonly property bool inMonth: day >= 1 && day <= daysInMonth
 
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 26
-                            radius: Core.Theme.radius
+                            Layout.preferredHeight: Core.UiStyle.controlHeightCompact
+                            radius: Core.UiStyle.radiusControl
                             color: current ? Core.Theme.accent : "transparent"
                             opacity: inMonth ? 1.0 : 0.0
 
@@ -112,7 +113,7 @@ Item {
                                 text: parent.inMonth ? parent.day : ""
                                 color: parent.current ? Core.Theme.background : Core.Theme.foreground
                                 font.bold: parent.current
-                                font.pixelSize: 14
+                                font.pixelSize: Core.UiStyle.fontBody
                             }
                         }
                     }
