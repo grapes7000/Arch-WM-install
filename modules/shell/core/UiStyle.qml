@@ -54,7 +54,8 @@ Singleton {
             field: "outlined",
             dialog: "elevated",
             status: "semantic-muted",
-            shadow: "overlay-only"
+            shadow: "overlay-only",
+            motion: "restrained"
         }
     })
 
@@ -97,6 +98,20 @@ Singleton {
     readonly property bool quietButtons: patterns.button === "quiet"
     readonly property bool accentMarkerSelection: patterns.selection === "accent-soft-marker"
     readonly property bool overlayOnlyShadows: patterns.shadow === "overlay-only"
+
+    // Motion is semantic too. Shell components consume these values rather
+    // than inferring animation personality from button/surface geometry.
+    readonly property string motion: patterns.motion || (quietButtons ? "restrained" : "playful")
+    readonly property bool motionNone: motion === "none"
+    readonly property bool motionRestrained: motion === "restrained"
+    readonly property bool motionPlayful: motion === "playful"
+    readonly property int motionFastMs: motionNone ? 0 : (motionRestrained ? 90 : 140)
+    readonly property int motionNormalMs: motionNone ? 0 : (motionRestrained ? 120 : 180)
+    readonly property real hoverScale: motionNone ? 1.0 : (motionRestrained ? 1.025 : 1.10)
+    readonly property real hoverLift: motionNone ? 0.0 : (motionRestrained ? 0.0 : -2.0)
+    readonly property real selectedPulse: motionNone ? 1.0 : (motionRestrained ? 1.035 : 1.18)
+    readonly property real pressScale: motionNone ? 1.0 : (motionRestrained ? 0.99 : 0.97)
+    readonly property real releaseOvershoot: motionPlayful ? 1.45 : 0.0
 
     function parse(contents) {
         if (!contents || typeof contents !== "string" || contents.length === 0)
