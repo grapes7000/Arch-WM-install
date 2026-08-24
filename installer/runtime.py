@@ -257,10 +257,10 @@ def repositories_check(ctx: Context) -> bool:
 def repositories_apply(ctx: Context) -> None:
     assert ctx.state is not None
     ctx.state.note(
-        "Built-in modules are the runtime source. Run scripts/sync-upstreams.sh "
-        "in a development checkout to refresh imported upstream snapshots."
+        "Built-in desktop modules are local runtime sources. Portable user config belongs "
+        "to dotfiles and the standalone themes repository is the canonical theme engine."
     )
-    ctx.emit("  built-in modules selected; upstream sync is a maintainer operation")
+    ctx.emit("  built-in desktop modules selected; shared terminal config remains external")
 
 
 def repositories_verify(ctx: Context) -> bool:
@@ -332,28 +332,29 @@ def theme_check(ctx: Context) -> bool:
         path.is_file()
         for path in (
             ctx.home / ".local/bin/theme",
-            ctx.home / ".local/bin/term",
-            ctx.home / ".zshrc",
-            ctx.config / "zsh/aliases.zsh",
-            ctx.config / "kitty/kitty.conf",
-            ctx.config / "atuin/config.toml",
             ctx.config / "theme-engine/generated/theme.json",
         )
     )
 
 
 def theme_apply(ctx: Context) -> None:
-    theme = ctx.root / "modules/theme-engine"
-    terminal = ctx.root / "modules/terminal"
-    ctx.install(theme / "bin/theme", ctx.home / ".local/bin/theme", executable=True)
-    ctx.install(terminal / "bin/term", ctx.home / ".local/bin/term", executable=True)
-    ctx.install(theme / "themes", ctx.config / "theme-engine/themes")
-    ctx.install(theme / "schema", ctx.config / "theme-engine/schema")
-    ctx.install(terminal / "kitty/kitty.conf", ctx.config / "kitty/kitty.conf")
-    ctx.install(terminal / "zsh/.zshrc", ctx.home / ".zshrc")
-    ctx.install(terminal / "zsh/aliases.zsh", ctx.config / "zsh/aliases.zsh")
-    ctx.install(terminal / "atuin/config.toml", ctx.config / "atuin/config.toml")
-    ctx.run([str(ctx.home / ".local/bin/theme"), ctx.options.theme])
+    theme_cmd = ctx.home / ".local/bin/theme"
+    if not theme_cmd.is_file():
+        # Transitional fallback only. The standalone grapes7000/themes repository
+        # is canonical and should normally be installed by linux-setup first.
+        theme = ctx.root / "modules/theme-engine"
+        ctx.emit("  standalone theme engine not found; using deprecated built-in fallback")
+        assert ctx.state is not None
+        ctx.state.note(
+            "Used deprecated built-in theme fallback. Install grapes7000/themes before the "
+            "next Arch-WM run to use the canonical engine."
+        )
+        ctx.install(theme / "bin/theme", theme_cmd, executable=True)
+        ctx.install(theme / "themes", ctx.config / "theme-engine/themes")
+        ctx.install(theme / "schema", ctx.config / "theme-engine/schema")
+    else:
+        ctx.emit("  using standalone theme engine already installed on this machine")
+    ctx.run([str(theme_cmd), ctx.options.theme])
 
 
 def theme_verify(ctx: Context) -> bool:
@@ -444,7 +445,7 @@ def dotfiles_apply(ctx: Context) -> None:
         return
     if not ctx.package_installed("chezmoi") or not ctx.package_installed("age"):
         ctx.run(["pacman", "-S", "--needed", "--noconfirm", "chezmoi", "age"], sudo=True)
-    ctx.emit("  applying dotfiles; enter the age passphrase from your password manager when prompted")
+    ctx.emit("  applying canonical portable dotfiles via Chezmoi")
     ctx.run(["chezmoi", "init", "--apply", repo])
 
 
@@ -591,7 +592,7 @@ def doctor_command(ctx: Context) -> int:
         "Hyprland": ctx.has("Hyprland"),
         "Quickshell": ctx.has("qs"),
         "theme": (ctx.home / ".local/bin/theme").is_file(),
-        "terminal profile": (ctx.config / "kitty/kitty.conf").is_file(),
+        "dotfiles terminal config": (ctx.config / "kitty/kitty.conf").is_file(),
         "Hyprland config": (ctx.config / "hypr/hyprland.conf").is_file(),
         "shell config": (ctx.config / "quickshell/arch-wm/shell.qml").is_file(),
         "theme contract": (ctx.config / "theme-engine/generated/theme.json").is_file(),
