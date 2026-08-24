@@ -8,6 +8,12 @@ created: 2026-07-28
 status: design-spec
 project: themes
 repo: grapes7000/themes
+superseded: true
+superseded_note: >
+  This is a pre-Quickshell-pivot planning doc. Waybar was dropped entirely;
+  the shipped shell is modules/shell (Quickshell). References to a
+  "Waybar Studio" phase below were never built and will not be. See
+  THEME-STUDIO.md for the current, accurate design.
 platforms:
   - Hyprland
   - Waybar

@@ -1,65 +1,77 @@
 import QtQuick
 import "../core" as Core
 
-// Animated pill background used behind bar widgets and buttons. Colors come
-// entirely from the shared theme contract so Theme Studio changes are visible
-// on the shell instead of being washed out by hard-coded white overlays.
+// Semantic interactive surface for compact bar controls. Geometry, colors,
+// and motion personality are resolved independently by the active contracts.
 Rectangle {
     id: root
 
     property bool active: false
     property bool scaleEnabled: true
-    property real growScale: 1.02
-    property real pressScale: 0.97
+    readonly property bool quiet: Core.UiStyle.quietButtons
+    property real growScale: Core.UiStyle.motionNone ? 1.0
+        : (Core.UiStyle.motionRestrained ? 1.015 : 1.02)
+    property real pressScale: Core.UiStyle.pressScale
     property real stateScale: root.scaleEnabled
-        ? (root.active ? pressScale : (hover.hovered ? growScale : 1.0))
+        ? (tap.pressed ? pressScale : (hover.hovered ? growScale : 1.0))
         : 1.0
     property real pressPop: 1.0
 
-    readonly property color idleColor: Core.Theme.alphaColor(Core.Theme.surfaceRaised, 0.72)
-    readonly property color hoverColor: Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.94)
-    readonly property color pressColor: Core.Theme.alphaColor(Core.Theme.selected, 0.34)
-    readonly property color idleBorder: Core.Theme.alphaColor(
-        Core.Theme.barOutlineColor,
-        Math.max(0.24, Core.Theme.barOutlineOpacity * 0.72)
+    readonly property color idleColor: quiet
+        ? Core.Theme.alphaColor(Core.Theme.surfaceRaised, 0.0)
+        : Core.Theme.alphaColor(Core.Theme.surfaceRaised, 0.72)
+    readonly property color hoverColor: quiet
+        ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.42)
+        : Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.94)
+    readonly property color pressColor: Core.Theme.alphaColor(
+        Core.Theme.selected,
+        quiet ? 0.18 : 0.34
     )
-    readonly property color hoverBorder: Core.Theme.alphaColor(Core.Theme.accent, 0.62)
-    readonly property color pressBorder: Core.Theme.alphaColor(Core.Theme.selected, 0.90)
+    readonly property color idleBorder: quiet
+        ? Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.0)
+        : Core.Theme.alphaColor(
+            Core.Theme.barOutlineColor,
+            Math.max(0.24, Core.Theme.barOutlineOpacity * 0.72)
+        )
+    readonly property color hoverBorder: Core.Theme.alphaColor(
+        Core.Theme.accent,
+        quiet ? 0.34 : 0.62
+    )
+    readonly property color pressBorder: Core.Theme.alphaColor(
+        Core.Theme.selected,
+        quiet ? 0.62 : 0.90
+    )
 
-    radius: Math.max(6, Core.Theme.barRadius - 2)
+    radius: Core.UiStyle.radiusControl
     color: root.active ? pressColor
         : (hover.hovered ? (tap.pressed ? pressColor : hoverColor) : idleColor)
-    opacity: tap.pressed ? 0.88 : 1.0
-    border.width: Math.max(1, Core.Theme.barOutlineWidth)
+    opacity: tap.pressed && !Core.UiStyle.motionNone ? (quiet ? 0.96 : 0.88) : 1.0
+    border.width: Core.UiStyle.borderWidth
     border.color: root.active ? pressBorder
         : (hover.hovered ? (tap.pressed ? pressBorder : hoverBorder) : idleBorder)
     scale: root.stateScale * root.pressPop
 
     Behavior on stateScale {
-        NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: Core.UiStyle.motionFastMs
+            easing.type: Easing.OutCubic
+        }
     }
-    Behavior on opacity {
-        NumberAnimation { duration: 60; easing.type: Easing.OutQuad }
-    }
-    Behavior on color {
-        ColorAnimation { duration: 120 }
-    }
-    Behavior on border.color {
-        ColorAnimation { duration: 120 }
-    }
+    Behavior on opacity { NumberAnimation { duration: Core.UiStyle.motionFastMs; easing.type: Easing.OutQuad } }
+    Behavior on color { ColorAnimation { duration: Core.UiStyle.motionFastMs } }
+    Behavior on border.color { ColorAnimation { duration: Core.UiStyle.motionFastMs } }
 
-    HoverHandler {
-        id: hover
-        blocking: false
-    }
+    HoverHandler { id: hover; blocking: false }
 
     TapHandler {
         id: tap
         acceptedButtons: Qt.LeftButton
         gesturePolicy: TapHandler.WithinBounds
         onPressedChanged: {
-            if (!root.scaleEnabled)
+            if (!root.scaleEnabled || Core.UiStyle.motionNone) {
+                root.pressPop = 1.0
                 return
+            }
             if (pressed) {
                 bounceAnim.stop()
                 pressAnim.restart()
@@ -74,8 +86,8 @@ Rectangle {
         id: pressAnim
         target: root
         property: "pressPop"
-        to: 0.97
-        duration: 60
+        to: Core.UiStyle.pressScale
+        duration: Core.UiStyle.motionFastMs
         easing.type: Easing.OutQuad
     }
 
@@ -84,8 +96,8 @@ Rectangle {
         target: root
         property: "pressPop"
         to: 1.0
-        duration: 140
-        easing.type: Easing.OutBack
-        easing.overshoot: 2.2
+        duration: Core.UiStyle.motionNormalMs
+        easing.type: Core.UiStyle.motionPlayful ? Easing.OutBack : Easing.OutCubic
+        easing.overshoot: Core.UiStyle.releaseOvershoot
     }
 }

@@ -11,25 +11,31 @@ Item {
         property string label: ""
         property int value: 0
         property color barColor: Core.Theme.accent
-        spacing: 4
+        spacing: Core.UiStyle.spacingXs
 
         RowLayout {
             Layout.fillWidth: true
-            Text { font.family: Core.Theme.fontFamily; text: label; color: Core.Theme.muted; font.pixelSize: 14 }
+            Text {
+                font.family: Core.Theme.fontFamily
+                text: label
+                color: Core.Theme.muted
+                font.pixelSize: Core.UiStyle.fontBody
+            }
             Item { Layout.fillWidth: true }
             Text {
                 font.family: Core.Theme.fontFamily
                 text: value + "%"
                 color: value >= 90 ? Core.Theme.urgent : Core.Theme.foreground
-                font.pixelSize: 15; font.bold: true
+                font.pixelSize: Core.UiStyle.fontSection
+                font.bold: true
             }
         }
 
         Rectangle {
             Layout.fillWidth: true
-            height: 6
-            radius: 3
-            color: Qt.rgba(1, 1, 1, 0.1)
+            height: Math.max(2, Core.UiStyle.grid)
+            radius: Math.min(Core.UiStyle.radiusControl, height / 2)
+            color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.34)
 
             Rectangle {
                 width: parent.width * Math.min(100, Math.max(0, parent.parent.value)) / 100
@@ -39,7 +45,13 @@ Item {
                     : parent.parent.value >= 70 ? Core.Theme.accent2
                     : parent.parent.barColor
 
-                Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
+                Behavior on width {
+                    enabled: !Core.UiStyle.motionNone
+                    NumberAnimation {
+                        duration: Core.UiStyle.motionNormalMs
+                        easing.type: Easing.OutQuad
+                    }
+                }
             }
         }
     }
@@ -48,7 +60,7 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 16
+        spacing: Core.UiStyle.spacingLg
 
         StatBar { label: "CPU"; value: Services.SystemStatsService.cpuPercent; Layout.fillWidth: true }
         StatBar { label: "Memory"; value: Services.SystemStatsService.memoryPercent; Layout.fillWidth: true }
@@ -56,22 +68,26 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: Core.Theme.muted
-            opacity: 0.2
+            height: Core.UiStyle.borderWidth
+            color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.42)
         }
 
         RowLayout {
             Layout.fillWidth: true
-            Text { font.family: Core.Theme.fontFamily; text: "Uptime"; color: Core.Theme.muted; font.pixelSize: 14 }
+            Text {
+                font.family: Core.Theme.fontFamily
+                text: "Uptime"
+                color: Core.Theme.muted
+                font.pixelSize: Core.UiStyle.fontBody
+            }
             Item { Layout.fillWidth: true }
             Text {
                 font.family: Core.Theme.fontFamily
                 text: Services.SystemStatsService.uptime
                 color: Core.Theme.foreground
-                font.pixelSize: 15; font.bold: true
+                font.pixelSize: Core.UiStyle.fontSection
+                font.bold: true
             }
         }
     }
 }
-

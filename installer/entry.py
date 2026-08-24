@@ -19,6 +19,7 @@ THEME_COMMANDS = (
     "theme-install",
     "theme-new",
     "theme-menu",
+    "ui-style",
     "wallgen",
 )
 # (source, installed-name) pairs for the two entry points that keep the legacy
@@ -172,6 +173,11 @@ def theme_apply(ctx: runtime.Context) -> None:
     else:
         ctx.install(theme / "themes", theme_target)
     ctx.install(theme / "schema", ctx.config / "theme-engine/schema")
+    # Bundled UI styles are repo-owned and fully replaced on every apply; the
+    # sibling `custom` directory is user-owned and never installed into, only
+    # ensured to exist so theme_runtime's merged catalog loader can read it.
+    ctx.install(theme / "ui-styles", ctx.config / "theme-engine/ui-styles/bundled")
+    (ctx.config / "theme-engine/ui-styles/custom").mkdir(parents=True, exist_ok=True)
     ctx.install(terminal / "kitty/kitty.conf", ctx.config / "kitty/kitty.conf")
     ctx.install(terminal / "zsh/.zshrc", ctx.home / ".zshrc")
     ctx.install(terminal / "zsh/aliases.zsh", ctx.config / "zsh/aliases.zsh")

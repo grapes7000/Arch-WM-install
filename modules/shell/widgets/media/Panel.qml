@@ -12,17 +12,17 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 12
+        spacing: Core.UiStyle.spacingMd
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: Core.UiStyle.spacingXs
 
             Text {
                 font.family: Core.Theme.fontFamily
                 text: Services.MprisService.title || "Nothing Playing"
                 color: Core.Theme.foreground
-                font.pixelSize: 19
+                font.pixelSize: Core.UiStyle.fontTitle + 2
                 font.bold: true
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -32,7 +32,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: Services.MprisService.artist || "--"
                 color: Core.Theme.muted
-                font.pixelSize: 15
+                font.pixelSize: Core.UiStyle.fontBody
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
@@ -40,7 +40,7 @@ Item {
 
         Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 32
+            Layout.preferredHeight: Core.UiStyle.controlHeight
 
             Row {
                 anchors.fill: parent
@@ -51,32 +51,24 @@ Item {
                     Rectangle {
                         required property int index
                         width: (parent.width - 39 * 2) / 40
-                        radius: 1
+                        radius: Math.min(1, Core.UiStyle.radiusControl)
                         color: Core.Theme.accent
-                        opacity: Services.MprisService.status === "Playing"
-                            ? barAnim.value : 0.12
+                        opacity: Services.MprisService.status === "Playing" ? barAnim.value : 0.12
                         anchors.bottom: parent.bottom
-
-                        height: Services.MprisService.status === "Playing"
-                            ? parent.height * barAnim.value
-                            : parent.height * 0.08
+                        height: Services.MprisService.status === "Playing" ? parent.height * barAnim.value : parent.height * 0.08
 
                         Timer {
                             id: barAnim
                             property real value: 0.12
                             interval: 70 + index * 5
-                            running: Services.MprisService.status === "Playing" && panel.visible
+                            running: !Core.UiStyle.motionNone && Services.MprisService.status === "Playing" && panel.visible
                             repeat: true
                             triggeredOnStart: true
                             onTriggered: value = 0.12 + Math.random() * 0.88
                         }
 
-                        Behavior on height {
-                            NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
-                        }
-                        Behavior on opacity {
-                            NumberAnimation { duration: 120 }
-                        }
+                        Behavior on height { NumberAnimation { duration: Core.UiStyle.motionFastMs; easing.type: Easing.OutQuad } }
+                        Behavior on opacity { NumberAnimation { duration: Core.UiStyle.motionFastMs } }
                     }
                 }
             }
@@ -84,21 +76,20 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: Core.Theme.muted
-            opacity: 0.2
+            height: Core.UiStyle.borderWidth
+            color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.5)
         }
 
         RowLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
-            spacing: 24
+            spacing: Core.UiStyle.spacing2xl
 
             Text {
                 font.family: Core.Theme.fontFamily
                 text: "󰒮"
                 color: Services.MprisService.canPrev ? Core.Theme.foreground : Core.Theme.muted
-                font.pixelSize: 25
+                font.pixelSize: Core.UiStyle.iconSize + 10
                 MouseArea {
                     id: panelPrevArea
                     anchors.fill: parent
@@ -110,16 +101,17 @@ Item {
             }
 
             Rectangle {
-                width: 44; height: 44
-                radius: 22
+                width: Core.UiStyle.controlHeightLarge
+                height: Core.UiStyle.controlHeightLarge
+                radius: Core.UiStyle.radiusControl
                 color: Core.Theme.accent
 
                 Text {
                     font.family: Core.Theme.fontFamily
                     anchors.centerIn: parent
                     text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
-                    color: Core.Theme.surface
-                    font.pixelSize: 27
+                    color: Core.Theme.background
+                    font.pixelSize: Core.UiStyle.iconSize + 10
                 }
 
                 MouseArea {
@@ -135,7 +127,7 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: "󰒭"
                 color: Services.MprisService.canNext ? Core.Theme.foreground : Core.Theme.muted
-                font.pixelSize: 25
+                font.pixelSize: Core.UiStyle.iconSize + 10
                 MouseArea {
                     id: panelNextArea
                     anchors.fill: parent
@@ -149,13 +141,13 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Core.UiStyle.spacingSm
 
             Text {
                 font.family: Core.Theme.fontFamily
                 text: Services.AudioService.muted ? "󰝟" : "󰕾"
                 color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.foreground
-                font.pixelSize: 19
+                font.pixelSize: Core.UiStyle.iconSize + 4
                 MouseArea {
                     id: panelMuteArea
                     anchors.fill: parent
@@ -167,16 +159,16 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 4
-                radius: 2
-                color: Qt.rgba(1, 1, 1, 0.1)
+                height: Core.UiStyle.grid
+                radius: Math.min(Core.UiStyle.radiusControl, height / 2)
+                color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.42)
 
                 Rectangle {
                     width: parent.width * Services.AudioService.volume / 100
                     height: parent.height
                     radius: parent.radius
                     color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.accent
-                    Behavior on width { NumberAnimation { duration: 200 } }
+                    Behavior on width { NumberAnimation { duration: Core.UiStyle.motionNormalMs } }
                 }
             }
 
@@ -184,9 +176,8 @@ Item {
                 font.family: Core.Theme.fontFamily
                 text: Services.AudioService.volume + "%"
                 color: Core.Theme.muted
-                font.pixelSize: 14
+                font.pixelSize: Core.UiStyle.fontSecondary
             }
         }
     }
 }
-

@@ -13,18 +13,15 @@ GlassCard {
     property string statusText: ""
     property string statusTone: "accent"
     property bool heroStyle: false
-    property int contentPadding: 16
-    property int contentSpacing: 10
+    property int contentPadding: Core.UiStyle.spacingMd
+    property int contentSpacing: Core.UiStyle.spacingSm
     property bool showHeader: root.eyebrow.length > 0 || root.title.length > 0
         || root.subtitle.length > 0 || root.icon.length > 0 || root.statusText.length > 0
 
-    // Professional cards respond to pointer presence even when they are not
-    // clickable. This is passive lighting/elevation only; it never steals taps
-    // from controls inside the card.
-    bounce: cardHover.hovered && root.revealProgress >= 0.999 ? 1.006 : 1.0
+    bounce: Core.UiStyle.quietButtons
+        ? 1.0
+        : (cardHover.hovered && root.revealProgress >= 0.999 ? 1.006 : 1.0)
 
-    // A parent layout may request a compact preferred height, but it must
-    // never compress a card below the space needed by its header and body.
     implicitHeight: frame.implicitHeight + root.contentPadding * 2
     Layout.minimumHeight: implicitHeight
 
@@ -42,16 +39,16 @@ GlassCard {
         RowLayout {
             visible: root.showHeader && (root.eyebrow.length > 0 || root.statusText.length > 0)
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Core.UiStyle.spacingSm
 
             Text {
                 visible: root.eyebrow.length > 0
                 text: root.eyebrow.toUpperCase()
                 color: Core.Theme.accent
                 font.family: Core.Theme.fontFamily
-                font.pixelSize: 10
-                font.bold: true
-                font.letterSpacing: 1.2
+                font.pixelSize: Core.UiStyle.fontCaption
+                font.weight: Font.DemiBold
+                font.letterSpacing: Core.UiStyle.quietButtons ? 0.4 : 1.2
             }
 
             Item { Layout.fillWidth: true }
@@ -66,30 +63,35 @@ GlassCard {
         RowLayout {
             visible: root.showHeader && (root.title.length > 0 || root.subtitle.length > 0 || root.icon.length > 0)
             Layout.fillWidth: true
-            spacing: 10
+            spacing: Core.UiStyle.spacingSm
 
             Rectangle {
                 visible: root.icon.length > 0
-                Layout.preferredWidth: root.heroStyle ? 40 : 34
-                Layout.preferredHeight: root.heroStyle ? 40 : 34
-                radius: root.heroStyle ? 13 : 11
-                color: Core.Theme.alphaColor(Core.Theme.accent,
-                    cardHover.hovered ? (root.heroStyle ? 0.22 : 0.17) : (root.heroStyle ? 0.16 : 0.11))
-                border.width: 1
-                border.color: Core.Theme.alphaColor(Core.Theme.accent, cardHover.hovered ? 0.42 : 0.22)
+                Layout.preferredWidth: root.heroStyle ? Core.UiStyle.controlHeight : Core.UiStyle.controlHeightCompact
+                Layout.preferredHeight: Layout.preferredWidth
+                radius: Core.UiStyle.radiusControl
+                color: Core.UiStyle.flatSurfaces
+                    ? "transparent"
+                    : Core.Theme.alphaColor(Core.Theme.accent,
+                        cardHover.hovered ? (root.heroStyle ? 0.22 : 0.17) : (root.heroStyle ? 0.16 : 0.11))
+                border.width: Core.UiStyle.borderWidth
+                border.color: Core.Theme.alphaColor(
+                    Core.Theme.accent,
+                    Core.UiStyle.flatSurfaces ? 0.24 : (cardHover.hovered ? 0.42 : 0.22)
+                )
 
-                Behavior on color { ColorAnimation { duration: 140 } }
-                Behavior on border.color { ColorAnimation { duration: 140 } }
+                Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
+                Behavior on border.color { ColorAnimation { duration: Core.Theme.animationMs } }
 
                 Text {
                     anchors.centerIn: parent
                     text: root.icon
                     color: Core.Theme.accent
                     font.family: Core.Theme.fontFamily
-                    font.pixelSize: root.heroStyle ? 20 : 17
-                    scale: cardHover.hovered ? 1.06 : 1.0
+                    font.pixelSize: root.heroStyle ? Core.UiStyle.iconSize + 2 : Core.UiStyle.iconSize
+                    scale: Core.UiStyle.quietButtons ? 1.0 : (cardHover.hovered ? 1.06 : 1.0)
                     Behavior on scale {
-                        NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Core.Theme.animationMs; easing.type: Easing.OutCubic }
                     }
                 }
             }
@@ -104,8 +106,8 @@ GlassCard {
                     text: root.title
                     color: Core.Theme.foreground
                     font.family: Core.Theme.fontFamily
-                    font.pixelSize: root.heroStyle ? 20 : 16
-                    font.bold: true
+                    font.pixelSize: root.heroStyle ? Core.UiStyle.fontTitle : Core.UiStyle.fontSection
+                    font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
 
@@ -115,7 +117,7 @@ GlassCard {
                     text: root.subtitle
                     color: Core.Theme.muted
                     font.family: Core.Theme.fontFamily
-                    font.pixelSize: root.heroStyle ? 12 : 11
+                    font.pixelSize: Core.UiStyle.fontCaption
                     elide: Text.ElideRight
                 }
             }
@@ -133,13 +135,13 @@ GlassCard {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: cardHover.hovered ? 2 : 1
-        radius: 1
-        color: Core.Theme.alphaColor(Core.Theme.accent, cardHover.hovered ? 0.62 : 0.26)
-        opacity: root.active ? 1.0 : (cardHover.hovered ? 0.82 : 0.42)
+        height: Core.UiStyle.borderWidth
+        radius: 0
+        color: Core.Theme.alphaColor(Core.Theme.accent,
+            root.active ? 0.72 : (cardHover.hovered ? 0.44 : 0.18))
+        opacity: root.active ? 1.0 : (cardHover.hovered ? 0.72 : 0.36)
 
-        Behavior on height { NumberAnimation { duration: 120 } }
-        Behavior on color { ColorAnimation { duration: 140 } }
-        Behavior on opacity { NumberAnimation { duration: 140 } }
+        Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
+        Behavior on opacity { NumberAnimation { duration: Core.Theme.animationMs } }
     }
 }

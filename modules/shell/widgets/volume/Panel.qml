@@ -13,23 +13,23 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 10
+        spacing: Core.UiStyle.spacingSm
 
         Components.TintedCard {
             visible: Services.AudioService.error === ""
             Layout.fillWidth: true
-            implicitHeight: mainCol.implicitHeight + 24
+            implicitHeight: mainCol.implicitHeight + Core.UiStyle.spacing2xl
 
             ColumnLayout {
                 id: mainCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 10
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 RowLayout {
-                    spacing: 12
+                    spacing: Core.UiStyle.spacingMd
 
                     Text {
                         font.family: Core.Theme.fontFamily
@@ -37,12 +37,12 @@ Item {
                             : Services.AudioService.volume >= 66 ? "󰕾"
                             : Services.AudioService.volume >= 33 ? "󰖀" : "󰕿"
                         color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.accent
-                        font.pixelSize: 25
+                        font.pixelSize: Core.UiStyle.iconSize + 8
 
                         MouseArea {
                             id: muteArea
                             anchors.fill: parent
-                            anchors.margins: -6
+                            anchors.margins: -Core.UiStyle.spacingSm
                             cursorShape: Qt.PointingHandCursor
                             onClicked: Services.AudioService.toggleMute()
                         }
@@ -51,13 +51,13 @@ Item {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Core.UiStyle.spacingXs / 2
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "Volume"
                             color: Core.Theme.foreground
-                            font.pixelSize: 16
+                            font.pixelSize: Core.UiStyle.fontTitle
                             font.bold: true
                         }
 
@@ -69,7 +69,7 @@ Item {
                                     ? (Services.MprisService.title || "Playing")
                                     : "System volume")
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                             elide: Text.ElideRight
                         }
                     }
@@ -85,7 +85,7 @@ Item {
                         font.family: Core.Theme.fontFamily
                         text: Services.AudioService.volume + "%"
                         color: Core.Theme.foreground
-                        font.pixelSize: 16
+                        font.pixelSize: Core.UiStyle.fontSection
                         font.bold: true
                     }
                 }
@@ -93,11 +93,9 @@ Item {
                 Rectangle {
                     id: sliderTrack
                     Layout.fillWidth: true
-                    height: 10
-                    radius: 5
-                    color: Qt.rgba(Qt.color(Core.Theme.foreground).r,
-                        Qt.color(Core.Theme.foreground).g,
-                        Qt.color(Core.Theme.foreground).b, 0.08)
+                    height: Core.UiStyle.grid
+                    radius: Math.min(Core.UiStyle.radiusControl, height / 2)
+                    color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.36)
 
                     Rectangle {
                         width: sliderTrack.width * (Services.AudioService.muted ? 0 : Services.AudioService.volume / 100)
@@ -106,14 +104,18 @@ Item {
                         color: Services.AudioService.muted ? Core.Theme.muted : Core.Theme.accent
 
                         Behavior on width {
-                            enabled: !sliderArea.dragging
-                            NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+                            enabled: !sliderArea.dragging && !Core.UiStyle.motionNone
+                            NumberAnimation {
+                                duration: Core.UiStyle.motionFastMs
+                                easing.type: Easing.OutQuad
+                            }
                         }
                     }
 
                     MouseArea {
                         id: sliderArea
                         anchors.fill: parent
+                        anchors.margins: -Core.UiStyle.spacingXs
                         cursorShape: Qt.PointingHandCursor
                         property bool dragging: false
 
@@ -130,9 +132,9 @@ Item {
 
                 Row {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 24
+                    Layout.preferredHeight: Core.UiStyle.controlHeightCompact
                     visible: Services.MprisService.status === "Playing"
-                    spacing: 2
+                    spacing: Math.max(1, Core.UiStyle.grid / 2)
 
                     Repeater {
                         model: Services.CavaService.bars
@@ -142,9 +144,12 @@ Item {
                             width: Math.max(2, (parent.width - (Services.CavaService.bars.length - 1) * parent.spacing) / Math.max(1, Services.CavaService.bars.length))
                             height: Math.max(3, parent.height * modelData)
                             anchors.bottom: parent.bottom
-                            radius: width / 2
+                            radius: Math.min(1, Core.UiStyle.radiusControl)
                             color: index % 2 ? Core.Theme.accent2 : Core.Theme.accent
-                            Behavior on height { NumberAnimation { duration: 70 } }
+                            Behavior on height {
+                                enabled: !Core.UiStyle.motionNone
+                                NumberAnimation { duration: Core.UiStyle.motionFastMs }
+                            }
                         }
                     }
                 }

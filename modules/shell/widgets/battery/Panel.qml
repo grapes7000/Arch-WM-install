@@ -13,12 +13,12 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 10
+        spacing: Core.UiStyle.spacingSm
 
         Components.TintedCard {
             visible: Services.PowerService.available
             Layout.fillWidth: true
-            implicitHeight: mainCol.implicitHeight + 24
+            implicitHeight: mainCol.implicitHeight + Core.UiStyle.spacing2xl
             active: Services.PowerService.charging
             tintColor: (Services.PowerService.percent <= 15 && !Services.PowerService.charging)
                 ? Core.Theme.urgent : Core.Theme.accent
@@ -28,11 +28,11 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 10
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 RowLayout {
-                    spacing: 12
+                    spacing: Core.UiStyle.spacingMd
 
                     Components.ProgressRing {
                         percent: Math.max(0, Services.PowerService.percent) / 100
@@ -43,13 +43,13 @@ Item {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Core.UiStyle.spacingXs / 2
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "Battery"
                             color: Core.Theme.foreground
-                            font.pixelSize: 16
+                            font.pixelSize: Core.UiStyle.fontTitle
                             font.bold: true
                         }
 
@@ -57,7 +57,7 @@ Item {
                             font.family: Core.Theme.fontFamily
                             text: Services.PowerService.charging ? "Charging" : "On battery"
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
                     }
 
@@ -65,32 +65,29 @@ Item {
                         active: Services.PowerService.charging || Services.PowerService.percent >= 100
                         activeLabel: Services.PowerService.percent >= 100 ? "FULL" : "CHARGING"
                         pulse: Services.PowerService.charging && Services.PowerService.percent < 100
+                            && Core.UiStyle.motionPlayful
                     }
                 }
 
                 Rectangle {
                     visible: Services.PowerService.timeRemaining !== ""
                     Layout.fillWidth: true
-                    implicitHeight: timeRow.implicitHeight + 8
-                    radius: 999
-                    color: Qt.rgba(Qt.color(Core.Theme.foreground).r,
-                        Qt.color(Core.Theme.foreground).g,
-                        Qt.color(Core.Theme.foreground).b, 0.04)
-                    border.width: 1
-                    border.color: Qt.rgba(Qt.color(Core.Theme.foreground).r,
-                        Qt.color(Core.Theme.foreground).g,
-                        Qt.color(Core.Theme.foreground).b, 0.06)
+                    implicitHeight: timeRow.implicitHeight + Core.UiStyle.spacingSm
+                    radius: Core.UiStyle.radiusControl
+                    color: Core.Theme.alphaColor(Core.Theme.surfaceHover, Core.UiStyle.flatSurfaces ? 0.30 : 0.52)
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, Core.UiStyle.flatSurfaces ? 0.30 : 0.50)
 
                     RowLayout {
                         id: timeRow
                         anchors.centerIn: parent
-                        spacing: 20
+                        spacing: Core.UiStyle.spacingXl
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "󰥔 " + Services.PowerService.timeRemaining
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
                     }
                 }

@@ -21,7 +21,7 @@ Item {
     RowLayout {
         id: content
         anchors.centerIn: parent
-        spacing: 4
+        spacing: Core.UiStyle.spacingXs
         visible: Services.PowerService.available
 
         Text {
@@ -39,7 +39,7 @@ Item {
             color: Services.PowerService.charging
                 ? Core.Theme.accent
                 : (Services.PowerService.percent <= 15 ? Core.Theme.urgent : Core.Theme.foreground)
-            font.pixelSize: context.variant === "compact" ? 19 : 23
+            font.pixelSize: context.variant === "compact" ? Core.UiStyle.iconSize + 4 : Core.UiStyle.iconSize + 7
         }
 
         Text {
@@ -48,7 +48,7 @@ Item {
             color: Services.PowerService.charging
                 ? Core.Theme.accent
                 : (Services.PowerService.percent <= 15 ? Core.Theme.urgent : Core.Theme.foreground)
-            font.pixelSize: context.variant === "compact" ? 15 : 17
+            font.pixelSize: context.variant === "compact" ? Core.UiStyle.fontBody : Core.UiStyle.fontSection
             font.bold: true
         }
 
@@ -57,8 +57,7 @@ Item {
             visible: context.variant !== "compact" && Services.PowerService.timeRemaining !== ""
             text: Services.PowerService.timeRemaining
             color: Core.Theme.muted
-            font.pixelSize: 14
+            font.pixelSize: Core.UiStyle.fontSecondary
         }
     }
 }
-

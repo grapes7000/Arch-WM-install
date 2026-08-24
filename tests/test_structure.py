@@ -69,12 +69,6 @@ class StructureTests(unittest.TestCase):
             self.assertIn("allows: function() { return false }", content, str(path))
 
     def test_dock_model_defers_group_rebuild(self) -> None:
-        # Hyprland.toplevels is a live model that can still be mid-mutation
-        # when its change signal fires; rebuilding groups synchronously in
-        # that signal handler raced Quickshell's native property-update-group
-        # bookkeeping and crashed the shell on startup. groups must be a
-        # plain (non-readonly) property populated from a deferred Timer, not
-        # a readonly property bound directly to buildGroups().
         dock_model = (
             ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
         ).read_text(encoding="utf-8")
@@ -83,8 +77,6 @@ class StructureTests(unittest.TestCase):
         self.assertIn("onSourceToplevelsChanged: rebuildTimer.restart()", dock_model)
 
     def test_theme_reload_helpers_are_bounded(self) -> None:
-        # Optional component reloads (dunstctl, etc.) have hung indefinitely
-        # in the field and must never block a theme switch forever.
         legacy_engine = (
             ROOT / "modules/theme-engine/bin/theme"
         ).read_text(encoding="utf-8")
@@ -244,17 +236,11 @@ class StructureTests(unittest.TestCase):
             ROOT / "modules/shell/.arch-wm-version"
         ).read_text(encoding="utf-8").strip()
         self.assertIn("function close()", popup)
-        self.assertRegex(popup, r"if \(menuOpen\) \{\s+close\(\)")
+        self.assertRegex(popup, r"if \(menuOpen\)\s*(?:\{\s*)?close\(\)")
         self.assertIn("bottom: true", popup)
         self.assertIn("left: true", popup)
-        self.assertRegex(
-            popup,
-            r"id: backdrop\s+anchors\.fill: parent\s+onClicked: popup\.close\(\)",
-        )
-        self.assertRegex(
-            popup,
-            r"id: cardClickShield\s+anchors\.fill: parent\s+onClicked: \{\}",
-        )
+        self.assertRegex(popup, r"MouseArea\s*\{\s*anchors\.fill: parent;?\s*onClicked: popup\.close\(\)")
+        self.assertRegex(popup, r"MouseArea\s*\{\s*anchors\.fill: parent;?\s*onClicked: \{\}\s*\}")
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)

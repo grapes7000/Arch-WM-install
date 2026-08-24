@@ -53,7 +53,7 @@ Scope {
     }
 
     function buildResults() {
-        const _entriesVersion = root.appsRevision // re-run this binding when the app list changes
+        const _entriesVersion = root.appsRevision
         const needle = root.query.trim().toLowerCase()
         const favorites = Services.LauncherStateService.favorites
         const recents = Services.LauncherStateService.recents
@@ -112,7 +112,6 @@ Scope {
 
     PanelWindow {
         id: launcherWindow
-
         property real revealProgress: 1.0
 
         function startReveal() {
@@ -150,54 +149,58 @@ Scope {
             property: "revealProgress"
             from: 0.0
             to: 1.0
-            duration: Math.round(Math.max(210, Core.Theme.animationMs * 1.4) * Core.Theme.motionScale)
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.12
+            duration: Math.round((Core.UiStyle.quietButtons ? 120 : 210) * Core.Theme.motionScale)
+            easing.type: Core.UiStyle.quietButtons ? Easing.OutCubic : Easing.OutBack
+            easing.overshoot: Core.UiStyle.quietButtons ? 0.0 : 1.12
         }
 
         Rectangle {
             anchors.fill: parent
-            color: {
-                const c = Qt.color(Core.Theme.background)
-                return Qt.rgba(c.r, c.g, c.b, 0.82)
-            }
+            color: Core.Theme.alphaColor(Core.Theme.background, 0.78)
             opacity: Math.max(0.0, Math.min(1.0, launcherWindow.revealProgress))
             MouseArea { anchors.fill: parent; onClicked: root.close() }
 
             Rectangle {
                 id: launcherCard
                 anchors.centerIn: parent
-                width: Math.min(parent.width - Core.Theme.gap * 6, 900)
-                height: Math.min(parent.height - Core.Theme.gap * 10, 650)
-                radius: Core.Theme.radius
-                color: Core.Theme.surface
-                border.width: Core.Theme.borderWidth
-                border.color: Core.Theme.accent2
-                opacity: Math.max(0.0, Math.min(1.0, launcherWindow.revealProgress))
-                scale: 0.91 + launcherWindow.revealProgress * 0.09
+                width: Math.min(parent.width - Core.UiStyle.spacing3xl * 2, 820)
+                height: Math.min(parent.height - Core.UiStyle.spacing3xl * 2, 600)
+                radius: Core.UiStyle.radiusOverlay
+                color: Core.Theme.surfaceOverlay
+                border.width: Core.UiStyle.borderWidth
+                border.color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.78)
+                opacity: launcherWindow.revealProgress
+                scale: Core.UiStyle.quietButtons ? 1.0 : (0.91 + launcherWindow.revealProgress * 0.09)
                 transform: Translate {
-                    y: (1.0 - launcherWindow.revealProgress) * 16
+                    y: (1.0 - launcherWindow.revealProgress) * (Core.UiStyle.quietButtons ? 6 : 16)
                 }
                 MouseArea { anchors.fill: parent }
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: Core.Theme.gap * 2
-                    spacing: Core.Theme.gap
+                    anchors.margins: Core.UiStyle.spacingLg
+                    spacing: Core.UiStyle.spacingSm
+
                     TextField {
                         id: searchField
                         Layout.fillWidth: true
+                        Layout.preferredHeight: Core.UiStyle.controlHeightLarge
                         placeholderText: "Search applications"
                         text: root.query
                         color: Core.Theme.foreground
                         placeholderTextColor: Core.Theme.muted
                         font.family: Core.Theme.fontFamily
-                        font.pixelSize: 21
+                        font.pixelSize: Core.UiStyle.fontBody
+                        leftPadding: Core.UiStyle.spacingMd
+                        rightPadding: Core.UiStyle.spacingMd
+                        selectionColor: Core.Theme.selected
                         background: Rectangle {
-                            color: Core.Theme.background
-                            radius: Core.Theme.radius
-                            border.width: Core.Theme.borderWidth
-                            border.color: searchField.activeFocus ? Core.Theme.accent : Core.Theme.accent2
+                            color: Core.Theme.surfaceBase
+                            radius: Core.UiStyle.radiusControl
+                            border.width: Core.UiStyle.focusWidth
+                            border.color: searchField.activeFocus
+                                ? Core.Theme.accent
+                                : Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.70)
                         }
                         onTextChanged: root.query = text
                         Keys.onUpPressed: root.selectedIndex = Math.max(0, root.selectedIndex - 1)
@@ -206,30 +209,62 @@ Scope {
                         Keys.onEnterPressed: root.launch(root.results[root.selectedIndex])
                         Keys.onEscapePressed: root.close()
                     }
+
                     ListView {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 36
+                        Layout.preferredHeight: Core.UiStyle.controlHeightLarge
                         orientation: ListView.Horizontal
-                        spacing: Core.Theme.gap
+                        spacing: Core.UiStyle.spacingXs
                         model: root.categories
                         clip: true
+
                         delegate: Rectangle {
                             required property var modelData
-                            width: categoryRow.implicitWidth + Core.Theme.gap * 3
-                            height: 32
-                            radius: Core.Theme.radius
-                            color: root.category === modelData.name ? Core.Theme.accent2 : Core.Theme.background
+                            width: categoryRow.implicitWidth + Core.UiStyle.spacingMd * 2
+                            height: Core.UiStyle.controlHeight
+                            radius: Core.UiStyle.radiusControl
+                            color: root.category === modelData.name
+                                ? Core.Theme.alphaColor(Core.Theme.selected, 0.16)
+                                : (categoryArea.containsMouse
+                                   ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.55)
+                                   : "transparent")
+                            border.width: Core.UiStyle.borderWidth
+                            border.color: root.category === modelData.name
+                                ? Core.Theme.alphaColor(Core.Theme.accent, 0.55)
+                                : "transparent"
+
                             RowLayout {
                                 id: categoryRow
                                 anchors.centerIn: parent
-                                spacing: 6
-                                IconImage { Layout.preferredWidth: 16; Layout.preferredHeight: 16; source: Quickshell.iconPath(modelData.icon, "") }
-                                Text { font.family: Core.Theme.fontFamily; text: modelData.name; color: Core.Theme.foreground }
+                                spacing: Core.UiStyle.spacingXs
+                                IconImage {
+                                    Layout.preferredWidth: Core.UiStyle.iconSize
+                                    Layout.preferredHeight: Core.UiStyle.iconSize
+                                    source: Quickshell.iconPath(modelData.icon, "")
+                                }
+                                Text {
+                                    font.family: Core.Theme.fontFamily
+                                    font.pixelSize: Core.UiStyle.fontCaption
+                                    text: modelData.name
+                                    color: root.category === modelData.name
+                                        ? Core.Theme.accent
+                                        : Core.Theme.foreground
+                                }
                             }
-                            MouseArea { id: categoryArea; anchors.fill: parent; onClicked: { root.category = modelData.name; root.selectedIndex = 0; searchField.forceActiveFocus() } }
+                            MouseArea {
+                                id: categoryArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    root.category = modelData.name
+                                    root.selectedIndex = 0
+                                    searchField.forceActiveFocus()
+                                }
+                            }
                             Components.PressBounce { pressed: categoryArea.pressed }
                         }
                     }
+
                     ListView {
                         id: appList
                         Layout.fillWidth: true
@@ -237,46 +272,116 @@ Scope {
                         model: root.results
                         currentIndex: root.selectedIndex
                         clip: true
-                        spacing: Math.max(2, Core.Theme.gap / 2)
+                        spacing: 0
+
                         ScrollBar.vertical: ScrollBar {
                             policy: ScrollBar.AsNeeded
                             contentItem: Rectangle {
-                                implicitWidth: 6
-                                radius: 3
-                                color: Core.Theme.accent2
-                                opacity: parent.pressed ? 0.9 : 0.5
+                                implicitWidth: Core.UiStyle.grid
+                                radius: Core.UiStyle.radiusControl
+                                color: Core.Theme.accent
+                                opacity: parent.pressed ? 0.9 : 0.42
                             }
                         }
+
                         delegate: Rectangle {
                             required property var modelData
                             required property int index
                             width: appList.width
-                            height: 58
-                            radius: Core.Theme.radius
-                            color: index === root.selectedIndex ? Core.Theme.background : "transparent"
+                            height: 48
+                            radius: Core.UiStyle.flatRows ? 0 : Core.UiStyle.radiusSurface
+                            color: index === root.selectedIndex
+                                ? Core.Theme.alphaColor(Core.Theme.selected, 0.11)
+                                : (appLaunchArea.containsMouse
+                                   ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.34)
+                                   : "transparent")
+
+                            Rectangle {
+                                visible: index === root.selectedIndex && Core.UiStyle.accentMarkerSelection
+                                width: 2
+                                height: Math.max(16, parent.height - Core.UiStyle.spacingMd * 2)
+                                radius: 1
+                                color: Core.Theme.accent
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                height: Core.UiStyle.borderWidth
+                                color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.32)
+                            }
+
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.margins: Core.Theme.gap
-                                spacing: Core.Theme.gap
-                                IconImage { Layout.preferredWidth: 36; Layout.preferredHeight: 36; source: Quickshell.iconPath(modelData.icon, "application-x-executable") }
+                                anchors.leftMargin: Core.UiStyle.spacingMd
+                                anchors.rightMargin: Core.UiStyle.spacingSm
+                                spacing: Core.UiStyle.spacingSm
+
+                                IconImage {
+                                    Layout.preferredWidth: Core.UiStyle.iconBox
+                                    Layout.preferredHeight: Core.UiStyle.iconBox
+                                    source: Quickshell.iconPath(modelData.icon, "application-x-executable")
+                                }
+
                                 ColumnLayout {
                                     Layout.fillWidth: true
-                                    spacing: 0
-                                    Text { font.family: Core.Theme.fontFamily; text: modelData.name; color: Core.Theme.foreground; font.pixelSize: 19; elide: Text.ElideRight; Layout.fillWidth: true }
-                                    Text { font.family: Core.Theme.fontFamily; text: modelData.comment || root.entryCategory(modelData); color: Core.Theme.muted; elide: Text.ElideRight; Layout.fillWidth: true }
+                                    spacing: 1
+                                    Text {
+                                        font.family: Core.Theme.fontFamily
+                                        text: modelData.name
+                                        color: Core.Theme.foreground
+                                        font.pixelSize: Core.UiStyle.fontBody
+                                        font.weight: index === root.selectedIndex ? Font.DemiBold : Font.Normal
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+                                    Text {
+                                        font.family: Core.Theme.fontFamily
+                                        font.pixelSize: Core.UiStyle.fontCaption
+                                        text: modelData.comment || root.entryCategory(modelData)
+                                        color: Core.Theme.muted
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
                                 }
+
                                 Text {
                                     font.family: Core.Theme.fontFamily
+                                    font.pixelSize: Core.UiStyle.fontCaption
                                     text: Services.LauncherStateService.isFavorite(modelData.id) ? "Unfavorite" : "Favorite"
-                                    color: Core.Theme.accent
-                                    MouseArea { id: favoriteArea; anchors.fill: parent; anchors.margins: -Core.Theme.gap; onClicked: Services.LauncherStateService.toggleFavorite(modelData.id) }
+                                    color: Core.Theme.muted
+                                    MouseArea {
+                                        id: favoriteArea
+                                        anchors.fill: parent
+                                        anchors.margins: -Core.UiStyle.spacingXs
+                                        onClicked: Services.LauncherStateService.toggleFavorite(modelData.id)
+                                    }
                                     Components.PressBounce { pressed: favoriteArea.pressed }
                                 }
                             }
-                            MouseArea { id: appLaunchArea; anchors.fill: parent; z: -1; hoverEnabled: true; onEntered: root.selectedIndex = index; onClicked: root.launch(modelData) }
+
+                            MouseArea {
+                                id: appLaunchArea
+                                anchors.fill: parent
+                                z: -1
+                                hoverEnabled: true
+                                onEntered: root.selectedIndex = index
+                                onClicked: root.launch(modelData)
+                            }
                             Components.PressBounce { pressed: appLaunchArea.pressed }
                         }
-                        Text { font.family: Core.Theme.fontFamily; anchors.centerIn: parent; visible: appList.count === 0; text: "No matching applications"; color: Core.Theme.muted }
+
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            font.pixelSize: Core.UiStyle.fontBody
+                            anchors.centerIn: parent
+                            visible: appList.count === 0
+                            text: "No matching applications"
+                            color: Core.Theme.muted
+                        }
                     }
                 }
             }

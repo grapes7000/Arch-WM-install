@@ -14,6 +14,14 @@ CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
 THEME_DIR = CONFIG / "theme-engine/themes"
 NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
+# Resolve relative to this script's real location so the mirror-to-repo hook
+# works both from a dev checkout and once installed alongside theme_runtime.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    import theme_runtime
+except ImportError:
+    theme_runtime = None
+
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="theme-new", description="Create a new Arch WM theme")
@@ -47,6 +55,12 @@ def main() -> int:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(target)
+    if theme_runtime is not None:
+        mirrored, detail = theme_runtime.mirror_new_theme(args.name)
+        if mirrored:
+            print(f"theme-new: mirrored into {detail}")
+        elif detail:
+            print(f"theme-new: {detail}", file=sys.stderr)
     if args.edit:
         editor = os.environ.get("EDITOR") or os.environ.get("VISUAL") or "nvim"
         return subprocess.call([editor, str(target)])

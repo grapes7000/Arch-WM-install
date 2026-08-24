@@ -24,14 +24,14 @@ Item {
     RowLayout {
         id: content
         anchors.centerIn: parent
-        spacing: context.variant === "compact" ? 4 : 8
+        spacing: context.variant === "compact" ? Core.UiStyle.spacingXs : Core.UiStyle.spacingSm
 
         Text {
             font.family: Core.Theme.fontFamily
             visible: context.variant !== "compact" && context.allows("media.control")
             text: Services.MprisService.canPrev ? "󰒮" : ""
             color: Core.Theme.muted
-            font.pixelSize: 19
+            font.pixelSize: Core.UiStyle.iconSize + 4
 
             MouseArea {
                 id: prevArea
@@ -47,7 +47,7 @@ Item {
             visible: context.allows("media.control")
             text: Services.MprisService.status === "Playing" ? "󰏤" : "󰐊"
             color: Core.Theme.foreground
-            font.pixelSize: context.variant === "compact" ? 19 : 23
+            font.pixelSize: context.variant === "compact" ? Core.UiStyle.iconSize + 4 : Core.UiStyle.iconSize + 7
 
             MouseArea {
                 id: playPauseArea
@@ -63,7 +63,7 @@ Item {
             visible: context.variant !== "compact" && context.allows("media.control")
             text: Services.MprisService.canNext ? "󰒭" : ""
             color: Core.Theme.muted
-            font.pixelSize: 19
+            font.pixelSize: Core.UiStyle.iconSize + 4
 
             MouseArea {
                 id: nextArea
@@ -89,7 +89,7 @@ Item {
                     Layout.maximumWidth: context.variant === "compact" ? 120 : 200
                     text: Services.MprisService.title
                     color: Core.Theme.foreground
-                    font.pixelSize: context.variant === "compact" ? 14 : 16
+                    font.pixelSize: context.variant === "compact" ? Core.UiStyle.fontSecondary : Core.UiStyle.fontBody
                     font.bold: true
                     elide: Text.ElideRight
                 }
@@ -100,7 +100,7 @@ Item {
                     visible: context.variant !== "compact"
                     text: Services.MprisService.artist
                     color: Core.Theme.muted
-                    font.pixelSize: 14
+                    font.pixelSize: Core.UiStyle.fontSecondary
                     elide: Text.ElideRight
                 }
             }

@@ -13,18 +13,13 @@ Item {
         allows: function() { return false }
     })
 
-    // Each indicator lifts and grows on its own hover, so the surrounding
-    // pill must not scale the whole widget as one unit. The widget is created
-    // inside the pill by WidgetHost; disabling its container scale leaves the
-    // pill's color hover intact while the group stays still.
+    // Each indicator animates independently. The surrounding PillBox stays
+    // still so hover/select motion cannot double-scale the workspace strip.
     Component.onCompleted: {
         if (parent && parent.hasOwnProperty("scaleEnabled"))
             parent.scaleEnabled = false
     }
 
-    // Semantic workspace slots, left to right. Each workspace id maps to a
-    // purpose: an icon (Nerd Font glyph) and a lowercase label that is only
-    // shown while the workspace is focused.
     readonly property var slots: [
         { name: "web", icon: "󰈹" },
         { name: "term", icon: "󰆍" },
@@ -41,19 +36,10 @@ Item {
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
 
-    // When the host sets settings.showLabels (e.g. the homepage strip) AND the
-    // widget has room, each slot shows its icon and label instead of revealing
-    // the label only on the focused workspace. The width gate (~10 labeled
-    // slots need ~960px) makes the mode adaptive: on narrow surfaces it falls
-    // back to the bar's focused-only labels instead of overflowing.
     readonly property bool showAllLabels: context && context.settings
         && context.settings.showLabels === true
         && root.width >= 1050
 
-    // Look up a live Hyprland workspace by id. Reads `.values` rather than
-    // indexing the model directly so QML re-evaluates this binding whenever
-    // the workspace list changes (workspaces are created and destroyed as
-    // windows open and close).
     function workspaceFor(id) {
         const workspaces = Hyprland.workspaces.values
         for (let i = 0; i < workspaces.length; ++i) {
@@ -66,7 +52,7 @@ Item {
     RowLayout {
         id: row
         anchors.centerIn: parent
-        spacing: context.variant === "compact" ? 4 : 7
+        spacing: context.variant === "compact" ? Core.UiStyle.spacingXs : Core.UiStyle.spacingSm
 
         Repeater {
             model: root.slots
@@ -79,63 +65,67 @@ Item {
                 readonly property var ws: root.workspaceFor(workspaceId)
                 readonly property bool selected: !!ws && ws.focused
                 readonly property bool active: !!ws && ws.active
-                // Compact base leaves headroom inside the bar's content band
-                // so a hovered indicator can lift and grow without clipping.
-                // Compact stays small for the bar; standard (used by the
-                // homepage strip) is sized for larger icons.
-                readonly property int base: context.variant === "compact" ? 28 : 46
+
+                // Bar workspaces must remain inside the actual layer-surface
+                // height. Precision and Win95 reserve extra headroom; Legacy's
+                // taller bar has room for the playful grow/lift animation.
+                readonly property int compactBase: Math.max(
+                    18,
+                    Math.min(
+                        Core.UiStyle.controlHeightCompact,
+                        Core.Theme.barHeight - Core.Theme.barPadding * 2
+                            - (Core.UiStyle.motionPlayful ? 2 : Core.UiStyle.spacingXs)
+                    )
+                )
+                readonly property int base: context.variant === "compact"
+                    ? compactBase : Math.max(36, Core.UiStyle.controlHeightLarge)
+                readonly property int selectedGrowth: Core.UiStyle.motionPlayful ? 4 : 0
 
                 property bool hovered: false
                 property real hoverScale: 1.0
-                // Lifts the indicator up a touch while hovered. Kept separate
-                // from scale so the pulse pop on focus never fights the hover
-                // animation (each animates its own property).
                 property real liftY: 0
                 property real pulse: 1.0
 
                 Behavior on hoverScale {
-                    NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Core.UiStyle.motionFastMs; easing.type: Easing.OutCubic }
                 }
                 Behavior on liftY {
-                    NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Core.UiStyle.motionFastMs; easing.type: Easing.OutCubic }
                 }
                 onHoveredChanged: {
-                    hoverScale = hovered ? 1.10 : 1.0
-                    liftY = hovered ? -2 : 0
+                    hoverScale = hovered ? Core.UiStyle.hoverScale : 1.0
+                    liftY = hovered ? Core.UiStyle.hoverLift : 0
                 }
 
                 readonly property color activeTint: {
                     const c = Qt.color(Core.Theme.accent2)
-                    return Qt.rgba(c.r, c.g, c.b, 0.28)
+                    return Qt.rgba(c.r, c.g, c.b, Core.UiStyle.flatSurfaces ? 0.18 : 0.28)
                 }
 
-                // Square box; the focused slot grows to show icon + label. The
-                // grown height is capped so the selected slot stays inside the
-                // bar's content band instead of being clipped by the cell.
                 Layout.preferredWidth: (selected || root.showAllLabels)
                     ? content.implicitWidth + base * 0.8 : base
-                Layout.preferredHeight: selected ? base + 4 : base
+                Layout.preferredHeight: base + (selected ? selectedGrowth : 0)
                 Behavior on Layout.preferredWidth {
-                    NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Core.UiStyle.motionNormalMs; easing.type: Easing.OutCubic }
                 }
                 Behavior on Layout.preferredHeight {
-                    NumberAnimation { duration: Core.Theme.animationMs * 2; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Core.UiStyle.motionNormalMs; easing.type: Easing.OutCubic }
                 }
 
-                radius: 4
+                radius: Core.UiStyle.radiusControl
                 color: selected ? Core.Theme.accent
                     : active ? activeTint
-                    : hovered ? Core.Theme.surface
+                    : hovered ? Core.Theme.surfaceHover
                     : "transparent"
-                Behavior on color { ColorAnimation { duration: Core.Theme.animationMs; easing.type: Easing.OutCubic } }
+                Behavior on color { ColorAnimation { duration: Core.UiStyle.motionFastMs } }
 
-                border.width: selected ? 0 : Core.Theme.borderWidth
+                border.width: selected ? 0 : Core.UiStyle.borderWidth
                 border.color: selected ? Core.Theme.accent
                     : active ? Core.Theme.accent2
                     : hovered ? Core.Theme.accent2
                     : Core.Theme.roles.border_normal
                 Behavior on border.color {
-                    ColorAnimation { duration: Core.Theme.animationMs; easing.type: Easing.OutCubic }
+                    ColorAnimation { duration: Core.UiStyle.motionFastMs }
                 }
 
                 scale: hoverScale * pulse
@@ -144,29 +134,28 @@ Item {
                 RowLayout {
                     id: content
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: Core.UiStyle.spacingXs
 
                     Text {
                         text: modelData.icon
                         font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: context.variant === "compact"
-                            ? (box.selected ? 17 : 15) : 26
+                            ? Math.max(Core.UiStyle.iconSize, box.selected ? Core.UiStyle.iconSize + 2 : Core.UiStyle.iconSize)
+                            : Math.max(22, Core.UiStyle.iconSize + 8)
                         color: box.selected ? Core.Theme.background
                             : box.active ? Core.Theme.accent2
                             : Core.Theme.foreground
-                        Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
+                        Behavior on color { ColorAnimation { duration: Core.UiStyle.motionFastMs } }
                     }
 
                     Text {
                         text: modelData.name
                         visible: box.selected || root.showAllLabels
                         font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: root.showAllLabels ? 13 : 14
+                        font.pixelSize: root.showAllLabels ? Core.UiStyle.fontBody : Core.UiStyle.fontSecondary
                         font.bold: true
-                        // Dark-on-accent when focused, foreground on the
-                        // surface fills the other slots use otherwise.
                         color: box.selected ? Core.Theme.background : Core.Theme.foreground
-                        Behavior on color { ColorAnimation { duration: Core.Theme.animationMs } }
+                        Behavior on color { ColorAnimation { duration: Core.UiStyle.motionFastMs } }
                     }
                 }
 
@@ -182,7 +171,6 @@ Item {
                         if (ws) {
                             ws.activate()
                         } else if (Hyprland.usingLua) {
-                            // Lua configs evaluate dispatchers as lua expressions.
                             Hyprland.dispatch('hl.dsp.focus({ workspace = ' + workspaceId + ' })')
                         } else {
                             Hyprland.dispatch("workspace " + workspaceId)
@@ -190,19 +178,31 @@ Item {
                     }
                 }
 
-                // Pop animation when a workspace becomes focused.
                 onSelectedChanged: {
-                    if (selected) pulseAnim.restart()
+                    if (!selected || Core.UiStyle.motionNone) {
+                        pulseAnim.stop()
+                        pulse = 1.0
+                    } else {
+                        pulseAnim.restart()
+                    }
                 }
 
                 SequentialAnimation on pulse {
                     id: pulseAnim
                     running: false
-                    NumberAnimation { to: 1.18; duration: 140; easing.type: Easing.OutQuad }
-                    NumberAnimation { to: 1.0; duration: 340; easing.type: Easing.OutBack }
+                    NumberAnimation {
+                        to: Core.UiStyle.selectedPulse
+                        duration: Core.UiStyle.motionFastMs
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        to: 1.0
+                        duration: Core.UiStyle.motionPlayful ? 260 : Core.UiStyle.motionNormalMs
+                        easing.type: Core.UiStyle.motionPlayful ? Easing.OutBack : Easing.OutCubic
+                        easing.overshoot: Core.UiStyle.releaseOvershoot
+                    }
                 }
             }
         }
     }
 }
-

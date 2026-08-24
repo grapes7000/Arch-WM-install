@@ -21,6 +21,18 @@ CACHE = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache"))
 THEME_DIR = CFG / "theme-engine" / "themes"
 ACTIVE_FILE = CFG / "theme-engine" / "generated" / ".active"
 RENDER_ROOT = CACHE / "theme-engine" / "wallpapers"
+# Bundled UI styles are reinstalled wholesale on every `40-theme-engine` apply
+# (repo-owned, treated read-only). Custom ones live alongside them but are
+# never touched by the installer, mirroring how custom themes sit beside the
+# pinned catalog in THEME_DIR.
+UI_STYLE_BUNDLED_DIR = CFG / "theme-engine" / "ui-styles" / "bundled"
+UI_STYLE_CUSTOM_DIR = CFG / "theme-engine" / "ui-styles" / "custom"
+UI_STYLE_GENERATED = CFG / "theme-engine" / "generated" / "ui-style.json"
+# Optional: a single-line file pointing at a local git checkout of your real
+# themes repo (e.g. ~/Projects/setup/themes). When present, brand-new themes
+# get mirrored into <repo>/themes/ too, so they're ready to `git push`. This
+# stays a machine-local override, never checked into Arch-WM-install itself.
+SOURCE_REPO_CONF = CFG / "theme-engine" / "source-repo.conf"
 PREVIEW_NAME = "_theme_studio_preview"
 # The preview draft lives in the generated dir, never inside the themes dir,
 # so it cannot surface as a selectable theme in browsers or managers.
@@ -469,3 +481,112 @@ def restore_theme(name: str) -> dict[str, Any]:
 def apply_saved_theme(name: str) -> dict[str, Any]:
     cleanup_preview()
     return apply_theme(name)
+
+
+# ── Shell UI style (Quickshell metrics/patterns, separate from theme.json) ──
+class UiStyleError(RuntimeError):
+    pass
+
+
+def _ui_style_path(name: str) -> Path | None:
+    """Resolve a style name to its file, preferring a custom override."""
+    custom = UI_STYLE_CUSTOM_DIR / f"{name}.json"
+    if custom.is_file():
+        return custom
+    bundled = UI_STYLE_BUNDLED_DIR / f"{name}.json"
+    if bundled.is_file():
+        return bundled
+    return None
+
+
+def is_custom_ui_style(name: str) -> bool:
+    return (UI_STYLE_CUSTOM_DIR / f"{name}.json").is_file()
+
+
+def list_ui_styles() -> list[str]:
+    names: set[str] = set()
+    for directory in (UI_STYLE_BUNDLED_DIR, UI_STYLE_CUSTOM_DIR):
+        if directory.is_dir():
+            names.update(path.stem for path in directory.glob("*.json"))
+    return sorted(names)
+
+
+def load_ui_style(name: str) -> dict[str, Any]:
+    path = _ui_style_path(name)
+    if path is None:
+        raise UiStyleError(f"unknown UI style: {name}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise UiStyleError(f"invalid UI style {path}: {error}") from error
+    if payload.get("schema_version") != 1:
+        raise UiStyleError(f"unsupported schema in {path}")
+    if not isinstance(payload.get("metrics"), dict) or not isinstance(payload.get("patterns"), dict):
+        raise UiStyleError(f"UI style {name} requires metrics and patterns")
+    return payload
+
+
+def save_ui_style(name: str, payload: dict[str, Any]) -> Path:
+    """Write a UI style into the user-custom catalog (never the bundled one)."""
+    safe_name = safe_theme_name(name)
+    data = dict(payload)
+    data["name"] = safe_name
+    data.setdefault("schema_version", 1)
+    path = UI_STYLE_CUSTOM_DIR / f"{safe_name}.json"
+    _atomic_text(path, json.dumps(data, indent=2, sort_keys=True) + "\n")
+    return path
+
+
+def apply_ui_style(name: str) -> dict[str, Any]:
+    """Switch the active shell UI style; Quickshell's UiStyle.qml file-watches
+    UI_STYLE_GENERATED and reloads automatically, no extra reload signal needed."""
+    payload = load_ui_style(name)
+    _atomic_text(UI_STYLE_GENERATED, json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    return payload
+
+
+def preview_ui_style(payload: dict[str, Any]) -> None:
+    """Write an in-progress (not yet saved) style edit straight through to the
+    generated file so Quickshell reflects it live while you're still editing."""
+    _atomic_text(UI_STYLE_GENERATED, json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def current_ui_style_name() -> str:
+    try:
+        payload = json.loads(UI_STYLE_GENERATED.read_text(encoding="utf-8"))
+        return str(payload.get("name") or "unknown")
+    except (OSError, json.JSONDecodeError):
+        return "precision"
+
+
+# ── Mirror brand-new themes into your real, pushable themes repo ───────
+def source_repo_path() -> Path | None:
+    """Read the configured local checkout of your themes repo, if any."""
+    if not SOURCE_REPO_CONF.is_file():
+        return None
+    for line in SOURCE_REPO_CONF.read_text(encoding="utf-8").splitlines():
+        candidate = line.split("#", 1)[0].strip()
+        if candidate:
+            return Path(candidate).expanduser()
+    return None
+
+
+def mirror_new_theme(name: str) -> tuple[bool, str]:
+    """Copy a brand-new theme file into the configured themes-repo checkout's
+    themes/ directory. Silently does nothing if unconfigured, so this stays
+    fully optional and portable across machines."""
+    repo = source_repo_path()
+    if repo is None:
+        return False, ""
+    if not repo.is_dir():
+        return False, f"configured source repo does not exist: {repo}"
+    source = THEME_DIR / f"{safe_theme_name(name)}.json"
+    if not source.is_file():
+        return False, f"theme not found: {source}"
+    destination = repo / "themes" / source.name
+    try:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        _atomic_text(destination, source.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return False, f"could not mirror into {destination}: {exc}"
+    return True, str(destination)

@@ -13,39 +13,39 @@ Item {
         id: layout
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 10
+        spacing: Core.UiStyle.spacingSm
 
         Components.TintedCard {
             Layout.fillWidth: true
-            implicitHeight: headerCol.implicitHeight + 24
+            implicitHeight: headerCol.implicitHeight + Core.UiStyle.spacing2xl
 
             ColumnLayout {
                 id: headerCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Core.UiStyle.spacingMd
+                spacing: Core.UiStyle.spacingSm
 
                 RowLayout {
-                    spacing: 12
+                    spacing: Core.UiStyle.spacingMd
 
                     Text {
                         font.family: Core.Theme.fontFamily
                         text: "󰂚"
                         color: Core.Theme.accent
-                        font.pixelSize: 25
+                        font.pixelSize: Core.UiStyle.iconSize + 8
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Core.UiStyle.spacingXs / 2
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             text: "Notifications"
                             color: Core.Theme.foreground
-                            font.pixelSize: 16
+                            font.pixelSize: Core.UiStyle.fontTitle
                             font.bold: true
                         }
 
@@ -54,7 +54,7 @@ Item {
                             text: Services.NotificationService.count
                                 + (Services.NotificationService.count === 1 ? " notification" : " notifications")
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                         }
                     }
 
@@ -68,19 +68,19 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 16
+                    spacing: Core.UiStyle.spacingLg
 
                     Text {
                         font.family: Core.Theme.fontFamily
                         text: Services.NotificationService.dndEnabled ? "Resume notifications" : "Pause (DND)"
                         color: Core.Theme.accent
-                        font.pixelSize: 14
+                        font.pixelSize: Core.UiStyle.fontBody
                         font.bold: true
 
                         MouseArea {
                             id: dndArea
                             anchors.fill: parent
-                            anchors.margins: -6
+                            anchors.margins: -Core.UiStyle.spacingSm
                             cursorShape: Qt.PointingHandCursor
                             onClicked: Services.NotificationService.toggleDnd()
                         }
@@ -92,12 +92,12 @@ Item {
                         visible: Services.NotificationService.recent.length > 0
                         text: "Dismiss all"
                         color: Core.Theme.muted
-                        font.pixelSize: 14
+                        font.pixelSize: Core.UiStyle.fontBody
 
                         MouseArea {
                             id: dismissArea
                             anchors.fill: parent
-                            anchors.margins: -6
+                            anchors.margins: -Core.UiStyle.spacingSm
                             cursorShape: Qt.PointingHandCursor
                             onClicked: Services.NotificationService.dismiss()
                         }
@@ -109,7 +109,7 @@ Item {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Core.UiStyle.spacingSm
             visible: Services.NotificationService.recent.length > 0
 
             Repeater {
@@ -118,22 +118,22 @@ Item {
                 Components.TintedCard {
                     required property var modelData
                     Layout.fillWidth: true
-                    implicitHeight: noticeCol.implicitHeight + 20
+                    implicitHeight: noticeCol.implicitHeight + Core.UiStyle.spacingLg
 
                     ColumnLayout {
                         id: noticeCol
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.margins: 10
-                        spacing: 2
+                        anchors.margins: Core.UiStyle.spacingSm
+                        spacing: Core.UiStyle.spacingXs / 2
 
                         Text {
                             font.family: Core.Theme.fontFamily
                             Layout.fillWidth: true
                             text: modelData.appName || "Notification"
                             color: Core.Theme.accent
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontCaption
                             font.bold: true
                             elide: Text.ElideRight
                         }
@@ -143,7 +143,7 @@ Item {
                             Layout.fillWidth: true
                             text: modelData.summary || ""
                             color: Core.Theme.foreground
-                            font.pixelSize: 15
+                            font.pixelSize: Core.UiStyle.fontSection
                             font.bold: true
                             elide: Text.ElideRight
                         }
@@ -154,7 +154,7 @@ Item {
                             visible: modelData.body !== ""
                             text: modelData.body || ""
                             color: Core.Theme.muted
-                            font.pixelSize: 13
+                            font.pixelSize: Core.UiStyle.fontBody
                             maximumLineCount: 2
                             elide: Text.ElideRight
                             wrapMode: Text.Wrap

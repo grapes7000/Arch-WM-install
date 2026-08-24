@@ -40,7 +40,9 @@ HOME_ITEMS = (
     ("Browse Themes", "Preview and open any installed theme"),
     ("From Wallpaper", "Extract a palette from an image"),
     ("Manage Themes", "Duplicate, rename, compare, or archive"),
+    ("Shell Style", "Browse, edit, and create Quickshell UI styles"),
 )
+HOME_ACTIONS = ("customize", "browse", "wallpaper", "manage", "shell_style")
 
 QUICK_AXES = (
     ("Palette", "palette", ()),
@@ -100,6 +102,8 @@ class ThemeStudio:
                 self.wallpaper_studio(stdscr)
             elif action == "manage":
                 self.theme_manager(stdscr)
+            elif action == "shell_style":
+                self.shell_style_studio(stdscr)
         if self.editor and self.editor.dirty:
             if confirm(stdscr, "Unsaved changes", "Quit and discard the current draft?", self.palette):
                 self.editor.cancel()
@@ -212,7 +216,7 @@ class ThemeStudio:
                 safe_addstr(stdscr, 3, 4, "Make your desktop feel like yours.", curses.A_BOLD)
                 card_w = min(32, (width - 10) // 2)
                 card_h = 6
-                positions = [(5, 4), (5, 6 + card_w), (12, 4), (12, 6 + card_w)]
+                positions = [(5 + (idx // 2) * 7, 4 + (idx % 2) * (2 + card_w)) for idx in range(len(HOME_ITEMS))]
                 for idx, ((name, desc), (y, x)) in enumerate(zip(HOME_ITEMS, positions)):
                     attr = self.palette.accent if idx == selected else self.palette.muted
                     draw_box(stdscr, y, x, card_h, card_w, f"{idx + 1}  {name}", attr)
@@ -233,12 +237,12 @@ class ThemeStudio:
                 selected = min(len(HOME_ITEMS) - 1, selected + (2 if width >= 58 else 1))
             elif key in (curses.KEY_UP, ord("k")):
                 selected = max(0, selected - (2 if width >= 58 else 1))
-            elif key in (ord("1"), ord("2"), ord("3"), ord("4")):
+            elif key in tuple(ord(str(n)) for n in range(1, len(HOME_ITEMS) + 1)):
                 selected = key - ord("1")
                 key = 10
             if key in (10, 13):
                 self.home_selected = selected
-                return ("customize", "browse", "wallpaper", "manage")[selected]
+                return HOME_ACTIONS[selected]
             if key == ord("/"):
                 self.search(stdscr)
 
@@ -837,6 +841,193 @@ class ThemeStudio:
                 except Exception as exc:
                     message(stdscr, "Could not create theme", [str(exc)], self.palette, self.palette.error)
 
+    # ── shell style ──────────────────────────────────────────────────
+    def shell_style_studio(self, stdscr: Any) -> None:
+        names = theme_runtime.list_ui_styles()
+        if not names:
+            message(stdscr, "No UI styles", ["No UI styles found in the catalog."], self.palette, self.palette.error)
+            return
+        active = theme_runtime.current_ui_style_name()
+        selected = names.index(active) if active in names else 0
+        while True:
+            stdscr.erase()
+            height, width = stdscr.getmaxyx()
+            draw_header(stdscr, "SHELL STYLE", f"Active: {theme_runtime.current_ui_style_name()}", self.palette)
+            split = max(24, min(36, width // 3))
+            draw_box(stdscr, 3, 1, height - 6, split, "STYLES", self.palette.muted)
+            labels = [f"{n} (custom)" if theme_runtime.is_custom_ui_style(n) else n for n in names]
+            draw_list(stdscr, 5, 3, height - 10, split - 4, labels, selected, self.palette)
+            x = split + 3
+            preview_w = max(20, width - x - 2)
+            draw_box(stdscr, 3, x, height - 6, preview_w, names[selected], self.palette.accent)
+            try:
+                style = theme_runtime.load_ui_style(names[selected])
+                row = 5
+                safe_addstr(stdscr, row, x + 2, style.get("description", ""), self.palette.muted, preview_w - 4)
+                row += 2
+                for key, value in sorted(style.get("patterns", {}).items()):
+                    safe_addstr(stdscr, row, x + 2, f"{key}: {value}", 0, preview_w - 4)
+                    row += 1
+                    if row >= height - 8:
+                        break
+            except theme_runtime.UiStyleError as exc:
+                safe_addstr(stdscr, 5, x + 2, str(exc), self.palette.error, preview_w - 4)
+            draw_footer(stdscr, "↑↓ Choose   Enter Edit live   Space Apply now   N New style   Esc Back", self.palette)
+            stdscr.refresh()
+            key = stdscr.getch()
+            if key in (27, ord("q")):
+                return
+            if key in (curses.KEY_DOWN, ord("j")):
+                selected = min(len(names) - 1, selected + 1)
+            elif key in (curses.KEY_UP, ord("k")):
+                selected = max(0, selected - 1)
+            elif key == ord(" "):
+                try:
+                    theme_runtime.apply_ui_style(names[selected])
+                    self.status = f"Shell style: {names[selected]}"
+                except theme_runtime.UiStyleError as exc:
+                    self.status = f"Apply failed: {exc}"
+            elif key in (10, 13):
+                self._edit_ui_style(stdscr, names[selected])
+                names = theme_runtime.list_ui_styles()
+                if names and selected >= len(names):
+                    selected = len(names) - 1
+            elif key in (ord("n"), ord("N")):
+                new_name = prompt(stdscr, "New style name", f"{names[selected]}_custom", palette=self.palette)
+                if not new_name:
+                    continue
+                try:
+                    base = theme_runtime.load_ui_style(names[selected])
+                    base["description"] = f"Custom style based on {names[selected]}"
+                    theme_runtime.save_ui_style(new_name, base)
+                except theme_runtime.UiStyleError as exc:
+                    message(stdscr, "Could not create style", [str(exc)], self.palette, self.palette.error)
+                    continue
+                names = theme_runtime.list_ui_styles()
+                safe_new_name = safe_theme_name(new_name)
+                selected = names.index(safe_new_name) if safe_new_name in names else selected
+                self._edit_ui_style(stdscr, safe_new_name)
+                names = theme_runtime.list_ui_styles()
+
+    def _edit_ui_style(self, stdscr: Any, name: str) -> None:
+        previous_active = theme_runtime.current_ui_style_name()
+        try:
+            working = theme_runtime.load_ui_style(name)
+        except theme_runtime.UiStyleError as exc:
+            message(stdscr, "Could not open style", [str(exc)], self.palette, self.palette.error)
+            return
+        metric_keys = sorted(working.get("metrics", {}).keys())
+        pattern_keys = sorted(working.get("patterns", {}).keys())
+        fields = [("metric", key) for key in metric_keys] + [("pattern", key) for key in pattern_keys]
+        # Offer known values per pattern field to cycle through, gathered from
+        # every installed style so custom vocabularies stay available too.
+        pattern_choices: dict[str, list[str]] = {key: [] for key in pattern_keys}
+        for other_name in theme_runtime.list_ui_styles():
+            try:
+                other = theme_runtime.load_ui_style(other_name)
+            except theme_runtime.UiStyleError:
+                continue
+            for key in pattern_keys:
+                value = other.get("patterns", {}).get(key)
+                if isinstance(value, str) and value not in pattern_choices[key]:
+                    pattern_choices[key].append(value)
+        dirty = False
+        last_preview_at = 0.0
+        selected = 0
+
+        def push_preview() -> None:
+            nonlocal last_preview_at
+            now = time.monotonic()
+            if now - last_preview_at < 0.12:
+                return
+            last_preview_at = now
+            theme_runtime.preview_ui_style(working)
+
+        push_preview()
+        try:
+            while True:
+                stdscr.erase()
+                height, width = stdscr.getmaxyx()
+                is_custom = theme_runtime.is_custom_ui_style(name)
+                subtitle = f"{'custom' if is_custom else 'bundled'} \u00b7 \u25cf LIVE"
+                draw_header(stdscr, f"SHELL STYLE / {name.upper()}{' \u2022' if dirty else ''}", subtitle, self.palette)
+                draw_box(stdscr, 3, 1, height - 7, width - 2, "FINE TUNE", self.palette.muted)
+                start = max(0, selected - max(1, (height - 12) // 2))
+                row = 5
+                for idx in range(start, min(len(fields), start + height - 11)):
+                    kind, key = fields[idx]
+                    value = working[f"{kind}s"][key]
+                    attr = self.palette.selected if idx == selected else 0
+                    fill_line(stdscr, row, 3, width - 6, " ", attr)
+                    safe_addstr(stdscr, row, 3, key, attr, max(20, (width - 6) // 2))
+                    safe_addstr(stdscr, row, 3 + max(20, (width - 6) // 2), str(value), attr, (width - 6) // 2 - 4)
+                    row += 1
+                self._draw_status(stdscr, height - 4)
+                draw_footer(stdscr, "\u2191\u2193 Setting  \u2190\u2192 Adjust  Enter Exact/Cycle  S Save  Esc Back", self.palette)
+                stdscr.refresh()
+                key_code = stdscr.getch()
+                if key_code in (27, ord("q")):
+                    break
+                if key_code in (curses.KEY_DOWN, ord("j")):
+                    selected = min(len(fields) - 1, selected + 1)
+                elif key_code in (curses.KEY_UP, ord("k")):
+                    selected = max(0, selected - 1)
+                elif fields and key_code in (curses.KEY_LEFT, ord("h"), curses.KEY_RIGHT, ord("l")):
+                    kind, key = fields[selected]
+                    direction = -1 if key_code in (curses.KEY_LEFT, ord("h")) else 1
+                    if kind == "metric":
+                        current = working["metrics"][key]
+                        working["metrics"][key] = max(0, int(current) + direction)
+                    else:
+                        choices = pattern_choices.get(key) or [working["patterns"][key]]
+                        idx = choices.index(working["patterns"][key]) if working["patterns"][key] in choices else 0
+                        working["patterns"][key] = choices[(idx + direction) % len(choices)]
+                    dirty = True
+                    push_preview()
+                elif fields and key_code in (10, 13):
+                    kind, key = fields[selected]
+                    if kind == "metric":
+                        entered = prompt(stdscr, key, str(working["metrics"][key]), palette=self.palette)
+                        if entered is not None:
+                            try:
+                                working["metrics"][key] = int(entered)
+                                dirty = True
+                                push_preview()
+                            except ValueError:
+                                self.status = f"'{entered}' is not a whole number"
+                    else:
+                        entered = prompt(stdscr, key, str(working["patterns"][key]), palette=self.palette)
+                        if entered is not None and entered:
+                            working["patterns"][key] = entered
+                            dirty = True
+                            push_preview()
+                elif key_code in (ord("s"), ord("S")):
+                    target_name = name
+                    if not theme_runtime.is_custom_ui_style(name):
+                        entered = prompt(stdscr, "Save as (bundled styles can't be overwritten)",
+                                          f"{name}_custom", palette=self.palette)
+                        if not entered:
+                            continue
+                        target_name = entered
+                    try:
+                        theme_runtime.save_ui_style(target_name, working)
+                        theme_runtime.apply_ui_style(safe_theme_name(target_name))
+                        self.status = f"Saved and applied shell style {safe_theme_name(target_name)}"
+                        dirty = False
+                        name = safe_theme_name(target_name)
+                        previous_active = name
+                    except Exception as exc:
+                        message(stdscr, "Save failed", [str(exc)], self.palette, self.palette.error)
+        finally:
+            if dirty:
+                # Editing was live-previewed but never saved; restore whatever
+                # style was actually active before we started tweaking.
+                try:
+                    theme_runtime.apply_ui_style(previous_active)
+                    self.status = f"Discarded shell style edits; restored {previous_active}"
+                except theme_runtime.UiStyleError:
+                    pass
+
     # ── theme manager ──────────────────────────────────────────────────
     def theme_manager(self, stdscr: Any) -> None:
         selected = 0
@@ -1099,6 +1290,12 @@ class ThemeStudio:
                         self.original_active = target
                         self.editor.desktop_preview = False
                         self.status = f"Saved and applied {target}"
+                        if mode_new:
+                            mirrored, detail = theme_runtime.mirror_new_theme(target)
+                            if mirrored:
+                                self.status += f" · mirrored into {detail}"
+                            elif detail:
+                                self.status += f" · mirror skipped: {detail}"
                         return
                     except Exception as exc:
                         message(stdscr, "Save failed", [str(exc)], self.palette, self.palette.error)

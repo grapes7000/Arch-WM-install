@@ -23,6 +23,14 @@ Home → Quick Style → Component rooms → Advanced Inspector
 - **Palette Studio** supports role editing, locking, swapping, variants, contrast reports, and import/export.
 - **Wallpaper Studio** extracts a palette with Pillow and creates an editable theme draft.
 - **Advanced Inspector** exposes every stored value and its generated effect.
+- **Shell Style** (Home screen) browses, live-edits, and creates Quickshell UI styles
+  (`precision`/`legacy`/`win95`-type metrics and patterns). Edits write straight through to
+  `~/.config/theme-engine/generated/ui-style.json`, which `modules/shell/core/UiStyle.qml`
+  file-watches and reloads live — so changes are visible on the shell as you tweak them, before
+  you decide to save. This is a separate artifact from `theme.json` and unrelated to the
+  "Shell" component room (which edits Quickshell bar/card colors and sizing as part of a theme).
+  Bundled styles can't be overwritten directly; editing one prompts a save-as into your
+  user-custom catalog at `~/.config/theme-engine/ui-styles/custom/`.
 
 ## Safety model
 
@@ -67,6 +75,22 @@ theme legacy --list        # Run previous engine directly
 ## Bar and launcher styling
 
 Theme Studio does not manage the Quickshell bar layout or the launcher surface — those are deliberately left to the hand-authored configs. The stable legacy generator themes the Quickshell shell, Hyprland, Kitty, Starship, and Neovim from the theme palette on every full apply.
+
+## Pushing new themes to your real themes repo
+
+`theme-new` and Theme Studio's "Create a new theme" save both write into
+`~/.config/theme-engine/themes/`, which is populated by `theme-catalog-sync` from a *pinned commit*
+of the upstream catalog — that directory is not itself a git checkout. To also get brand-new themes
+mirrored into your actual pushable clone (e.g. a local checkout of `grapes7000/themes`), point at it
+once:
+
+```bash
+echo ~/Projects/setup/themes > ~/.config/theme-engine/source-repo.conf
+```
+
+From then on, every newly created theme (not edits to existing catalog themes) is copied into
+`<that path>/themes/<name>.json` too, ready for `git add`/`commit`/`push`. Leaving this file unset
+or pointing at a missing path is fine — mirroring is skipped silently.
 
 ## Data model
 

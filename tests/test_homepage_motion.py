@@ -67,7 +67,7 @@ class HomepageMotionTests(unittest.TestCase):
     def test_homepage_motion_has_bounce_and_reduced_motion_path(self) -> None:
         content = GLASS_CARD.read_text(encoding="utf-8")
         self.assertIn("Easing.OutBack", content)
-        self.assertIn("easing.overshoot: 1.45", content)
+        self.assertIn("easing.overshoot: root.precision ? 0.0 : 1.45", content)
         self.assertIn("Core.Theme.motionScale <= 0.05", content)
         self.assertIn("assemblyEnabled", content)
         self.assertIn("Core.Theme.homepageTransitionMs", content)

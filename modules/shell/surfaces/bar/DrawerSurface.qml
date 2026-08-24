@@ -33,12 +33,11 @@ Scope {
 
     PanelWindow {
         id: drawerWindow
-
         property real revealProgress: 1.0
 
         function startReveal() {
             revealAnimation.stop()
-            if (Core.Theme.motionScale <= 0.05) {
+            if (Core.Theme.motionScale <= 0.05 || Core.UiStyle.motionNone) {
                 revealProgress = 1.0
                 return
             }
@@ -62,7 +61,7 @@ Scope {
                 Qt.callLater(drawerWindow.startReveal)
             else {
                 revealAnimation.stop()
-                revealProgress = Core.Theme.motionScale <= 0.05 ? 1.0 : 0.0
+                revealProgress = (Core.Theme.motionScale <= 0.05 || Core.UiStyle.motionNone) ? 1.0 : 0.0
             }
         }
 
@@ -72,9 +71,9 @@ Scope {
             property: "revealProgress"
             from: 0.0
             to: 1.0
-            duration: Math.round(Math.max(190, Core.Theme.animationMs * 1.35) * Core.Theme.motionScale)
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.18
+            duration: Math.round(Core.UiStyle.motionNormalMs * Core.Theme.motionScale)
+            easing.type: Core.UiStyle.motionPlayful ? Easing.OutBack : Easing.OutCubic
+            easing.overshoot: Core.UiStyle.motionPlayful ? 1.18 : 0.0
         }
 
         Item {
@@ -120,7 +119,7 @@ Scope {
                     : drawerWindow.height - height - Core.Theme.barHeight
                         - Core.Theme.barOuterMargin * 2 - Core.Theme.drawerOffset
                 width: Math.min(
-                    drawerWindow.width - Math.max(8, Core.Theme.drawerOffset) * 2,
+                    drawerWindow.width - Math.max(Core.UiStyle.spacingSm, Core.Theme.drawerOffset) * 2,
                     Core.Theme.drawerWidth
                 )
                 height: Math.min(
@@ -135,11 +134,14 @@ Scope {
                     Core.Theme.drawerOutlineOpacity
                 )
                 opacity: Math.max(0.0, Math.min(1.0, drawerWindow.revealProgress))
-                scale: 0.96 + drawerWindow.revealProgress * 0.04
+                scale: Core.UiStyle.motionPlayful ? (0.96 + drawerWindow.revealProgress * 0.04) : 1.0
                 transform: Translate {
-                    x: (1.0 - drawerWindow.revealProgress) * 26
-                    y: (1.0 - drawerWindow.revealProgress)
-                        * (Core.Theme.barPosition === "top" ? -5 : 5)
+                    x: Core.UiStyle.motionNone ? 0
+                        : (1.0 - drawerWindow.revealProgress)
+                            * (Core.UiStyle.motionRestrained ? Core.UiStyle.spacingSm : 26)
+                    y: Core.UiStyle.motionNone ? 0
+                        : (1.0 - drawerWindow.revealProgress)
+                            * (Core.Theme.barPosition === "top" ? -Core.UiStyle.grid : Core.UiStyle.grid)
                 }
                 MouseArea { anchors.fill: parent }
 

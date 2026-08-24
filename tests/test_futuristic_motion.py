@@ -14,14 +14,16 @@ EFFECTS_PROFILE = ROOT / "modules/hyprland/config/scripts/effects-profile.py"
 
 
 class FuturisticShellMotionTests(unittest.TestCase):
-    def test_bar_keeps_direct_widget_hosts_and_layer_motion(self) -> None:
+    def test_bar_keeps_direct_widget_hosts_and_semantic_action_pills(self) -> None:
         content = BAR.read_text(encoding="utf-8")
         self.assertEqual(content.count("WidgetHost {"), 4)
         self.assertNotIn("BarMotionHost {", content)
         self.assertIn('WlrLayershell.namespace: root.isPrimary ? "arch-wm:bar"', content)
-        self.assertIn("HoverHandler { id: menuHover }", content)
-        self.assertIn("HoverHandler { id: homeHover }", content)
-        self.assertIn("Behavior on scale", content)
+        self.assertGreaterEqual(content.count("PillBox {"), 2)
+        self.assertIn("id: homepageTrigger", content)
+        self.assertIn("id: menuTrigger", content)
+        self.assertNotIn("HoverHandler { id: menuHover }", content)
+        self.assertNotIn("HoverHandler { id: homeHover }", content)
 
     def test_drawer_and_launcher_have_internal_reveal_motion(self) -> None:
         drawer = DRAWER.read_text(encoding="utf-8")
@@ -29,9 +31,13 @@ class FuturisticShellMotionTests(unittest.TestCase):
         self.assertIn("property real revealProgress", drawer)
         self.assertIn("drawerWindow.startReveal", drawer)
         self.assertIn("transform: Translate", drawer)
+        self.assertIn("Core.UiStyle.motionNone", drawer)
+        self.assertIn("Core.UiStyle.motionPlayful", drawer)
         self.assertIn("property real revealProgress", launcher)
         self.assertIn("launcherWindow.startReveal", launcher)
-        self.assertIn("scale: 0.91 + launcherWindow.revealProgress * 0.09", launcher)
+        self.assertIn("Core.UiStyle.quietButtons ? 1.0", launcher)
+        self.assertIn("0.91 + launcherWindow.revealProgress * 0.09", launcher)
+        self.assertIn("Core.UiStyle.radiusOverlay", launcher)
         self.assertIn('WlrLayershell.namespace: "arch-wm-launcher"', launcher)
 
     def test_hyprland_motion_loads_after_theme(self) -> None:
@@ -90,10 +96,11 @@ class FuturisticShellMotionTests(unittest.TestCase):
         self.assertIn('"hypr" / "effects-profile"', content)
         self.assertIn('["hyprctl", "reload"]', content)
 
-    def test_professional_cards_have_passive_hover_lighting(self) -> None:
+    def test_professional_cards_have_profile_aware_hover_treatment(self) -> None:
         content = PRO_CARD.read_text(encoding="utf-8")
         self.assertIn("id: cardHover", content)
         self.assertIn("blocking: false", content)
+        self.assertIn("bounce: Core.UiStyle.quietButtons", content)
         self.assertIn("cardHover.hovered && root.revealProgress >= 0.999 ? 1.006 : 1.0", content)
         self.assertIn("Behavior on color", content)
         self.assertIn("Behavior on scale", content)
