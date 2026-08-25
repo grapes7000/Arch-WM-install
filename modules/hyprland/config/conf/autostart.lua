@@ -17,5 +17,9 @@ hl.on("hyprland.start", function()
         "pkill -f '/.config/hypr/scripts/theme-sync.py' >/dev/null 2>&1 || true; "
         .. "python ~/.config/hypr/scripts/theme-sync.py >/dev/null 2>&1 &"
     )
-    hl.exec_cmd("command -v qs >/dev/null 2>&1 && qs --no-duplicate --config arch-wm")
+    hl.exec_cmd(
+        "if sh ~/.config/hypr/scripts/ensure-quickshell-default.sh; then "
+        .. "command -v qs >/dev/null 2>&1 && qs --no-duplicate; "
+        .. "else command -v qs >/dev/null 2>&1 && qs --no-duplicate --config arch-wm; fi"
+    )
 end)
