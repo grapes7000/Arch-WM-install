@@ -239,8 +239,14 @@ class StructureTests(unittest.TestCase):
         self.assertRegex(popup, r"if \(menuOpen\)\s*(?:\{\s*)?close\(\)")
         self.assertIn("bottom: true", popup)
         self.assertIn("left: true", popup)
-        self.assertRegex(popup, r"MouseArea\s*\{\s*anchors\.fill: parent;?\s*onClicked: popup\.close\(\)")
-        self.assertRegex(popup, r"MouseArea\s*\{\s*anchors\.fill: parent;?\s*onClicked: \{\}\s*\}")
+        self.assertRegex(
+            popup,
+            r"MouseArea\s*\{\s*id:\s*backdrop\s*anchors\.fill:\s*parent\s*onClicked:\s*popup\.close\(\)",
+        )
+        self.assertRegex(
+            popup,
+            r"MouseArea\s*\{\s*id:\s*cardClickShield\s*anchors\.fill:\s*parent\s*onClicked:\s*\{\}\s*\}",
+        )
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
