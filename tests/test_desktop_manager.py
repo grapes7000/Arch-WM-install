@@ -73,6 +73,7 @@ class ManagerTests(unittest.TestCase):
         (source / "config/quickshell").mkdir(parents=True)
         (source / "config/hypr/hyprland.conf").write_text("monitor=,preferred,auto,1\n")
         (source / "config/quickshell/shell.qml").write_text("import Quickshell\nShellRoot {}\n")
+        # Minimal .git facade: patch _git in tests that call prepare.
         return DesktopManager(paths)
 
     def test_prepare_copies_only_curated_mappings(self):
@@ -112,7 +113,8 @@ class ManagerTests(unittest.TestCase):
             manager = self.manager(Path(tmp))
             source = manager.source_dir("demo")
             (source / "install.sh").write_text("sudo cp x /etc/pam.d/x\n", encoding="utf-8")
-            report = manager.audit("demo")
+            with patch.object(manager, "_installed", return_value=True):
+                report = manager.audit("demo")
             self.assertEqual(report["static"]["blockers"], 0)
             self.assertGreater(report["source_scan"]["blockers"], 0)
             self.assertTrue(any(item["category"] == "pam" for item in report["excluded_findings"]))
@@ -132,9 +134,35 @@ class ManagerTests(unittest.TestCase):
             self.assertIn("jq", plan["packages"]["missing_official"])
             self.assertTrue(plan["packages"]["quickshell_provider_reused"])
 
+    def test_package_ledger_tracks_transitive_transaction_delta(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            spec_path = manager.paths.profile_defs / "demo.json"
+            data = json.loads(spec_path.read_text())
+            data["official_packages"] = ["top-level"]
+            spec_path.write_text(json.dumps(data))
+            manager.plan = lambda profile: {"packages": {
+                "missing_official": ["top-level"], "missing_aur": [],
+                "official": ["top-level"]
+            }}
+            queries = iter([["base"], ["base", "top-level", "transitive-dep"]])
+            with patch.object(manager, "_query_installed", side_effect=lambda: next(queries)), \
+                 patch("desktop_manager.manager.os.geteuid", return_value=1000), \
+                 patch("desktop_manager.manager.subprocess.run") as run:
+                run.side_effect = [
+                    type("R", (), {"returncode": 0, "stdout": "top-level\ntransitive-dep\n", "stderr": ""})(),
+                    type("R", (), {"returncode": 0})(),
+                ]
+                manager.install_packages("demo", apply=True)
+            ledger = json.loads(manager.package_ledger_path.read_text())["packages"]
+            self.assertTrue(ledger["top-level"]["installed_by_manager"])
+            self.assertTrue(ledger["transitive-dep"]["installed_by_manager"])
+            self.assertIn("demo", ledger["transitive-dep"]["owners"])
+
     def test_monitor_overlay_written_for_supported_adapter(self):
         with tempfile.TemporaryDirectory() as tmp:
             manager = self.manager(Path(tmp))
+            # Override the local test profile to use Tsugumori-style user.lua injection.
             spec_path = manager.paths.profile_defs / "demo.json"
             data = json.loads(spec_path.read_text())
             data["monitor_adapter"] = "tsugumori-user-lua"
