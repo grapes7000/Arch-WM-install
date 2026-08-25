@@ -10,9 +10,12 @@ run_install() {
   bash "$ROOT_DIR/scripts/install-nvim.sh" "$@"
 }
 
-case "${1:-install}" in
+command="${1:-install}"
+case "$command" in
   install)
-    shift
+    if [[ "${1:-}" == "install" ]]; then
+      shift
+    fi
     run_install "$@"
     ;;
   profile-manager)
@@ -24,7 +27,6 @@ case "${1:-install}" in
     exec bash "$ROOT_DIR/scripts/install-profile-manager.sh"
     ;;
   help|doctor)
-    command="$1"
     shift
     exec python -m installer "$command" "$@"
     ;;
