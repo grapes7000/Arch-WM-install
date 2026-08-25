@@ -1,0 +1,34 @@
+{
+  "id": "tsugumori",
+  "name": "Tsugumori",
+  "repository": "https://github.com/Aleph1-9012/Tsugumori.git",
+  "ref": "main",
+  "kind": "hyprland-quickshell",
+  "runtime": {
+    "hyprland": ">=0.55.2",
+    "shell": "quickshell",
+    "provider_policy": "compatible-existing-provider-first"
+  },
+  "config": [
+    {"source": "config/hypr", "target": "hypr"},
+    {"source": "config/quickshell", "target": "quickshell"},
+    {"source": "config/waybar", "target": "waybar"}
+  ],
+  "package_files": ["packages/pacman.txt"],
+  "aur_package_files": ["packages/aur.txt"],
+  "protected": ["bash", "kitty", "starship.toml", "nvim", "theme-engine"],
+  "capabilities": [
+    "notifications:exclusive",
+    "session-lock:exclusive",
+    "wallpaper:exclusive",
+    "clipboard",
+    "quickshare:network-optional"
+  ],
+  "monitor_adapter": "tsugumori-user-lua",
+  "risk_policy": "curated",
+  "notes": [
+    "config/bash and config/kitty are intentionally not imported.",
+    "Quickshare network exposure is not enabled by desktopctl.",
+    "AUR packages are reported but are not auto-installed by v0.1."
+  ]
+}

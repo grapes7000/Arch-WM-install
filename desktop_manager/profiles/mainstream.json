@@ -1,0 +1,58 @@
+{
+  "id": "mainstream",
+  "name": "MainstreamOS desktop",
+  "repository": "https://github.com/MainstreamOS/dots-hyprland.git",
+  "ref": "mainstream",
+  "kind": "hyprland-quickshell",
+  "runtime": {
+    "hyprland": "lua",
+    "shell": "quickshell",
+    "config": "ii",
+    "provider_policy": "do-not-replace-provider-in-v0.1"
+  },
+  "config": [
+    {"source": "dots/.config/hypr", "target": "hypr"},
+    {"source": "dots/.config/quickshell", "target": "quickshell"}
+  ],
+  "official_packages": [
+    "hyprland",
+    "xdg-desktop-portal-hyprland",
+    "xdg-desktop-portal-gtk",
+    "hypridle",
+    "hyprlock",
+    "hyprsunset",
+    "wl-clipboard",
+    "cliphist",
+    "cava",
+    "playerctl",
+    "brightnessctl",
+    "ddcutil",
+    "geoclue",
+    "jq",
+    "curl",
+    "wget",
+    "upower",
+    "imagemagick",
+    "slurp",
+    "swappy",
+    "wf-recorder",
+    "hyprpicker",
+    "libqalculate",
+    "networkmanager"
+  ],
+  "protected": ["fish", "kitty", "starship.toml", "nvim", "theme-engine", "fontconfig"],
+  "capabilities": [
+    "notifications:exclusive",
+    "session-lock:exclusive",
+    "wallpaper:exclusive",
+    "clipboard",
+    "settings-helpers:restricted"
+  ],
+  "monitor_adapter": "mainstream-monitors-lua",
+  "risk_policy": "curated-strict",
+  "notes": [
+    "The upstream installer is never executed.",
+    "SDDM, GPU drivers, polkit helpers, pacman hooks, boot settings and gaming-mode system helpers are excluded.",
+    "v0.1 reuses the current Quickshell provider and will not replace it with Mainstream's pinned provider."
+  ]
+}

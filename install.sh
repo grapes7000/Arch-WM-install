@@ -15,6 +15,14 @@ case "${1:-install}" in
     shift
     run_install "$@"
     ;;
+  profile-manager)
+    shift
+    if (($#)); then
+      echo "profile-manager takes no options yet; install it, then use desktopctl" >&2
+      exit 2
+    fi
+    exec bash "$ROOT_DIR/scripts/install-profile-manager.sh"
+    ;;
   help|doctor)
     command="$1"
     shift
