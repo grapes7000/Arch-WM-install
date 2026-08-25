@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -7,6 +8,34 @@ from typing import Sequence
 
 from . import runtime
 from .help import HELP_LAUNCHER, help_command, render_reference
+
+# Compatibility metadata for tests and the still-bundled fallback theme payload.
+# These names no longer control stage 40 and are not installed by this entrypoint.
+THEME_UPSTREAM_COMMIT = "c609410fbd88ddc2a15c51ab142743c49ae861e0"
+THEME_COMMANDS = (
+    "theme-catalog-sync",
+    "theme-install",
+    "theme-new",
+    "theme-menu",
+    "ui-style",
+    "wallgen",
+)
+THEME_ENTRY_POINTS = (
+    ("theme-studio", "theme"),
+    ("theme", "theme-legacy"),
+)
+THEME_STUDIO_MODULES = (
+    "theme_runtime.py",
+    "theme_editor.py",
+    "theme_effects.py",
+    "theme_starship.py",
+    "theme_homepage.py",
+    "theme_schema.py",
+    "theme_components.py",
+    "theme_preview.py",
+    "theme_tui.py",
+    "theme_tui_widgets.py",
+)
 
 
 def payload_version_matches(source: Path, installed: Path) -> bool:
@@ -16,6 +45,60 @@ def payload_version_matches(source: Path, installed: Path) -> bool:
         ).strip()
     except OSError:
         return False
+
+
+def theme_catalog_valid(ctx: runtime.Context) -> bool:
+    """Validate the bundled fallback catalog without claiming runtime ownership."""
+    theme_dir = ctx.config / "theme-engine/themes"
+    lock_path = ctx.config / "theme-engine/upstream-lock.json"
+    files = list(theme_dir.glob("*.json"))
+    if not files or not lock_path.is_file():
+        return False
+    try:
+        lock = runtime.json_file(lock_path)
+        theme_count = int(lock.get("theme_count", 0))
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return False
+    if lock.get("commit") != THEME_UPSTREAM_COMMIT:
+        return False
+    if lock.get("source") == "bundled-fallback":
+        return 0 < theme_count <= len(files)
+    return len(files) >= 40 and theme_count >= 40
+
+
+def theme_payload_current(ctx: runtime.Context) -> bool:
+    """Compatibility check for the deprecated bundled Theme Studio payload."""
+    return payload_version_matches(
+        ctx.root / "modules/theme-engine/.arch-wm-version",
+        ctx.config / "theme-engine/.arch-wm-version",
+    ) and payload_version_matches(
+        ctx.root / "modules/theme-engine/bin/theme-studio",
+        ctx.home / ".local/bin/theme",
+    )
+
+
+def theme_check(ctx: runtime.Context) -> bool:
+    """Legacy payload checker retained for compatibility tests only.
+
+    patch_runtime deliberately does not install this checker into stage 40. The
+    live stage uses runtime.theme_check and consumes the standalone theme layer.
+    """
+    return theme_payload_current(ctx) and theme_catalog_valid(ctx) and all(
+        path.is_file()
+        for path in (
+            *(ctx.home / ".local/bin" / name for _, name in THEME_ENTRY_POINTS),
+            *(ctx.home / ".local/bin" / name for name in THEME_COMMANDS),
+            *(ctx.home / ".local/bin" / module for module in THEME_STUDIO_MODULES),
+            ctx.home / ".local/bin/term",
+            ctx.home / ".local/bin/arch-wm-help",
+            ctx.home / ".zshrc",
+            ctx.config / "zsh/aliases.zsh",
+            ctx.config / "kitty/kitty.conf",
+            ctx.config / "atuin/config.toml",
+            ctx.config / "theme-engine/generated/theme.json",
+            ctx.config / "arch-wm/help.txt",
+        )
+    )
 
 
 def hypr_check(ctx: runtime.Context) -> bool:
