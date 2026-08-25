@@ -50,7 +50,7 @@
       "variants": ["compact", "standard"],
       "lockSafe": true,
       "services": ["power"],
-      "capabilities": []
+      "capabilities": ["drawer.open"]
     },
     {
       "id": "media",
