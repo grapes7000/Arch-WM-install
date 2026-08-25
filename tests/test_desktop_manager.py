@@ -33,6 +33,19 @@ class ScannerTests(unittest.TestCase):
             report = scan_tree(root)
             self.assertEqual(report["blockers"], 0)
 
+    def test_read_only_pam_reference_warns_but_does_not_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "lock.sh").write_text(
+                "pam_service=/etc/pam.d/hyprlock\n"
+                "if [[ ! -r \"$pam_service\" ]]; then exit 1; fi\n",
+                encoding="utf-8",
+            )
+            report = scan_tree(root)
+            cats = {item["category"] for item in report["findings"]}
+            self.assertEqual(report["blockers"], 0)
+            self.assertIn("sensitive_reference:pam", cats)
+
     def test_warns_for_protected_personal_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -129,6 +142,52 @@ class ManagerTests(unittest.TestCase):
                 with self.assertRaises(ProfileError):
                     manager.activate_pending(apply=True)
 
+    def test_activation_rolls_back_when_link_switch_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            hypr = manager.paths.config / "hypr"
+            hypr.mkdir()
+            (hypr / "original.conf").write_text("original\n")
+            foreign = manager.payload_dir("demo") / "config/hypr"
+            foreign.mkdir(parents=True)
+            (foreign / "foreign.conf").write_text("foreign\n")
+            (manager.payload_dir("demo") / "config/quickshell").mkdir(parents=True)
+            manager.save_registry({
+                "active": "arch-wm",
+                "pending": "demo",
+                "previous": None,
+                "profiles": {},
+                "monitor_snapshot": [{
+                    "name": "Virtual-1", "width": 1920, "height": 1080,
+                    "refreshRate": 60.0, "x": 0, "y": 0, "scale": 1.0,
+                }],
+            })
+
+            def fail_links(profile):
+                target = manager.paths.config / "hypr"
+                if target.exists() or target.is_symlink():
+                    if target.is_dir() and not target.is_symlink():
+                        shutil.rmtree(target)
+                    else:
+                        target.unlink()
+                target.mkdir()
+                (target / "partial.conf").write_text("partial\n")
+                raise RuntimeError("boom")
+
+            with patch.object(manager, "_links", side_effect=fail_links):
+                with self.assertRaises(ProfileError):
+                    manager.activate_pending(apply=True)
+
+            self.assertEqual(
+                (manager.paths.config / "hypr/original.conf").read_text(),
+                "original\n",
+            )
+            self.assertFalse((manager.paths.config / "hypr/partial.conf").exists())
+            journal = json.loads(
+                (manager.paths.state_root / "switch-journal.json").read_text()
+            )
+            self.assertEqual(journal["status"], "rolled_back")
+
     def test_arch_wm_snapshot_protects_unmanaged_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             manager = self.manager(Path(tmp))
@@ -138,6 +197,21 @@ class ManagerTests(unittest.TestCase):
             manager._ensure_arch_wm_snapshot()
             snap = manager.payload_dir("arch-wm") / "config/hypr/mine.conf"
             self.assertEqual(snap.read_text(), "mine\n")
+
+    def test_arch_wm_snapshot_dereferences_top_level_symlink(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            real_hypr = Path(tmp) / "real-hypr"
+            real_hypr.mkdir()
+            (real_hypr / "mine.conf").write_text("mine\n")
+            (manager.paths.config / "hypr").symlink_to(
+                real_hypr, target_is_directory=True
+            )
+            manager._ensure_arch_wm_snapshot()
+            snap = manager.payload_dir("arch-wm") / "config/hypr"
+            self.assertTrue(snap.is_dir())
+            self.assertFalse(snap.is_symlink())
+            self.assertEqual((snap / "mine.conf").read_text(), "mine\n")
 
     def test_audit_excludes_blockers_outside_curated_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -165,6 +239,14 @@ class ManagerTests(unittest.TestCase):
             self.assertIn("jq", plan["packages"]["missing_official"])
             self.assertTrue(plan["packages"]["quickshell_provider_reused"])
 
+    def test_foreign_select_requires_safe_monitor_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            (manager.payload_dir("demo") / "config").mkdir(parents=True)
+            with patch.object(manager, "capture_monitors", return_value=[]):
+                with self.assertRaises(ProfileError):
+                    manager.select("demo")
+
     def test_package_ledger_tracks_transitive_transaction_delta(self):
         with tempfile.TemporaryDirectory() as tmp:
             manager = self.manager(Path(tmp))
@@ -178,6 +260,7 @@ class ManagerTests(unittest.TestCase):
             }}
             queries = iter([["base"], ["base", "top-level", "transitive-dep"]])
             with patch.object(manager, "_query_installed", side_effect=lambda: next(queries)), \
+                 patch.object(manager, "_installed", return_value=True), \
                  patch("desktop_manager.manager.os.geteuid", return_value=1000), \
                  patch("desktop_manager.manager.subprocess.run") as run:
                 run.side_effect = [
@@ -189,6 +272,30 @@ class ManagerTests(unittest.TestCase):
             self.assertTrue(ledger["top-level"]["installed_by_manager"])
             self.assertTrue(ledger["transitive-dep"]["installed_by_manager"])
             self.assertIn("demo", ledger["transitive-dep"]["owners"])
+
+    def test_reused_manager_package_adds_second_owner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            manager.plan = lambda profile: {"packages": {
+                "missing_official": [], "missing_aur": [],
+                "official": ["shared-pkg"]
+            }}
+            manager.package_ledger_path.write_text(json.dumps({
+                "packages": {
+                    "shared-pkg": {
+                        "preexisting": False,
+                        "installed_by_manager": True,
+                        "owners": ["first"],
+                    }
+                }
+            }))
+            with patch.object(manager, "_installed", return_value=True), \
+                 patch("desktop_manager.manager.os.geteuid", return_value=1000):
+                manager.install_packages("demo", apply=True)
+            owners = json.loads(manager.package_ledger_path.read_text())[
+                "packages"
+            ]["shared-pkg"]["owners"]
+            self.assertEqual(set(owners), {"first", "demo"})
 
     def test_monitor_overlay_written_for_supported_adapter(self):
         with tempfile.TemporaryDirectory() as tmp:
