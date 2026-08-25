@@ -24,6 +24,13 @@ class ScannerTests(unittest.TestCase):
             self.assertIn("pam", cats)
             self.assertIn("symlink_escape", cats)
 
+    def test_pure_comments_do_not_create_blockers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config.lua").write_text("-- docs mention /etc/sddm.conf only\n")
+            report = scan_tree(root)
+            self.assertEqual(report["blockers"], 0)
+
     def test_warns_for_protected_personal_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
