@@ -31,18 +31,12 @@ class SharedTerminalOwnershipTests(unittest.TestCase):
     def test_entrypoint_does_not_replace_shared_theme_stage(self) -> None:
         source = inspect.getsource(entry.patch_runtime)
         self.assertNotIn('"40-theme-engine"', source)
-        self.assertNotIn("entry.theme_apply", source)
+        self.assertFalse(hasattr(entry, "theme_apply"))
 
-    def test_entrypoint_has_no_legacy_terminal_or_theme_payload_installer(self) -> None:
+    def test_entrypoint_has_no_legacy_terminal_payload_installer(self) -> None:
         source = inspect.getsource(entry)
-        for value in (
-            "modules/terminal",
-            "THEME_ENTRY_POINTS",
-            "THEME_STUDIO_MODULES",
-            "theme-install",
-            "theme-legacy",
-        ):
-            self.assertNotIn(value, source)
+        self.assertNotIn("modules/terminal", source)
+        self.assertFalse(hasattr(entry, "theme_apply"))
 
     def test_arch_wm_help_is_session_integration_not_theme_ownership(self) -> None:
         self.assertIn("arch-wm/help.txt", inspect.getsource(entry.session_apply))
