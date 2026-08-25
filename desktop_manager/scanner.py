@@ -14,14 +14,33 @@ TEXT_SUFFIXES = {
 }
 TEXT_NAMES = {"PKGBUILD", "Makefile", "meson.build", "CMakeLists.txt", "AGENTS.md"}
 
+# Commands that are dangerous regardless of where their arguments point.
 BLOCK_PATTERNS: tuple[tuple[str, str], ...] = (
-    ("boot_or_initramfs", r"(?:/boot/|\bmkinitcpio\b|\bgrub-install\b|\bbootctl\b)"),
-    ("pam", r"/etc/pam\.d/"),
-    ("sudoers", r"(?:/etc/sudoers|/etc/sudoers\.d/)"),
-    ("pacman_trust", r"(?:/etc/pacman\.conf|/etc/pacman\.d/(?:gnupg|mirrorlist))"),
-    ("display_manager", r"(?:/etc/sddm|/usr/share/sddm/themes|systemctl\s+(?:enable|disable).*sddm)"),
-    ("kernel_or_driver", r"(?:\bnvidia(?:-dkms|-open)?\b|\bamdgpu\b|\bmodprobe\b|\bdracut\b)"),
+    ("boot_or_initramfs", r"\b(?:mkinitcpio|grub-install|bootctl)\b"),
+    ("kernel_or_driver", r"\b(?:modprobe|dracut)\b|\b(?:pacman|yay|paru)\b[^\n]*(?:nvidia(?:-dkms|-open)?|amdgpu)"),
     ("destructive_disk", r"(?:\bmkfs(?:\.|\s)|\bfdisk\b|\bparted\b|\bdd\s+if=)"),
+    ("display_manager", r"\bsystemctl\s+(?:enable|disable|mask|unmask)\b[^\n]*\bsddm\b"),
+)
+
+# Merely reading these paths can be legitimate (for example checking that a
+# PAM service exists before launching a lock screen). They become hard blockers
+# only when the same line also looks mutating.
+SENSITIVE_PATHS: tuple[tuple[str, str], ...] = (
+    ("pam", r"/etc/pam\.d(?:/|\b)"),
+    ("sudoers", r"(?:/etc/sudoers(?:\.d/|\b))"),
+    ("pacman_trust", r"(?:/etc/pacman\.conf\b|/etc/pacman\.d/(?:gnupg|mirrorlist)\b)"),
+    ("display_manager", r"(?:/etc/sddm(?:\.conf|\.conf\.d/|/)|/usr/share/sddm/themes/)"),
+    ("boot_files", r"/boot/"),
+)
+
+MUTATING_CONTEXT = re.compile(
+    r"(?:"
+    r"\b(?:cp|mv|install|tee|rm|ln|touch|chmod|chown|truncate)\b"
+    r"|\bsed\b[^\n]*\s-i(?:\b|['\"]?)"
+    r"|\b(?:write_text|write_bytes|unlink|remove|rename|replace)\s*\("
+    r"|(?:^|[^<])>>?\s*['\"]?/"
+    r")",
+    re.IGNORECASE,
 )
 
 WARN_PATTERNS: tuple[tuple[str, str], ...] = (
@@ -48,6 +67,7 @@ PROTECTED_PATTERNS: tuple[tuple[str, str], ...] = (
     ("shell_rc", r"(?:^|/)\.(?:zshrc|bashrc|profile|zshenv)$"),
 )
 
+
 @dataclass(frozen=True)
 class Finding:
     severity: str
@@ -71,23 +91,36 @@ def _scan_lines(relative: str, lines: Iterable[str]) -> list[Finding]:
     protected_hit = [name for name, rx in PROTECTED_PATTERNS if re.search(rx, relative)]
     if protected_hit:
         findings.append(Finding("warn", "protected_config", relative, 0, ", ".join(protected_hit)))
+
     for number, line in enumerate(lines, 1):
         stripped = line.lstrip()
         if stripped.startswith(("#", "--", "//")):
             continue
+
+        evidence = _safe_evidence(line)
         for name, rx in BLOCK_PATTERNS:
             if re.search(rx, line, re.IGNORECASE):
-                findings.append(Finding("block", name, relative, number, _safe_evidence(line)))
+                findings.append(Finding("block", name, relative, number, evidence))
+
+        for name, rx in SENSITIVE_PATHS:
+            if re.search(rx, line, re.IGNORECASE):
+                severity = "block" if MUTATING_CONTEXT.search(line) else "warn"
+                category = name if severity == "block" else f"sensitive_reference:{name}"
+                findings.append(Finding(severity, category, relative, number, evidence))
+
         for name, rx in WARN_PATTERNS:
             if re.search(rx, line, re.IGNORECASE):
-                findings.append(Finding("warn", name, relative, number, _safe_evidence(line)))
+                findings.append(Finding("warn", name, relative, number, evidence))
     return findings
 
 
 def scan_tree(root: Path, *, max_file_bytes: int = 2_000_000) -> dict:
     root = root.resolve()
     findings: list[Finding] = []
-    scanned_files = skipped_files = symlinks = 0
+    scanned_files = 0
+    skipped_files = 0
+    symlinks = 0
+
     for path in sorted(root.rglob("*")):
         try:
             relative = path.relative_to(root).as_posix()
@@ -115,6 +148,7 @@ def scan_tree(root: Path, *, max_file_bytes: int = 2_000_000) -> dict:
             skipped_files += 1
             continue
         findings.extend(_scan_lines(relative, text.splitlines()))
+
     blocks = sum(item.severity == "block" for item in findings)
     warnings = sum(item.severity == "warn" for item in findings)
     risk = min(100, blocks * 35 + warnings * 3)
