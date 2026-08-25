@@ -1,0 +1,320 @@
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from desktop_manager.manager import DesktopManager, Paths
+from desktop_manager.models import ProfileError
+from desktop_manager.scanner import scan_tree
+
+
+class ScannerTests(unittest.TestCase):
+    def test_blocks_pam_and_symlink_escape(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "install.sh").write_text("sudo cp qs-lock /etc/pam.d/qs-lock\n", encoding="utf-8")
+            (root / "escape").symlink_to("/etc/passwd")
+            report = scan_tree(root)
+            cats = {item["category"] for item in report["findings"]}
+            self.assertEqual(report["verdict"], "blocked")
+            self.assertIn("pam", cats)
+            self.assertIn("symlink_escape", cats)
+
+    def test_pure_comments_do_not_create_blockers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config.lua").write_text("-- docs mention /etc/sddm.conf only\n")
+            report = scan_tree(root)
+            self.assertEqual(report["blockers"], 0)
+
+    def test_read_only_pam_reference_warns_but_does_not_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "lock.sh").write_text(
+                "pam_service=/etc/pam.d/hyprlock\n"
+                "if [[ ! -r \"$pam_service\" ]]; then exit 1; fi\n",
+                encoding="utf-8",
+            )
+            report = scan_tree(root)
+            cats = {item["category"] for item in report["findings"]}
+            self.assertEqual(report["blockers"], 0)
+            self.assertIn("sensitive_reference:pam", cats)
+
+    def test_warns_for_protected_personal_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "config/kitty/kitty.conf"
+            path.parent.mkdir(parents=True)
+            path.write_text("font_size 12\n", encoding="utf-8")
+            report = scan_tree(root)
+            self.assertTrue(any(item["category"] == "protected_config" for item in report["findings"]))
+
+
+class InstallWrapperTests(unittest.TestCase):
+    def test_bare_install_keeps_default_installer_path_working(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shutil.copy2(repo_root / "install.sh", root / "install.sh")
+            (root / "scripts").mkdir()
+            (root / "scripts/install-nvim.sh").write_text("#!/usr/bin/env bash\nexit 0\n")
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            log = root / "python.log"
+            fake_python = fake_bin / "python"
+            fake_python.write_text(
+                "#!/usr/bin/env bash\nprintf '%s\n' \"$*\" > \"$TEST_PYTHON_LOG\"\nexit 0\n"
+            )
+            fake_python.chmod(0o755)
+            env = os.environ.copy()
+            env["PATH"] = f"{fake_bin}:{env['PATH']}"
+            env["TEST_PYTHON_LOG"] = str(log)
+            result = subprocess.run(
+                ["bash", str(root / "install.sh")],
+                text=True,
+                capture_output=True,
+                env=env,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(log.read_text().strip(), "-m installer install")
+
+
+class ManagerTests(unittest.TestCase):
+    def manager(self, temp: Path) -> DesktopManager:
+        defs = temp / "defs"
+        defs.mkdir()
+        profile = {
+            "id": "demo",
+            "name": "Demo",
+            "repository": "https://github.com/example/demo.git",
+            "ref": "main",
+            "kind": "hyprland-quickshell",
+            "runtime": {"shell": "quickshell"},
+            "config": [
+                {"source": "config/hypr", "target": "hypr"},
+                {"source": "config/quickshell", "target": "quickshell"},
+            ],
+            "protected": ["kitty"],
+        }
+        (defs / "demo.json").write_text(json.dumps(profile), encoding="utf-8")
+        paths = Paths(
+            home=temp / "home",
+            config=temp / "home/.config",
+            data_root=temp / "data",
+            state_root=temp / "state",
+            profile_defs=defs,
+        )
+        paths.home.mkdir()
+        paths.config.mkdir(parents=True)
+        source = paths.data_root / "sources/demo"
+        (source / "config/hypr").mkdir(parents=True)
+        (source / "config/quickshell").mkdir(parents=True)
+        (source / "config/hypr/hyprland.conf").write_text("monitor=,preferred,auto,1\n")
+        (source / "config/quickshell/shell.qml").write_text("import Quickshell\nShellRoot {}\n")
+        # Minimal .git facade: patch _git in tests that call prepare.
+        return DesktopManager(paths)
+
+    def test_prepare_copies_only_curated_mappings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            source = manager.source_dir("demo")
+            (source / "config/kitty").mkdir()
+            (source / "config/kitty/kitty.conf").write_text("do not import\n")
+            with patch.object(manager, "_git", return_value="deadbeef\n"), \
+                 patch.object(manager, "_installed", return_value=True):
+                lock = manager.prepare("demo", force_review=True)
+            payload = manager.payload_dir("demo") / "config"
+            self.assertTrue((payload / "hypr/hyprland.conf").is_file())
+            self.assertTrue((payload / "quickshell/shell.qml").is_file())
+            self.assertFalse((payload / "kitty").exists())
+            self.assertEqual(lock["commit"], "deadbeef")
+
+    def test_activation_refuses_inside_hyprland(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            with patch.dict(os.environ, {"HYPRLAND_INSTANCE_SIGNATURE": "abc"}):
+                with self.assertRaises(ProfileError):
+                    manager.activate_pending(apply=True)
+
+    def test_activation_rolls_back_when_link_switch_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            hypr = manager.paths.config / "hypr"
+            hypr.mkdir()
+            (hypr / "original.conf").write_text("original\n")
+            foreign = manager.payload_dir("demo") / "config/hypr"
+            foreign.mkdir(parents=True)
+            (foreign / "foreign.conf").write_text("foreign\n")
+            (manager.payload_dir("demo") / "config/quickshell").mkdir(parents=True)
+            manager.save_registry({
+                "active": "arch-wm",
+                "pending": "demo",
+                "previous": None,
+                "profiles": {},
+                "monitor_snapshot": [{
+                    "name": "Virtual-1", "width": 1920, "height": 1080,
+                    "refreshRate": 60.0, "x": 0, "y": 0, "scale": 1.0,
+                }],
+            })
+
+            def fail_links(profile):
+                target = manager.paths.config / "hypr"
+                if target.exists() or target.is_symlink():
+                    if target.is_dir() and not target.is_symlink():
+                        shutil.rmtree(target)
+                    else:
+                        target.unlink()
+                target.mkdir()
+                (target / "partial.conf").write_text("partial\n")
+                raise RuntimeError("boom")
+
+            with patch.object(manager, "_links", side_effect=fail_links):
+                with self.assertRaises(ProfileError):
+                    manager.activate_pending(apply=True)
+
+            self.assertEqual(
+                (manager.paths.config / "hypr/original.conf").read_text(),
+                "original\n",
+            )
+            self.assertFalse((manager.paths.config / "hypr/partial.conf").exists())
+            journal = json.loads(
+                (manager.paths.state_root / "switch-journal.json").read_text()
+            )
+            self.assertEqual(journal["status"], "rolled_back")
+
+    def test_arch_wm_snapshot_protects_unmanaged_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            hypr = manager.paths.config / "hypr"
+            hypr.mkdir()
+            (hypr / "mine.conf").write_text("mine\n")
+            manager._ensure_arch_wm_snapshot()
+            snap = manager.payload_dir("arch-wm") / "config/hypr/mine.conf"
+            self.assertEqual(snap.read_text(), "mine\n")
+
+    def test_arch_wm_snapshot_dereferences_top_level_symlink(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            real_hypr = Path(tmp) / "real-hypr"
+            real_hypr.mkdir()
+            (real_hypr / "mine.conf").write_text("mine\n")
+            (manager.paths.config / "hypr").symlink_to(
+                real_hypr, target_is_directory=True
+            )
+            manager._ensure_arch_wm_snapshot()
+            snap = manager.payload_dir("arch-wm") / "config/hypr"
+            self.assertTrue(snap.is_dir())
+            self.assertFalse(snap.is_symlink())
+            self.assertEqual((snap / "mine.conf").read_text(), "mine\n")
+
+    def test_audit_excludes_blockers_outside_curated_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            source = manager.source_dir("demo")
+            (source / "install.sh").write_text("sudo cp x /etc/pam.d/x\n", encoding="utf-8")
+            with patch.object(manager, "_installed", return_value=True):
+                report = manager.audit("demo")
+            self.assertEqual(report["static"]["blockers"], 0)
+            self.assertGreater(report["source_scan"]["blockers"], 0)
+            self.assertTrue(any(item["category"] == "pam" for item in report["excluded_findings"]))
+
+    def test_existing_qs_provider_is_reused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            spec_path = manager.paths.profile_defs / "demo.json"
+            data = json.loads(spec_path.read_text())
+            data["official_packages"] = ["quickshell", "jq"]
+            spec_path.write_text(json.dumps(data))
+            with patch("desktop_manager.manager.shutil.which", side_effect=lambda name: "/usr/bin/qs" if name == "qs" else None), \
+                 patch.object(manager, "_installed", return_value=False), \
+                 patch.object(manager, "audit", return_value={"static": {"blockers": 0, "warnings": 0}}):
+                plan = manager.plan("demo")
+            self.assertNotIn("quickshell", plan["packages"]["missing_official"])
+            self.assertIn("jq", plan["packages"]["missing_official"])
+            self.assertTrue(plan["packages"]["quickshell_provider_reused"])
+
+    def test_foreign_select_requires_safe_monitor_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            (manager.payload_dir("demo") / "config").mkdir(parents=True)
+            with patch.object(manager, "capture_monitors", return_value=[]):
+                with self.assertRaises(ProfileError):
+                    manager.select("demo")
+
+    def test_package_ledger_tracks_transitive_transaction_delta(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            spec_path = manager.paths.profile_defs / "demo.json"
+            data = json.loads(spec_path.read_text())
+            data["official_packages"] = ["top-level"]
+            spec_path.write_text(json.dumps(data))
+            manager.plan = lambda profile: {"packages": {
+                "missing_official": ["top-level"], "missing_aur": [],
+                "official": ["top-level"]
+            }}
+            queries = iter([["base"], ["base", "top-level", "transitive-dep"]])
+            with patch.object(manager, "_query_installed", side_effect=lambda: next(queries)), \
+                 patch.object(manager, "_installed", return_value=True), \
+                 patch("desktop_manager.manager.os.geteuid", return_value=1000), \
+                 patch("desktop_manager.manager.subprocess.run") as run:
+                run.side_effect = [
+                    type("R", (), {"returncode": 0, "stdout": "top-level\ntransitive-dep\n", "stderr": ""})(),
+                    type("R", (), {"returncode": 0})(),
+                ]
+                manager.install_packages("demo", apply=True)
+            ledger = json.loads(manager.package_ledger_path.read_text())["packages"]
+            self.assertTrue(ledger["top-level"]["installed_by_manager"])
+            self.assertTrue(ledger["transitive-dep"]["installed_by_manager"])
+            self.assertIn("demo", ledger["transitive-dep"]["owners"])
+
+    def test_reused_manager_package_adds_second_owner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            manager.plan = lambda profile: {"packages": {
+                "missing_official": [], "missing_aur": [],
+                "official": ["shared-pkg"]
+            }}
+            manager.package_ledger_path.write_text(json.dumps({
+                "packages": {
+                    "shared-pkg": {
+                        "preexisting": False,
+                        "installed_by_manager": True,
+                        "owners": ["first"],
+                    }
+                }
+            }))
+            with patch.object(manager, "_installed", return_value=True), \
+                 patch("desktop_manager.manager.os.geteuid", return_value=1000):
+                manager.install_packages("demo", apply=True)
+            owners = json.loads(manager.package_ledger_path.read_text())[
+                "packages"
+            ]["shared-pkg"]["owners"]
+            self.assertEqual(set(owners), {"first", "demo"})
+
+    def test_monitor_overlay_written_for_supported_adapter(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manager = self.manager(Path(tmp))
+            # Override the local test profile to use Tsugumori-style user.lua injection.
+            spec_path = manager.paths.profile_defs / "demo.json"
+            data = json.loads(spec_path.read_text())
+            data["monitor_adapter"] = "tsugumori-user-lua"
+            spec_path.write_text(json.dumps(data))
+            payload = manager.payload_dir("demo") / "config/hypr"
+            payload.mkdir(parents=True)
+            manager._apply_monitor_snapshot("demo", [{
+                "name": "DP-1", "width": 2560, "height": 1440,
+                "refreshRate": 144.0, "x": 0, "y": 0, "scale": 1.0,
+            }])
+            user_lua = (payload / "user.lua").read_text()
+            self.assertIn("DP-1", user_lua)
+            self.assertIn("2560x1440@144", user_lua)
+
+
+if __name__ == "__main__":
+    unittest.main()

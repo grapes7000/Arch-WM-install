@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grapes7000.github.io/Arch-WM-install/schemas/desktop-profile.schema.json",
+  "title": "Arch-WM Desktop Profile",
+  "type": "object",
+  "required": ["id", "name", "repository", "ref", "kind", "runtime", "config"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "name": {"type": "string", "minLength": 1},
+    "repository": {"type": "string", "pattern": "^https://github\\.com/"},
+    "ref": {"type": "string", "minLength": 1},
+    "kind": {"type": "string"},
+    "runtime": {"type": "object"},
+    "config": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "target"],
+        "properties": {
+          "source": {"type": "string"},
+          "target": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"}
+        }
+      }
+    },
+    "official_packages": {"type": "array", "items": {"type": "string"}},
+    "package_files": {"type": "array", "items": {"type": "string"}},
+    "aur_packages": {"type": "array", "items": {"type": "string"}},
+    "aur_package_files": {"type": "array", "items": {"type": "string"}},
+    "protected": {"type": "array", "items": {"type": "string"}},
+    "capabilities": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": "array", "items": {"type": "string"}},
+    "monitor_adapter": {"type": ["string", "null"]},
+    "risk_policy": {"type": "string"}
+  },
+  "additionalProperties": false
+}
