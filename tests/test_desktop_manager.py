@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -39,6 +41,35 @@ class ScannerTests(unittest.TestCase):
             path.write_text("font_size 12\n", encoding="utf-8")
             report = scan_tree(root)
             self.assertTrue(any(item["category"] == "protected_config" for item in report["findings"]))
+
+
+class InstallWrapperTests(unittest.TestCase):
+    def test_bare_install_keeps_default_installer_path_working(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shutil.copy2(repo_root / "install.sh", root / "install.sh")
+            (root / "scripts").mkdir()
+            (root / "scripts/install-nvim.sh").write_text("#!/usr/bin/env bash\nexit 0\n")
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            log = root / "python.log"
+            fake_python = fake_bin / "python"
+            fake_python.write_text(
+                "#!/usr/bin/env bash\nprintf '%s\n' \"$*\" > \"$TEST_PYTHON_LOG\"\nexit 0\n"
+            )
+            fake_python.chmod(0o755)
+            env = os.environ.copy()
+            env["PATH"] = f"{fake_bin}:{env['PATH']}"
+            env["TEST_PYTHON_LOG"] = str(log)
+            result = subprocess.run(
+                ["bash", str(root / "install.sh")],
+                text=True,
+                capture_output=True,
+                env=env,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(log.read_text().strip(), "-m installer install")
 
 
 class ManagerTests(unittest.TestCase):
