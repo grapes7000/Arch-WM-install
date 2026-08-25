@@ -15,7 +15,6 @@
     {"source": "config/waybar", "target": "waybar"}
   ],
   "package_files": ["packages/pacman.txt"],
-  "aur_package_files": ["packages/aur.txt"],
   "protected": ["bash", "kitty", "starship.toml", "nvim", "theme-engine"],
   "capabilities": [
     "notifications:exclusive",
@@ -29,6 +28,6 @@
   "notes": [
     "config/bash and config/kitty are intentionally not imported.",
     "Quickshare network exposure is not enabled by desktopctl.",
-    "AUR packages are reported but are not auto-installed by v0.1."
+    "Upstream currently publishes a single packages/pacman.txt manifest; no AUR manifest is declared."
   ]
 }
