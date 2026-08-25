@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import unittest
 
-from installer import runtime
+from installer import entry, runtime
 
 
 class SharedTerminalOwnershipTests(unittest.TestCase):
@@ -27,6 +27,34 @@ class SharedTerminalOwnershipTests(unittest.TestCase):
         self.assertNotIn("kitty/kitty.conf", source)
         self.assertNotIn(".zshrc", source)
         self.assertNotIn("atuin/config.toml", source)
+
+    def test_entrypoint_does_not_replace_shared_theme_stage(self) -> None:
+        source = inspect.getsource(entry.patch_runtime)
+        self.assertNotIn('"40-theme-engine"', source)
+        self.assertNotIn("entry.theme_apply", source)
+
+    def test_entrypoint_has_no_legacy_terminal_or_theme_payload_installer(self) -> None:
+        source = inspect.getsource(entry)
+        for value in (
+            "modules/terminal",
+            "THEME_ENTRY_POINTS",
+            "THEME_STUDIO_MODULES",
+            "theme-install",
+            "theme-legacy",
+        ):
+            self.assertNotIn(value, source)
+
+    def test_arch_wm_help_is_session_integration_not_theme_ownership(self) -> None:
+        self.assertIn("arch-wm/help.txt", inspect.getsource(entry.session_apply))
+        self.assertIn("arch-wm-help", inspect.getsource(entry.session_apply))
+        self.assertNotIn("arch-wm-help", inspect.getsource(runtime.theme_apply))
+
+    def test_doctor_uses_shared_layer_contracts(self) -> None:
+        source = inspect.getsource(entry.doctor_command)
+        self.assertIn("standalone theme engine", source)
+        self.assertIn("Chezmoi source", source)
+        self.assertNotIn("theme studio payload", source)
+        self.assertNotIn("terminal profile", source)
 
     def test_dotfiles_stage_remains_after_theme_and_desktop_stages(self) -> None:
         self.assertGreater(
