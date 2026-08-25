@@ -171,8 +171,16 @@ class DesktopManager:
         before=set(self._query_installed()); r=subprocess.run(["sudo","pacman","-S","--needed",*missing])
         if r.returncode: raise ProfileError(f"pacman dependency install failed ({r.returncode})")
         after=set(self._query_installed()); added=sorted(after-before); out["installed"]=added; ledger=_read(self.package_ledger_path,{"packages":{}})
-        for pkg in set(plan["packages"]["official"]):
-            new=pkg in added; e=ledger["packages"].setdefault(pkg,{"preexisting":not new,"installed_by_manager":new,"owners":[]})
+        # Record the complete transaction delta, including transitive dependencies,
+        # so profile removal never leaves packages behind merely because they were
+        # pulled indirectly by pacman.
+        for pkg in added:
+            e=ledger["packages"].setdefault(pkg,{"preexisting":False,"installed_by_manager":True,"owners":[]})
+            if p not in e["owners"]: e["owners"].append(p)
+        # Also record requested packages that existed before this profile. Those
+        # are user/pre-existing owned and therefore never eligible for removal.
+        for pkg in set(plan["packages"]["official"])-set(added):
+            e=ledger["packages"].setdefault(pkg,{"preexisting":True,"installed_by_manager":False,"owners":[]})
             if p not in e["owners"]: e["owners"].append(p)
         _write(self.package_ledger_path,ledger); return out
 
