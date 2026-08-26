@@ -21,15 +21,15 @@ Item {
     }
 
     readonly property var slots: [
-        { name: "web", icon: "󰈹" },
+        { name: "web", icon: "" },
         { name: "term", icon: "󰆍" },
-        { name: "dev", icon: "󰨞" },
-        { name: "media", icon: "󰓇" },
-        { name: "files", icon: "󰉋" },
+        { name: "dev", icon: "" },
+        { name: "music", icon: "󰓇" },
+        { name: "files", icon: "" },
         { name: "settings", icon: "󰒓" },
-        { name: "chat", icon: "󰙯" },
-        { name: "mail", icon: "󰒊" },
-        { name: "media", icon: "󰘽" },
+        { name: "chat", icon: "" },
+        { name: "mail", icon: "" },
+        { name: "media", icon: "" },
         { name: "sys", icon: "󰖲" }
     ]
 
