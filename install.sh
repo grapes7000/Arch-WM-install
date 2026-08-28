@@ -6,7 +6,7 @@ export PYTHONPATH="$ROOT_DIR${PYTHONPATH:+:$PYTHONPATH}"
 export PATH="$HOME/.local/bin:$PATH"
 
 run_install() {
-  python -m installer install "$@"
+  python -m installer.fixed_entry install "$@"
   bash "$ROOT_DIR/scripts/install-nvim.sh" "$@"
 }
 
@@ -28,7 +28,7 @@ case "$command" in
     ;;
   help|doctor)
     shift
-    exec python -m installer "$command" "$@"
+    exec python -m installer.fixed_entry "$command" "$@"
     ;;
   *)
     run_install "$@"
