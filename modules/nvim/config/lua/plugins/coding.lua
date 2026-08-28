@@ -126,6 +126,7 @@ return {
         pyright = {},
         bashls = {},
         jsonls = {},
+        yamlls = {},
         html = {},
         cssls = {},
         ts_ls = {},
