@@ -165,18 +165,17 @@ return {
       end
       opts.sources.providers = opts.sources.providers or {}
       opts.sources.providers.minuet = {
-        name = "AI",
+        name = "minuet",
         module = "minuet.blink",
         async = true,
         timeout_ms = 5000,
         score_offset = 50,
       }
       opts.keymap = opts.keymap or {}
-      opts.keymap["<M-y>"] = {
-        function(cmp)
-          cmp.show({ providers = { "minuet" } })
-        end,
-      }
+      opts.keymap["<M-y>"] = require("minuet").make_blink_map()
+      opts.completion = opts.completion or {}
+      opts.completion.trigger = opts.completion.trigger or {}
+      opts.completion.trigger.prefetch_on_insert = false
       return opts
     end,
   },
