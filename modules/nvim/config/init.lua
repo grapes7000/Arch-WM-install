@@ -5,6 +5,10 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
 local opt = vim.opt
+local zsh = vim.fn.exepath("zsh")
+if zsh ~= "" then
+  opt.shell = zsh
+end
 opt.number = true
 opt.relativenumber = true
 opt.cursorline = true
