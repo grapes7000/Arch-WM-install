@@ -43,6 +43,6 @@ echo "  syncing lazy.nvim plugins..."
 nvim --headless "+Lazy! sync" +qa
 
 echo "  ensuring Tree-sitter parsers..."
-nvim --headless "+lua require('nvim-treesitter').install({'bash','json','lua','markdown','markdown_inline','python','vim','vimdoc'}):wait(300000)" +qa
+nvim --headless "+lua require('nvim-treesitter').install({'bash','c','cpp','css','diff','gitcommit','gitignore','html','javascript','json','lua','markdown','markdown_inline','python','toml','tsx','typescript','vim','vimdoc','yaml'}):wait(300000)" +qa
 
 echo "  Neovim setup complete"
