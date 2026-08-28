@@ -189,7 +189,10 @@ return {
 
   {
     "milanglacier/minuet-ai.nvim",
-    event = "InsertEnter",
+    -- Minuet's virtual-text auto_trigger_ft is evaluated during setup and
+    -- enables matching buffers as their FileType events fire. Load it at
+    -- startup so setup happens before normal code buffers are opened.
+    lazy = false,
     enabled = completion_provider == "ollama" or completion_provider == "openai",
     opts = function()
       local common = {
