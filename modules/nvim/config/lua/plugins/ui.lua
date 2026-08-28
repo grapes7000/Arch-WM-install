@@ -4,59 +4,7 @@ return {
     name = "catppuccin",
     priority = 1000,
     config = function()
-      require("catppuccin").setup({
-        flavour = "mocha",
-        transparent_background = false,
-        color_overrides = {
-          mocha = {
-            rosewater = "#ff8fce",
-            flamingo = "#ff70c5",
-            pink = "#ff3eae",
-            mauve = "#d85cff",
-            red = "#ff5c8a",
-            peach = "#ff8ac6",
-            yellow = "#f5c2e7",
-            green = "#a6e3c7",
-            teal = "#94e2d5",
-            sky = "#89dceb",
-            sapphire = "#74c7ec",
-            blue = "#89b4fa",
-            lavender = "#cba6f7",
-            text = "#f5e9f2",
-            subtext1 = "#d8cbd4",
-            subtext0 = "#b9adb5",
-            overlay2 = "#958a92",
-            overlay1 = "#756c72",
-            overlay0 = "#5d565b",
-            surface2 = "#454047",
-            surface1 = "#353138",
-            surface0 = "#29262d",
-            base = "#111014",
-            mantle = "#0c0b0e",
-            crust = "#080709",
-          },
-        },
-        custom_highlights = function(colors)
-          return {
-            CursorLine = { bg = colors.surface0 },
-            LineNr = { fg = colors.overlay0 },
-            CursorLineNr = { fg = colors.pink, bold = true },
-            Visual = { bg = colors.surface2 },
-            Search = { bg = colors.pink, fg = colors.crust, bold = true },
-          }
-        end,
-        integrations = {
-          blink_cmp = true,
-          gitsigns = true,
-          native_lsp = { enabled = true },
-          neotree = true,
-          noice = true,
-          telescope = { enabled = true },
-          treesitter = true,
-          which_key = true,
-        },
-      })
-      vim.cmd.colorscheme("catppuccin")
+      require("arch_theme").setup()
     end,
   },
 
@@ -176,7 +124,7 @@ return {
         separator_style = "slant",
         always_show_bufferline = false,
         offsets = {
-          { filetype = "neo-tree", text = "  FILES", text_align = "left", separator = true },
+          { filetype = "neo-tree", text = "  SIDEBAR", text_align = "left", separator = true },
         },
       },
     },
@@ -225,6 +173,7 @@ return {
             return vim.b[buf].neo_tree_source == "filesystem"
           end,
           pinned = true,
+          collapsed = true,
           open = "Neotree show position=left filesystem",
         },
       },
