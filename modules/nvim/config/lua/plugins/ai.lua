@@ -4,6 +4,16 @@ local ollama_model = vim.env.NVIM_OLLAMA_MODEL or "qwen2.5-coder:7b"
 local openai_model = vim.env.NVIM_OPENAI_MODEL or "gpt-5.6-luna"
 local codex_model = vim.env.NVIM_CODEX_MODEL or "gpt-5.6-terra"
 
+local function normalize_url(value)
+  value = value or "http://127.0.0.1:11434"
+  if not value:match("^https?://") then
+    value = "http://" .. value
+  end
+  return value:gsub("/+$", "")
+end
+
+local ollama_host = normalize_url(vim.env.NVIM_OLLAMA_HOST or vim.env.OLLAMA_HOST)
+
 local function codecompanion_adapter()
   if chat_provider == "copilot" then
     return "copilot"
@@ -15,6 +25,45 @@ local function codecompanion_adapter()
     return { name = "codex", model = codex_model }
   end
   return { name = "ollama", model = ollama_model }
+end
+
+local function ollama_health()
+  vim.system({ "curl", "-fsS", "--max-time", "4", ollama_host .. "/api/tags" }, { text = true }, function(result)
+    vim.schedule(function()
+      if result.code ~= 0 then
+        vim.notify(
+          "Cannot reach Ollama at " .. ollama_host .. "\n" .. (result.stderr or ""),
+          vim.log.levels.ERROR,
+          { title = "Neovim AI" }
+        )
+        return
+      end
+
+      local ok, payload = pcall(vim.json.decode, result.stdout or "")
+      if not ok or type(payload) ~= "table" then
+        vim.notify("Ollama responded, but /api/tags was not valid JSON", vim.log.levels.WARN, { title = "Neovim AI" })
+        return
+      end
+
+      local models = {}
+      local found = false
+      for _, item in ipairs(payload.models or {}) do
+        local name = item.name or item.model
+        if name then
+          table.insert(models, name)
+          if name == ollama_model or name:match("^" .. vim.pesc(ollama_model) .. ":") then
+            found = true
+          end
+        end
+      end
+
+      local message = string.format("Ollama reachable: %s\nModel: %s (%s)", ollama_host, ollama_model, found and "installed" or "NOT FOUND")
+      if #models > 0 then
+        message = message .. "\nAvailable: " .. table.concat(models, ", ")
+      end
+      vim.notify(message, found and vim.log.levels.INFO or vim.log.levels.WARN, { title = "Neovim AI" })
+    end)
+  end)
 end
 
 return {
@@ -34,6 +83,15 @@ return {
     },
     opts = {
       adapters = {
+        http = {
+          ollama = function()
+            return require("codecompanion.adapters").extend("ollama", {
+              env = {
+                url = ollama_host,
+              },
+            })
+          end,
+        },
         acp = {
           codex = function()
             return require("codecompanion.adapters").extend("codex", {
@@ -89,15 +147,17 @@ return {
       vim.api.nvim_create_user_command("AIStatus", function()
         vim.notify(
           string.format(
-            "AI chat: %s | completion: %s | Ollama model: %s",
+            "AI chat: %s | completion: %s\nOllama: %s\nModel: %s",
             chat_provider,
             completion_provider,
+            ollama_host,
             ollama_model
           ),
           vim.log.levels.INFO,
           { title = "Neovim AI" }
         )
       end, {})
+      vim.api.nvim_create_user_command("AIHealth", ollama_health, { desc = "Check Ollama connectivity and configured model" })
     end,
   },
 
@@ -113,6 +173,7 @@ return {
           context_window = 4096,
           throttle = 800,
           debounce = 300,
+          request_timeout = 5.0,
           provider_options = {
             openai = {
               model = openai_model,
@@ -129,20 +190,25 @@ return {
       return {
         provider = "openai_fim_compatible",
         n_completions = 1,
-        context_window = tonumber(vim.env.NVIM_OLLAMA_CONTEXT) or 1024,
-        throttle = 1200,
-        debounce = 400,
+        context_window = tonumber(vim.env.NVIM_OLLAMA_CONTEXT) or 512,
+        throttle = 900,
+        debounce = 300,
+        request_timeout = 5.0,
+        blink = {
+          enable_auto_complete = true,
+        },
         provider_options = {
           openai_fim_compatible = {
             name = "Ollama",
-            end_point = (vim.env.OLLAMA_HOST or "http://127.0.0.1:11434") .. "/v1/completions",
+            end_point = ollama_host .. "/v1/completions",
             model = ollama_model,
             api_key = function()
               return "ollama"
             end,
             optional = {
-              max_tokens = 128,
+              max_tokens = 64,
               top_p = 0.9,
+              stop = { "\n\n" },
             },
           },
         },
@@ -176,6 +242,28 @@ return {
       opts.completion = opts.completion or {}
       opts.completion.trigger = opts.completion.trigger or {}
       opts.completion.trigger.prefetch_on_insert = false
+      opts.completion.menu = opts.completion.menu or {}
+      opts.completion.menu.draw = opts.completion.menu.draw or {}
+      opts.completion.menu.draw.components = opts.completion.menu.draw.components or {}
+      opts.completion.menu.draw.components.source_icon = {
+        ellipsis = false,
+        text = function(ctx)
+          local icons = {
+            minuet = "󱗻",
+            lsp = "",
+            path = "",
+            snippets = "",
+            buffer = "",
+          }
+          return icons[ctx.source_name:lower()] or "󰜚"
+        end,
+        highlight = "BlinkCmpSource",
+      }
+      opts.completion.menu.draw.columns = {
+        { "label", "label_description", gap = 1 },
+        { "kind_icon", "kind" },
+        { "source_icon" },
+      }
       return opts
     end,
   },
