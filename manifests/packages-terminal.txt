@@ -18,3 +18,18 @@ glow
 tree-sitter-cli
 ttf-jetbrains-mono-nerd
 neovim
+
+# Neovim IDE language intelligence and formatting
+lua-language-server
+pyright
+bash-language-server
+typescript-language-server
+vscode-json-languageserver
+vscode-html-languageserver
+vscode-css-languageserver
+yaml-language-server
+clang
+qt6-languageserver
+stylua
+shfmt
+shellcheck
