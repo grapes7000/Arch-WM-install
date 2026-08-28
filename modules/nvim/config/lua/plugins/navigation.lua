@@ -34,6 +34,46 @@ return {
   },
 
   {
+    "mikavilpas/yazi.nvim",
+    version = "*",
+    event = "VeryLazy",
+    dependencies = {
+      { "nvim-lua/plenary.nvim", lazy = true },
+    },
+    init = function()
+      vim.g.loaded_netrwPlugin = 1
+    end,
+    opts = {
+      open_for_directories = true,
+      open_multiple_tabs = true,
+      change_neovim_cwd_on_close = false,
+      floating_window_scaling_factor = 0.94,
+      yazi_floating_window_winblend = 0,
+      yazi_floating_window_border = "rounded",
+      highlight_hovered_buffers_in_same_directory = true,
+      keymaps = {
+        show_help = "<f1>",
+        open_file_in_vertical_split = "<c-v>",
+        open_file_in_horizontal_split = "<c-x>",
+        open_file_in_tab = "<c-t>",
+        grep_in_directory = "<c-s>",
+        replace_in_directory = "<c-g>",
+        cycle_open_buffers = "<tab>",
+        copy_relative_path_to_selected_files = "<c-y>",
+        send_to_quickfix_list = "<c-q>",
+        change_working_directory = "<c-\\>",
+        open_and_pick_window = "<c-o>",
+      },
+    },
+    keys = {
+      { "-", "<cmd>Yazi<cr>", mode = { "n", "v" }, desc = "Yazi at current file" },
+      { "<leader>ee", "<cmd>Yazi<cr>", mode = { "n", "v" }, desc = "Yazi at current file" },
+      { "<leader>ec", "<cmd>Yazi cwd<cr>", desc = "Yazi at project cwd" },
+      { "<leader>er", "<cmd>Yazi toggle<cr>", desc = "Resume Yazi session" },
+    },
+  },
+
+  {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
     lazy = false,
@@ -49,6 +89,7 @@ return {
       open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "codecompanion", "edgy" },
       filesystem = {
         bind_to_cwd = false,
+        hijack_netrw_behavior = "disabled",
         follow_current_file = { enabled = true },
         use_libuv_file_watcher = true,
         filtered_items = {
@@ -62,30 +103,18 @@ return {
         width = 36,
         mappings = {
           ["l"] = "open",
+          ["<Right>"] = "open",
           ["h"] = "close_node",
+          ["<Left>"] = "close_node",
           ["<space>"] = "none",
         },
       },
     },
-    config = function(_, opts)
-      require("neo-tree").setup(opts)
-      vim.api.nvim_create_autocmd("VimEnter", {
-        once = true,
-        callback = function()
-          if #vim.api.nvim_list_uis() == 0 then
-            return
-          end
-          vim.schedule(function()
-            pcall(vim.cmd, "Neotree show position=left filesystem")
-          end)
-        end,
-      })
-    end,
     keys = {
-      { "<leader>ee", "<cmd>Neotree toggle position=left filesystem reveal<cr>", desc = "Toggle file explorer" },
-      { "<leader>ef", "<cmd>Neotree focus position=left filesystem reveal<cr>", desc = "Focus current file" },
-      { "<leader>eb", "<cmd>Neotree toggle position=left buffers<cr>", desc = "Buffer explorer" },
-      { "<leader>eg", "<cmd>Neotree toggle position=left git_status<cr>", desc = "Git explorer" },
+      { "<leader>es", "<cmd>Neotree toggle position=left filesystem reveal<cr>", desc = "Toggle file sidebar" },
+      { "<leader>ef", "<cmd>Neotree focus position=left filesystem reveal<cr>", desc = "Focus current file in sidebar" },
+      { "<leader>eb", "<cmd>Neotree toggle position=left buffers<cr>", desc = "Buffer sidebar" },
+      { "<leader>eg", "<cmd>Neotree toggle position=left git_status<cr>", desc = "Git sidebar" },
     },
   },
 
@@ -100,8 +129,7 @@ return {
       float = { padding = 2, border = "rounded" },
     },
     keys = {
-      { "-", "<cmd>Oil<cr>", desc = "Edit parent directory" },
-      { "<leader>eo", "<cmd>Oil --float<cr>", desc = "Floating Oil browser" },
+      { "<leader>eo", "<cmd>Oil --float<cr>", desc = "Floating Oil editor" },
     },
   },
 
