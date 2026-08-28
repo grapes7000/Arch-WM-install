@@ -64,7 +64,19 @@ return {
       keymap = {
         preset = "enter",
         ["<C-y>"] = { "select_and_accept" },
-        ["<Tab>"] = { "select_and_accept", "snippet_forward", "fallback" },
+        ["<Tab>"] = {
+          function()
+            local ok, vt = pcall(require, "minuet.virtualtext")
+            if ok and vt.action.is_visible() then
+              vt.action.accept()
+              return true
+            end
+            return false
+          end,
+          "select_and_accept",
+          "snippet_forward",
+          "fallback",
+        },
         ["<S-Tab>"] = { "snippet_backward", "fallback" },
       },
       appearance = {
