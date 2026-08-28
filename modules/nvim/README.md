@@ -22,6 +22,10 @@ The intended editing layout is:
 
 Yazi is the primary interactive file browser. It opens as a large floating browser because Yazi's multi-column layout is much more useful with room to show parent/current/preview columns. Neo-tree remains available as a collapsible left overview when a persistent VS Code-style sidebar is useful. Oil remains available as an editable filesystem buffer.
 
+## Plugin loading
+
+Lazy.nvim intentionally does not load every installed plugin at startup. A display such as `18/35 loaded` means 35 plugins are installed/known and 18 are currently resident. The rest load when their trigger is used, for example on `InsertEnter`, a filetype, a command such as `:CodeCompanionChat`, or opening Yazi. This is expected and keeps startup fast.
+
 ## File browsing
 
 `yazi.nvim` runs the real system Yazi inside Neovim and keeps file operations synchronized with Neovim buffers and LSP clients.
@@ -83,7 +87,8 @@ Neo-tree also maps `h/l` and the physical left/right arrow keys to collapse/open
 | `Space a e` | AI inline edit |
 | `Space a d` | Add visual selection to AI chat |
 | `Alt-y` | Manually request Minuet completion |
-| `:AIStatus` | Show active AI providers |
+| `:AIStatus` | Show active AI providers, Ollama host and model |
+| `:AIHealth` | Ping Ollama and check whether the configured model exists |
 | `:ThemeReload` | Manually reload the Arch-WM theme palette |
 
 Press Space and wait briefly to see the Which-Key menu.
@@ -124,19 +129,27 @@ Noice replaces the stock command line/messages UI. Pressing `:` opens the center
 
 ## Completion and language intelligence
 
-Blink provides fast IDE completion from LSP, paths, snippets, and the current buffer. The installer provides language servers for Lua, Python, Bash, JSON, YAML, HTML/CSS, JavaScript/TypeScript, C/C++, and QML/Qt.
+Blink provides fast IDE completion from LSP, paths, snippets, the current buffer, and Minuet AI. The installer provides language servers for Lua, Python, Bash, JSON, YAML, HTML/CSS, JavaScript/TypeScript, C/C++, and QML/Qt.
 
 Conform formats on save with LSP fallback. Trouble provides an IDE-style Problems panel. Gitsigns adds Git changes and hunk actions in the gutter. nvim-lint currently runs ShellCheck for Bash/sh.
 
-## AI: local by default
+## Terminal environment
 
-By default both chat and autocomplete use local Ollama:
+The embedded Snacks terminal explicitly launches the workstation's `zsh` as a login shell. That means it loads the same Arch-WM `.zshrc`, including Starship, the active generated Starship theme, eza icon aliases, zoxide, atuin, fzf and local overrides from `~/.zshrc.local`.
+
+The prompt and command output should therefore match a normal terminal closely. The outer window is still a Neovim terminal buffer, so Kitty-specific window chrome/padding is not reproduced inside the editor.
+
+## AI: Ollama by default
+
+Both CodeCompanion chat/inline edits and Minuet autocomplete use Ollama by default.
+
+For a remote Ollama instance, set one environment variable in the user's untracked `~/.zshrc.local`:
 
 ```bash
-ollama pull qwen2.5-coder:7b
-ollama serve
-nvim .
+export OLLAMA_HOST="http://HOST:11434"
 ```
+
+`NVIM_OLLAMA_HOST` can override that value for Neovim only. A scheme-less value is accepted and normalized to `http://`.
 
 The defaults are equivalent to:
 
@@ -147,9 +160,29 @@ NVIM_OLLAMA_MODEL=qwen2.5-coder:7b \
 nvim .
 ```
 
-`OLLAMA_HOST` can point at another Ollama host. `NVIM_OLLAMA_CONTEXT` controls Minuet's local completion context and defaults to 1024.
+Minuet uses Ollama's OpenAI-compatible `/v1/completions` endpoint for fill-in-the-middle autocomplete. The default `qwen2.5-coder:7b` model supports FIM completion. The starting context window is intentionally 512 characters for lower latency over a remote/local model; increase it with `NVIM_OLLAMA_CONTEXT` after confirming performance.
 
-Minuet uses Ollama's OpenAI-compatible `/v1/completions` endpoint for fill-in-the-middle autocomplete. The default `qwen2.5-coder:7b` model supports that workflow.
+AI completion is automatically enabled as a Blink source. `Alt-y` manually requests Minuet if an automatic suggestion has not appeared. `:Minuet blink enable` explicitly re-enables Minuet autocomplete if it was toggled off during a session.
+
+Useful checks:
+
+```vim
+:AIStatus
+:AIHealth
+:checkhealth codecompanion
+```
+
+Outside Neovim:
+
+```bash
+curl "$OLLAMA_HOST/api/tags"
+```
+
+The configured Ollama server must contain `qwen2.5-coder:7b`. Pull it on the Ollama host if needed:
+
+```bash
+ollama pull qwen2.5-coder:7b
+```
 
 ## AI: Copilot fallback
 
@@ -214,13 +247,7 @@ Inside Neovim:
 :LspInfo
 :ConformInfo
 :AIStatus
-```
-
-For local AI, also verify outside Neovim:
-
-```bash
-ollama list
-curl http://127.0.0.1:11434/api/tags
+:AIHealth
 ```
 
 ## LazyVim relationship
