@@ -1,3 +1,8 @@
+local terminal_shell = vim.fn.exepath("zsh")
+if terminal_shell == "" then
+  terminal_shell = vim.o.shell
+end
+
 return {
   {
     "catppuccin/nvim",
@@ -19,6 +24,7 @@ return {
       notifier = { enabled = true, timeout = 3000 },
       quickfile = { enabled = true },
       terminal = {
+        shell = { terminal_shell, "-l" },
         win = {
           position = "bottom",
           height = 0.30,
