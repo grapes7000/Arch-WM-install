@@ -20,6 +20,15 @@ if ! command -v nvim >/dev/null 2>&1; then
   exit 0
 fi
 
+if ! command -v curl >/dev/null 2>&1; then
+  echo "  WARNING: curl is missing; Minuet/CodeCompanion AI requests will not work" >&2
+  echo "           install it with: sudo pacman -S curl" >&2
+fi
+
+if ! command -v yazi >/dev/null 2>&1; then
+  echo "  WARNING: yazi is missing; the Neovim Yazi browser will not work" >&2
+fi
+
 if [[ ! -f "$SOURCE/init.lua" ]]; then
   echo "Neovim source config missing: $SOURCE/init.lua" >&2
   exit 1

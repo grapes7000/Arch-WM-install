@@ -42,4 +42,23 @@ return {
       { "<leader>tc", "<cmd>TSContext toggle<cr>", desc = "Toggle code context" },
     },
   },
+
+  -- Keep AI regeneration as a single insert-mode action. This optional spec
+  -- augments Minuet only when the main AI configuration enables the plugin.
+  {
+    "milanglacier/minuet-ai.nvim",
+    optional = true,
+    keys = {
+      {
+        "<M-r>",
+        function()
+          local action = require("minuet.virtualtext").action
+          action.dismiss()
+          vim.schedule(action.next)
+        end,
+        mode = "i",
+        desc = "Regenerate AI completion",
+      },
+    },
+  },
 }
