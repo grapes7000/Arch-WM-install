@@ -236,7 +236,16 @@ return {
         },
       },
       bottom = {
-        { ft = "snacks_terminal", size = { height = 0.30 } },
+        {
+          ft = "snacks_terminal",
+          size = { height = 0.30 },
+          filter = function(_buf, win)
+            return vim.w[win].snacks_win
+              and vim.w[win].snacks_win.position == "bottom"
+              and vim.w[win].snacks_win.relative == "editor"
+              and not vim.w[win].trouble_preview
+          end,
+        },
         { ft = "trouble", size = { height = 0.30 } },
         { ft = "qf", title = "Quickfix", size = { height = 0.30 } },
       },
