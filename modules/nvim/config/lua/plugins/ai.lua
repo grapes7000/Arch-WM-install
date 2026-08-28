@@ -13,6 +13,7 @@ local function normalize_url(value)
 end
 
 local ollama_host = normalize_url(vim.env.NVIM_OLLAMA_HOST or vim.env.OLLAMA_HOST)
+local curl_path = vim.fn.exepath("curl")
 
 local function codecompanion_adapter()
   if chat_provider == "copilot" then
@@ -28,11 +29,25 @@ local function codecompanion_adapter()
 end
 
 local function ollama_health()
-  vim.system({ "curl", "-fsS", "--max-time", "4", ollama_host .. "/api/tags" }, { text = true }, function(result)
+  if curl_path == "" then
+    vim.notify(
+      "curl is not available in Neovim's PATH. Install it with: sudo pacman -S curl",
+      vim.log.levels.ERROR,
+      { title = "Neovim AI" }
+    )
+    return
+  end
+
+  vim.system({ curl_path, "-fsS", "--max-time", "4", ollama_host .. "/api/tags" }, { text = true }, function(result)
     vim.schedule(function()
       if result.code ~= 0 then
         vim.notify(
-          "Cannot reach Ollama at " .. ollama_host .. "\n" .. (result.stderr or ""),
+          string.format(
+            "Cannot reach Ollama at %s\ncurl exit: %s\n%s",
+            ollama_host,
+            result.code,
+            result.stderr or ""
+          ),
           vim.log.levels.ERROR,
           { title = "Neovim AI" }
         )
@@ -57,7 +72,12 @@ local function ollama_health()
         end
       end
 
-      local message = string.format("Ollama reachable: %s\nModel: %s (%s)", ollama_host, ollama_model, found and "installed" or "NOT FOUND")
+      local message = string.format(
+        "Ollama reachable: %s\nModel: %s (%s)",
+        ollama_host,
+        ollama_model,
+        found and "installed" or "NOT FOUND"
+      )
       if #models > 0 then
         message = message .. "\nAvailable: " .. table.concat(models, ", ")
       end
@@ -88,6 +108,11 @@ return {
             return require("codecompanion.adapters").extend("ollama", {
               env = {
                 url = ollama_host,
+              },
+              schema = {
+                model = {
+                  default = ollama_model,
+                },
               },
             })
           end,
@@ -147,11 +172,12 @@ return {
       vim.api.nvim_create_user_command("AIStatus", function()
         vim.notify(
           string.format(
-            "AI chat: %s | completion: %s\nOllama: %s\nModel: %s",
+            "AI chat: %s | completion: %s\nOllama: %s\nModel: %s\ncurl: %s",
             chat_provider,
             completion_provider,
             ollama_host,
-            ollama_model
+            ollama_model,
+            curl_path ~= "" and curl_path or "MISSING"
           ),
           vim.log.levels.INFO,
           { title = "Neovim AI" }
@@ -166,53 +192,69 @@ return {
     event = "InsertEnter",
     enabled = completion_provider == "ollama" or completion_provider == "openai",
     opts = function()
-      if completion_provider == "openai" then
-        return {
-          provider = "openai",
-          n_completions = 1,
-          context_window = 4096,
-          throttle = 800,
-          debounce = 300,
-          request_timeout = 5.0,
-          provider_options = {
-            openai = {
-              model = openai_model,
-              api_key = "OPENAI_API_KEY",
-              optional = {
-                max_completion_tokens = 128,
-                reasoning_effort = "none",
-              },
-            },
-          },
-        }
-      end
-
-      return {
-        provider = "openai_fim_compatible",
+      local common = {
         n_completions = 1,
-        context_window = tonumber(vim.env.NVIM_OLLAMA_CONTEXT) or 512,
+        add_single_line_entry = false,
         throttle = 900,
-        debounce = 300,
+        debounce = 350,
         request_timeout = 5.0,
-        blink = {
-          enable_auto_complete = true,
-        },
-        provider_options = {
-          openai_fim_compatible = {
-            name = "Ollama",
-            end_point = ollama_host .. "/v1/completions",
-            model = ollama_model,
-            api_key = function()
-              return "ollama"
-            end,
-            optional = {
-              max_tokens = 64,
-              top_p = 0.9,
-              stop = { "\n\n" },
-            },
+        curl_cmd = curl_path ~= "" and curl_path or "curl",
+        virtualtext = {
+          auto_trigger_ft = { "*" },
+          auto_trigger_ignore_ft = {
+            "TelescopePrompt",
+            "neo-tree",
+            "snacks_terminal",
+            "yazi",
+            "codecompanion",
+            "lazy",
+            "help",
+          },
+          show_on_completion_menu = true,
+          keymap = {
+            accept = "<M-l>",
+            accept_line = "<M-j>",
+            next = "<M-y>",
+            prev = "<M-[>",
+            dismiss = "<C-]>",
           },
         },
       }
+
+      if completion_provider == "openai" then
+        common.provider = "openai"
+        common.context_window = 4096
+        common.provider_options = {
+          openai = {
+            model = openai_model,
+            api_key = "OPENAI_API_KEY",
+            optional = {
+              max_completion_tokens = 128,
+              reasoning_effort = "none",
+            },
+          },
+        }
+        return common
+      end
+
+      common.provider = "openai_fim_compatible"
+      common.context_window = tonumber(vim.env.NVIM_OLLAMA_CONTEXT) or 512
+      common.provider_options = {
+        openai_fim_compatible = {
+          name = "Ollama",
+          end_point = ollama_host .. "/v1/completions",
+          model = ollama_model,
+          api_key = function()
+            return "ollama"
+          end,
+          optional = {
+            max_tokens = 64,
+            top_p = 0.9,
+            stop = { "\n\n" },
+          },
+        },
+      }
+      return common
     end,
   },
 
@@ -224,45 +266,29 @@ return {
         return opts
       end
 
+      -- AI completion uses Minuet virtual text instead of the Blink popup.
+      -- Blink remains focused on fast LSP/path/snippet/buffer completion.
       opts.sources = opts.sources or {}
       opts.sources.default = opts.sources.default or { "lsp", "path", "snippets", "buffer" }
-      if not vim.tbl_contains(opts.sources.default, "minuet") then
-        table.insert(opts.sources.default, 1, "minuet")
+      for index = #opts.sources.default, 1, -1 do
+        if opts.sources.default[index] == "minuet" then
+          table.remove(opts.sources.default, index)
+        end
       end
-      opts.sources.providers = opts.sources.providers or {}
-      opts.sources.providers.minuet = {
-        name = "minuet",
-        module = "minuet.blink",
-        async = true,
-        timeout_ms = 5000,
-        score_offset = 50,
-      }
+
       opts.keymap = opts.keymap or {}
-      opts.keymap["<M-y>"] = require("minuet").make_blink_map()
-      opts.completion = opts.completion or {}
-      opts.completion.trigger = opts.completion.trigger or {}
-      opts.completion.trigger.prefetch_on_insert = false
-      opts.completion.menu = opts.completion.menu or {}
-      opts.completion.menu.draw = opts.completion.menu.draw or {}
-      opts.completion.menu.draw.components = opts.completion.menu.draw.components or {}
-      opts.completion.menu.draw.components.source_icon = {
-        ellipsis = false,
-        text = function(ctx)
-          local icons = {
-            minuet = "󱗻",
-            lsp = "",
-            path = "",
-            snippets = "",
-            buffer = "",
-          }
-          return icons[ctx.source_name:lower()] or "󰜚"
+      opts.keymap["<Tab>"] = {
+        function()
+          local ok, vt = pcall(require, "minuet.virtualtext")
+          if ok and vt.action.is_visible() then
+            vt.action.accept()
+            return true
+          end
+          return false
         end,
-        highlight = "BlinkCmpSource",
-      }
-      opts.completion.menu.draw.columns = {
-        { "label", "label_description", gap = 1 },
-        { "kind_icon", "kind" },
-        { "source_icon" },
+        "select_and_accept",
+        "snippet_forward",
+        "fallback",
       }
       return opts
     end,
