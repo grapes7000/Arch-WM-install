@@ -12,7 +12,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from installer.runtime import manifest
+from installer.runtime import configured_services, manifest, services_apply
 from installer.runtime import Context, Options
 from installer.state import StateStore
 from installer.entry import (
@@ -40,6 +40,46 @@ class ManifestTests(unittest.TestCase):
             self.assertTrue(profile["manifests"])
             for filename in profile["manifests"]:
                 self.assertTrue((ROOT / "manifests" / filename).is_file(), filename)
+
+
+class OptionalServiceTests(unittest.TestCase):
+    class FakeContext:
+        def __init__(self, tailscale_installed: bool) -> None:
+            self.profile = {"services": ["NetworkManager"]}
+            self.options = type("Options", (), {"dry_run": True})()
+            self.state = None
+            self.tailscale_installed = tailscale_installed
+            self.commands: list[list[str]] = []
+            self.messages: list[str] = []
+
+        def has(self, command: str) -> bool:
+            return command == "tailscale" and self.tailscale_installed
+
+        def service_enabled(self, service: str) -> bool:
+            return False
+
+        def emit(self, message: str) -> None:
+            self.messages.append(message)
+
+        def run(self, command: list[str], **kwargs: object) -> None:
+            self.commands.append(command)
+
+    def test_tailscale_service_is_configured_when_installed(self) -> None:
+        ctx = self.FakeContext(tailscale_installed=True)
+        self.assertEqual(
+            configured_services(ctx), ["NetworkManager", "tailscaled.service"]
+        )
+        services_apply(ctx)
+        self.assertIn(
+            ["systemctl", "enable", "--now", "tailscaled.service"], ctx.commands
+        )
+
+    def test_missing_tailscale_is_skipped_without_running_its_service(self) -> None:
+        ctx = self.FakeContext(tailscale_installed=False)
+        self.assertEqual(configured_services(ctx), ["NetworkManager"])
+        services_apply(ctx)
+        self.assertFalse(any("tailscaled.service" in command for command in ctx.commands))
+        self.assertTrue(any("optional service skipped" in msg for msg in ctx.messages))
 
 
 class StateTests(unittest.TestCase):

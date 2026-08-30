@@ -55,11 +55,11 @@ class QuickshellDefaultTests(unittest.TestCase):
             self.assertTrue(marker.is_file())
             self.assertFalse(existing.is_symlink())
 
-    def test_autostart_uses_plain_qs_with_safe_named_fallback(self) -> None:
+    def test_autostart_uses_the_named_arch_wm_instance(self) -> None:
         text = AUTOSTART.read_text(encoding="utf-8")
         self.assertIn("ensure-quickshell-default.sh", text)
-        self.assertIn("qs --no-duplicate;", text)
         self.assertIn("qs --no-duplicate --config arch-wm", text)
+        self.assertNotIn("&& qs --no-duplicate;", text)
 
 
 if __name__ == "__main__":

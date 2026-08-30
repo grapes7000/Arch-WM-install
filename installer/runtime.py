@@ -27,6 +27,7 @@ STAGE_ORDER = (
     "50-hyprland",
     "60-quickshell",
     "70-services",
+    "75-login",
     "80-session",
     "85-dotfiles",
     "90-validate",
@@ -408,12 +409,31 @@ def shell_verify(ctx: Context) -> bool:
     )
 
 
+OPTIONAL_SERVICES = {
+    # Tailscale is not part of the Arch-WM package manifests, but if the user
+    # installed it separately its daemon should be ready before desktop login.
+    "tailscale": "tailscaled.service",
+}
+
+
+def configured_services(ctx: Context) -> list[str]:
+    services = list(ctx.profile.get("services", []))
+    services.extend(
+        service for command, service in OPTIONAL_SERVICES.items() if ctx.has(command)
+    )
+    return services
+
+
 def services_check(ctx: Context) -> bool:
-    return all(ctx.service_enabled(name) for name in ctx.profile.get("services", []))
+    return all(ctx.service_enabled(name) for name in configured_services(ctx))
 
 
 def services_apply(ctx: Context) -> None:
-    for name in ctx.profile.get("services", []):
+    for command, name in OPTIONAL_SERVICES.items():
+        if not ctx.has(command):
+            ctx.emit(f"  optional service skipped: {name} ({command} is not installed)")
+
+    for name in configured_services(ctx):
         if ctx.service_enabled(name):
             ctx.emit(f"  already enabled: {name}")
             continue
@@ -425,7 +445,88 @@ def services_apply(ctx: Context) -> None:
 
 def services_verify(ctx: Context) -> bool:
     return ctx.options.dry_run or all(
-        ctx.service_enabled(name) for name in ctx.profile.get("services", [])
+        ctx.service_enabled(name) for name in configured_services(ctx)
+    )
+
+
+def _install_system_file(ctx: Context, source: Path, target: Path) -> None:
+    """Install a root-owned file while retaining normal rollback metadata."""
+    assert ctx.state is not None
+    if target.is_file():
+        try:
+            if source.read_bytes() == target.read_bytes():
+                ctx.emit(f"  unchanged {target}")
+                return
+        except OSError:
+            pass
+    ctx._own(target)
+    ctx.run(["install", "-D", "-m", "0644", str(source), str(target)], sudo=True)
+
+
+def login_check(ctx: Context) -> bool:
+    source = ctx.root / "modules/login/greetd"
+    adapter_source = ctx.root / "modules/login/bin/arch-wm-regreet-theme"
+    adapter_target = ctx.home / ".local/bin/arch-wm-regreet-theme"
+    try:
+        payload_current = all(
+            (source / name).read_bytes() == (Path("/etc/greetd") / name).read_bytes()
+            for name in ("config.toml", "regreet.toml")
+        ) and adapter_source.read_bytes() == adapter_target.read_bytes()
+    except OSError:
+        payload_current = False
+    return (
+        ctx.package_installed("greetd")
+        and ctx.package_installed("greetd-regreet")
+        and ctx.package_installed("cage")
+        and Path("/etc/greetd/config.toml").is_file()
+        and Path("/etc/greetd/regreet.toml").is_file()
+        and ctx.service_enabled("greetd.service")
+        and payload_current
+    )
+
+
+def login_apply(ctx: Context) -> None:
+    """Install a themed ReGreet login without starting it over this session."""
+    source = ctx.root / "modules/login/greetd"
+    adapter = ctx.home / ".local/bin/arch-wm-regreet-theme"
+    ctx.install(
+        ctx.root / "modules/login/bin/arch-wm-regreet-theme",
+        adapter,
+        executable=True,
+    )
+    for name in ("config.toml", "regreet.toml"):
+        _install_system_file(ctx, source / name, Path("/etc/greetd") / name)
+
+    # The logged-in user publishes non-secret appearance assets here. The
+    # setgid greeter directory makes newly generated files readable by ReGreet.
+    ctx.run(
+        [
+            "install", "-d", "-o", str(os.getuid()), "-g", "greeter", "-m", "2750",
+            "/var/lib/arch-wm-greeter",
+        ],
+        sudo=True,
+    )
+    if not ctx.options.dry_run:
+        ctx.run([str(adapter), "--once"])
+
+    # Replace stale/broken display-manager selections. Do not start greetd now:
+    # doing so from a live graphical session can seize its VT.
+    ctx.run(["systemctl", "disable", "ly@tty2.service"], sudo=True, check=False)
+    ctx.run(["systemctl", "enable", "--force", "greetd.service"], sudo=True)
+    if not ctx.options.dry_run and ctx.service_enabled("greetd.service"):
+        assert ctx.state is not None
+        ctx.state.record_enabled_service("greetd.service")
+
+
+def login_verify(ctx: Context) -> bool:
+    if ctx.options.dry_run:
+        return True
+    return login_check(ctx) and all(
+        path.is_file()
+        for path in (
+            Path("/var/lib/arch-wm-greeter/regreet.css"),
+            Path("/var/lib/arch-wm-greeter/background.png"),
+        )
     )
 
 
@@ -519,6 +620,7 @@ STAGES = (
     Stage("50-hyprland", hypr_check, hypr_apply, hypr_verify),
     Stage("60-quickshell", shell_check, shell_apply, shell_verify),
     Stage("70-services", services_check, services_apply, services_verify),
+    Stage("75-login", login_check, login_apply, login_verify),
     Stage("80-session", session_check, session_apply, session_verify),
     Stage("85-dotfiles", dotfiles_check, dotfiles_apply, dotfiles_verify),
     Stage("90-validate", validate_check, validate_apply, validate_verify),

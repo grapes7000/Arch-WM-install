@@ -104,6 +104,7 @@ def doctor_command(ctx: runtime.Context) -> int:
             or (ctx.config / "hypr/generated/theme.conf").is_file()
         ),
         "shell payload current": entry.shell_check(ctx),
+        "ReGreet login": runtime.login_check(ctx),
     }
     if ctx.profile.get("dotfiles"):
         checks["Chezmoi source"] = ctx.has("chezmoi") and (ctx.data / "chezmoi").is_dir()

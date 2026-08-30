@@ -118,8 +118,11 @@ class StructureTests(unittest.TestCase):
             ROOT / "modules/hyprland/config/.arch-wm-version"
         ).read_text(encoding="utf-8").strip()
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
+        self.assertNotIn("&& qs --no-duplicate;", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
         self.assertIn("theme-sync.py", autostart)
+        self.assertIn("command -v dunst >/dev/null 2>&1 && dunst", autostart)
+        self.assertIn("arch-wm-regreet-theme --watch", autostart)
         self.assertEqual(version, "2026.08.07.5")
 
     def test_universal_theme_contract_drives_shell_and_hyprland(self) -> None:

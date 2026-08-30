@@ -1,0 +1,26 @@
+skip_selection = false
+
+[background]
+path = "/var/lib/arch-wm-greeter/background.png"
+fit = "Cover"
+
+[GTK]
+application_prefer_dark_theme = true
+cursor_theme_name = "Adwaita"
+cursor_blink = true
+font_name = "JetBrainsMono Nerd Font 14"
+icon_theme_name = "Adwaita"
+theme_name = "Adwaita"
+
+[commands]
+reboot = ["systemctl", "reboot"]
+poweroff = ["systemctl", "poweroff"]
+
+[appearance]
+greeting_msg = "Welcome back"
+
+[widget.clock]
+format = "%a, %b %-d  %H:%M"
+resolution = "1s"
+timezone = "America/Los_Angeles"
+label_width = 220

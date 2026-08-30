@@ -13,13 +13,17 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("command -v udiskie >/dev/null 2>&1 && udiskie --tray")
     hl.exec_cmd("command -v hyprpaper >/dev/null 2>&1 && hyprpaper")
     hl.exec_cmd("command -v hypridle >/dev/null 2>&1 && hypridle")
+    hl.exec_cmd("command -v dunst >/dev/null 2>&1 && dunst")
+    hl.exec_cmd(
+        "command -v arch-wm-regreet-theme >/dev/null 2>&1 && "
+        .. "arch-wm-regreet-theme --watch"
+    )
     hl.exec_cmd(
         "pkill -f '/.config/hypr/scripts/theme-sync.py' >/dev/null 2>&1 || true; "
         .. "python ~/.config/hypr/scripts/theme-sync.py >/dev/null 2>&1 &"
     )
     hl.exec_cmd(
-        "if sh ~/.config/hypr/scripts/ensure-quickshell-default.sh; then "
-        .. "command -v qs >/dev/null 2>&1 && qs --no-duplicate; "
-        .. "else command -v qs >/dev/null 2>&1 && qs --no-duplicate --config arch-wm; fi"
+        "sh ~/.config/hypr/scripts/ensure-quickshell-default.sh; "
+        .. "command -v qs >/dev/null 2>&1 && qs --no-duplicate --config arch-wm"
     )
 end)
