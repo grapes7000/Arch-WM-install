@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "bluetooth",
+  "name": "Bluetooth",
+  "entry": "Widget.qml",
+  "surfaces": ["bar", "desktop"],
+  "variants": ["compact", "standard"],
+  "lockSafe": false,
+  "services": ["bluetooth"],
+  "capabilities": ["drawer.open"],
+  "constraints": {
+    "compact": {"minWidth": 28, "minHeight": 24},
+    "standard": {"minWidth": 120, "minHeight": 48}
+  }
+}

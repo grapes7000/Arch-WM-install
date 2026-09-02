@@ -12,6 +12,7 @@ QtObject {
     readonly property var validKinds: [
         "calendar",
         "audio",
+        "bluetooth",
         "network",
         "system",
         "notifications",

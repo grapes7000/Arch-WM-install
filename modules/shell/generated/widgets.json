@@ -74,6 +74,16 @@
       "capabilities": ["audio.control", "drawer.open"]
     },
     {
+      "id": "bluetooth",
+      "name": "Bluetooth",
+      "entry": "Widget.qml",
+      "surfaces": ["bar", "desktop"],
+      "variants": ["compact", "standard"],
+      "lockSafe": false,
+      "services": ["bluetooth"],
+      "capabilities": ["drawer.open"]
+    },
+    {
       "id": "network",
       "name": "Network",
       "entry": "Widget.qml",
