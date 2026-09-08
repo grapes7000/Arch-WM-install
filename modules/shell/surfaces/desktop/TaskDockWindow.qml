@@ -199,7 +199,7 @@ PanelWindow {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Core.Theme.gap
             color: Core.Theme.alphaColor(Core.Theme.surface, 0.58)
-            radius: Math.min(height / 2, Core.Theme.radius * 2)
+            radius: Math.min(height / 2, Core.Theme.radius * 2.25)
             border.width: 0
             opacity: root.shown ? 1 : 0
             transform: Translate {
@@ -265,23 +265,29 @@ PanelWindow {
 
                             IconImage {
                                 anchors.centerIn: parent
-                                width: parent.width - Core.Theme.gap * 0.5
+                                width: parent.width
                                 height: width
                                 source: Quickshell.iconPath(modelData.icon, true)
                             }
                         }
 
                         Rectangle {
-                            visible: modelData.windows.length > 0
-                            width: modelData.active ? 14 : 7
-                            height: 4
+                            width: modelData.active ? 16 : 9
+                            height: 5
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.bottom: parent.bottom
-                            anchors.bottomMargin: -Math.max(2, Core.Theme.gap / 4)
+                            anchors.bottomMargin: -Math.max(3, Core.Theme.gap / 2)
                             radius: height / 2
-                            color: modelData.urgent ? Core.Theme.urgent : Core.Theme.accent
+                            color: modelData.urgent ? Core.Theme.urgent
+                                : (modelData.active ? Core.Theme.accent : Core.Theme.foreground)
+                            opacity: modelData.running ? 1 : 0
                             z: 2
 
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: Math.max(100, Core.Theme.animationMs)
+                                }
+                            }
                             Behavior on width {
                                 NumberAnimation {
                                     duration: Math.max(100, Core.Theme.animationMs)

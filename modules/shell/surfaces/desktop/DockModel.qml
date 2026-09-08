@@ -138,6 +138,7 @@ QtObject {
                         ? identity.entry.icon : "application-x-executable",
                     desktopId: identity.entry ? identity.entry.id : "",
                     pinned: false,
+                    running: true,
                     windows: [],
                     active: false,
                     urgent: false
@@ -163,6 +164,7 @@ QtObject {
                     icon: entry.icon || "application-x-executable",
                     desktopId,
                     pinned: true,
+                    running: false,
                     windows: [],
                     active: false,
                     urgent: false

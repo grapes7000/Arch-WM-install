@@ -85,6 +85,7 @@ class StructureTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("property var favoriteIds: []", dock_model)
         self.assertIn("pinned: true", dock_model)
+        self.assertIn("running: true", dock_model)
         self.assertNotIn("entry: identity.entry", dock_model)
         self.assertIn(
             "favoriteIds: Services.LauncherStateService.favorites",
@@ -97,13 +98,13 @@ class StructureTests(unittest.TestCase):
         self.assertIn("acceptedButtons: Qt.RightButton", dock_window)
         self.assertIn("border.width: 0", dock_window)
         self.assertIn(
-            "radius: Math.min(height / 2, Core.Theme.radius * 2)",
+            "radius: Math.min(height / 2, Core.Theme.radius * 2.25)",
             dock_window,
         )
         self.assertIn("Math.abs(index - root.hoveredGroupIndex)", dock_window)
-        self.assertIn("width: parent.width - Core.Theme.gap * 0.5", dock_window)
-        self.assertIn("visible: modelData.windows.length > 0", dock_window)
-        self.assertIn("anchors.bottomMargin: -Math.max(2, Core.Theme.gap / 4)", dock_window)
+        self.assertIn("width: parent.width", dock_window)
+        self.assertIn("opacity: modelData.running ? 1 : 0", dock_window)
+        self.assertIn("anchors.bottomMargin: -Math.max(3, Core.Theme.gap / 2)", dock_window)
         self.assertIn("target: iconVisual", dock_window)
         self.assertNotIn("onExited:", dock_window)
         self.assertNotIn(
@@ -293,7 +294,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.09.07.3")
+        self.assertEqual(version, "2026.09.07.4")
 
 
 if __name__ == "__main__":

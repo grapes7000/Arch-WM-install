@@ -65,6 +65,7 @@ TestCase {
         compare(pinnedOnly.length, 1)
         compare(pinnedOnly[0].desktopId, "org.mozilla.firefox.desktop")
         compare(pinnedOnly[0].pinned, true)
+        compare(pinnedOnly[0].running, false)
         compare(pinnedOnly[0].windows.length, 0)
 
         const merged = model.buildGroups([
@@ -72,6 +73,7 @@ TestCase {
         ], entries, "DP-1", ["org.mozilla.firefox.desktop"])
         compare(merged.length, 1)
         compare(merged[0].pinned, true)
+        compare(merged[0].running, true)
         compare(merged[0].windows.length, 1)
     }
 

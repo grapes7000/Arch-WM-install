@@ -99,7 +99,7 @@ class ProfessionalHomepageTests(unittest.TestCase):
 
     def test_managed_shell_version_is_bumped(self) -> None:
         version = (ROOT / "modules/shell/.arch-wm-version").read_text(encoding="utf-8").strip()
-        self.assertEqual(version, "2026.09.07.3")
+        self.assertEqual(version, "2026.09.07.4")
 
 
 if __name__ == "__main__":
