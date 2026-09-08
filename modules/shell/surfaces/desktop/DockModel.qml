@@ -136,7 +136,6 @@ QtObject {
                         ? identity.entry.name : identity.appIdentity,
                     icon: identity.entry && identity.entry.icon
                         ? identity.entry.icon : "application-x-executable",
-                    entry: identity.entry,
                     desktopId: identity.entry ? identity.entry.id : "",
                     pinned: false,
                     windows: [],
@@ -162,7 +161,6 @@ QtObject {
                     key: identity.key,
                     name: entry.name || desktopId,
                     icon: entry.icon || "application-x-executable",
-                    entry,
                     desktopId,
                     pinned: true,
                     windows: [],
@@ -171,7 +169,6 @@ QtObject {
                 }
                 byKey[identity.key] = group
             } else {
-                group.entry = entry
                 group.desktopId = desktopId
                 group.pinned = true
             }

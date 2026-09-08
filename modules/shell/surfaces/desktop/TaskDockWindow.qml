@@ -80,10 +80,11 @@ PanelWindow {
         if (!group)
             return
         if (group.windows.length === 0) {
-            if (!group.entry)
+            const entry = group.desktopId ? DesktopEntries.byId(group.desktopId) : null
+            if (!entry)
                 return
             Services.LauncherStateService.recordLaunch(group.desktopId)
-            group.entry.execute()
+            entry.execute()
             close()
             return
         }
@@ -198,7 +199,7 @@ PanelWindow {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Core.Theme.gap
             color: Core.Theme.alphaColor(Core.Theme.surface, 0.58)
-            radius: Math.min(height / 2, Core.Theme.radius * 1.5)
+            radius: Math.min(height / 2, Core.Theme.radius * 2)
             border.width: 0
             opacity: root.shown ? 1 : 0
             transform: Translate {
@@ -264,26 +265,27 @@ PanelWindow {
 
                             IconImage {
                                 anchors.centerIn: parent
-                                width: parent.width - Core.Theme.gap
+                                width: parent.width - Core.Theme.gap * 0.5
                                 height: width
                                 source: Quickshell.iconPath(modelData.icon, true)
                             }
+                        }
 
-                            Rectangle {
-                                visible: modelData.windows.length > 0
-                                width: modelData.active ? 12 : 6
-                                height: 4
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                radius: height / 2
-                                color: modelData.urgent ? Core.Theme.urgent
-                                    : (modelData.active ? Core.Theme.accent : Core.Theme.accent2)
+                        Rectangle {
+                            visible: modelData.windows.length > 0
+                            width: modelData.active ? 14 : 7
+                            height: 4
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: -Math.max(2, Core.Theme.gap / 4)
+                            radius: height / 2
+                            color: modelData.urgent ? Core.Theme.urgent : Core.Theme.accent
+                            z: 2
 
-                                Behavior on width {
-                                    NumberAnimation {
-                                        duration: Math.max(100, Core.Theme.animationMs)
-                                        easing.type: Easing.OutCubic
-                                    }
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Math.max(100, Core.Theme.animationMs)
+                                    easing.type: Easing.OutCubic
                                 }
                             }
                         }

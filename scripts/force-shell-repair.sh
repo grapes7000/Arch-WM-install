@@ -37,14 +37,24 @@ fi
 
 mkdir -p "$STATE"
 qs kill -c arch-wm >/dev/null 2>&1 || true
-for _ in {1..20}; do
-    if ! qs list -c arch-wm 2>/dev/null | grep -q '^Instance '; then
-        break
+# A crashed Quickshell process may spend up to ten seconds in its recovery
+# path before registering a replacement instance. Require an uninterrupted
+# quiet window after the last recovered instance is stopped.
+quiet_ticks=0
+for _ in {1..300}; do
+    if qs list -c arch-wm 2>/dev/null | grep -q '^Instance '; then
+        qs kill -c arch-wm >/dev/null 2>&1 || true
+        quiet_ticks=0
+    else
+        quiet_ticks=$((quiet_ticks + 1))
+        if ((quiet_ticks >= 110)); then
+            break
+        fi
     fi
     sleep 0.1
 done
-if qs list -c arch-wm 2>/dev/null | grep -q '^Instance '; then
-    echo 'Repair aborted: the existing Quickshell instance did not stop.' >&2
+if ((quiet_ticks < 110)); then
+    echo 'Repair aborted: Quickshell did not remain stopped.' >&2
     exit 1
 fi
 nohup qs --no-duplicate --config arch-wm >"$LOG" 2>&1 &
