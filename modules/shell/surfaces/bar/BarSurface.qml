@@ -14,10 +14,23 @@ Scope {
 
     MenuPopup { id: menuPopup }
 
-    function close() {
+    function open(screen) {
         if (menuPopup.menuOpen)
-            menuPopup.toggle()
+            return true
+        if (!Core.InteractiveShellController.prepareMenuOpen())
+            return false
+        menuPopup.targetScreen = screen
+        menuPopup.menuOpen = true
         return true
+    }
+
+    function close() {
+        menuPopup.close()
+        return true
+    }
+
+    function toggle(screen) {
+        return menuPopup.menuOpen ? close() : open(screen)
     }
 
     Binding {
@@ -71,6 +84,11 @@ Scope {
                 radius: Core.Theme.barRadius
                 border.width: Core.Theme.barOutlineWidth
                 border.color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, Core.Theme.barOutlineOpacity)
+
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: Core.InteractiveShellController.menu("open", root.screen)
+                }
 
                 RowLayout {
                     anchors.fill: parent
@@ -213,9 +231,7 @@ Scope {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        if (menuPopup.menuOpen
-                                                || Core.InteractiveShellController.prepareMenuOpen())
-                                            menuPopup.toggle()
+                                        barScope.toggle(root.screen)
                                     }
                                 }
                             }

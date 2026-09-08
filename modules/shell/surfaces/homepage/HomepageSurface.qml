@@ -135,6 +135,11 @@ Scope {
                 anchors.fill: parent
                 opacity: root.anyWindowOpen ? 0 : 1
 
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: Core.InteractiveShellController.menu("open", root.screen)
+                }
+
                 Behavior on opacity {
                     NumberAnimation {
                         duration: Math.round(Core.Theme.animationMs * 2

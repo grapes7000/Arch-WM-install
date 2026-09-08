@@ -221,7 +221,7 @@ PanelWindow {
 
             TapHandler {
                 acceptedButtons: Qt.RightButton
-                onTapped: Core.InteractiveShellController.launcher("open")
+                onTapped: Core.InteractiveShellController.menu("open", root.screen)
             }
 
             Row {

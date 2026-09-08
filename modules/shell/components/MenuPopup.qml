@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "../core" as Core
 import "../services" as Services
 
@@ -10,6 +11,7 @@ PanelWindow {
     property bool menuOpen: false
     property string currentWidget: ""
     property string currentWidgetName: ""
+    property var targetScreen: null
 
     readonly property color insetFill: Core.Theme.alphaColor(
         Core.Theme.surfaceHover,
@@ -21,7 +23,7 @@ PanelWindow {
     )
 
     visible: menuOpen
-    screen: Quickshell.screens[0]
+    screen: targetScreen || Quickshell.screens[0]
 
     anchors {
         top: true
@@ -53,6 +55,48 @@ PanelWindow {
         menuOpen = true
         currentWidget = kind
         currentWidgetName = definition ? definition.name : kind
+    }
+
+    function runQuickAction(action) {
+        if (action === "launcher") {
+            close()
+            Core.InteractiveShellController.launcher("open")
+        } else if (action === "monitor") {
+            close()
+            if (!systemMonitorProcess.running)
+                systemMonitorProcess.running = true
+        } else if (action === "theme") {
+            close()
+            if (!themeProcess.running)
+                themeProcess.running = true
+        } else if (action === "home") {
+            close()
+            Core.InteractiveShellController.homepage("toggle")
+        } else if (action === "lock") {
+            close()
+            Services.SessionService.lock()
+        } else if (action === "session") {
+            close()
+            Core.InteractiveShellController.drawersOpen("session", "")
+        }
+    }
+
+    Process {
+        id: systemMonitorProcess
+        command: [
+            "sh", "-lc",
+            "if command -v missioncenter >/dev/null 2>&1; then exec missioncenter; "
+            + "elif command -v resources >/dev/null 2>&1; then exec resources; "
+            + "elif command -v gnome-system-monitor >/dev/null 2>&1; then exec gnome-system-monitor; "
+            + "elif command -v plasma-systemmonitor >/dev/null 2>&1; then exec plasma-systemmonitor; "
+            + "elif command -v btop >/dev/null 2>&1; then exec kitty --class system-monitor -e btop; "
+            + "else exec notify-send 'System monitor' 'Install Mission Center, Resources, or btop'; fi"
+        ]
+    }
+
+    Process {
+        id: themeProcess
+        command: ["kitty", "--class", "theme-picker", "-e", "term", "theme"]
     }
 
     MouseArea {
@@ -211,6 +255,66 @@ PanelWindow {
                             font.pixelSize: Core.UiStyle.fontBody
                             horizontalAlignment: Text.AlignHCenter
                             Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                }
+
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: 3
+                    columnSpacing: Core.UiStyle.spacingXs
+                    rowSpacing: Core.UiStyle.spacingXs
+
+                    Repeater {
+                        model: [
+                            { action: "launcher", icon: "󰍉", label: "Apps" },
+                            { action: "monitor", icon: "󰍛", label: "Monitor" },
+                            { action: "theme", icon: "󰏘", label: "Theme" },
+                            { action: "home", icon: "󰋜", label: "Home" },
+                            { action: "lock", icon: "󰌾", label: "Lock" },
+                            { action: "session", icon: "󰐥", label: "Session" }
+                        ]
+
+                        Rectangle {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Core.UiStyle.controlHeightLarge
+                            radius: Core.UiStyle.radiusControl
+                            color: quickActionArea.containsMouse
+                                ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.62)
+                                : popup.insetFill
+                            border.width: Core.UiStyle.borderWidth
+                            border.color: quickActionArea.containsMouse
+                                ? Core.Theme.alphaColor(Core.Theme.accent, 0.52)
+                                : popup.insetBorder
+
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 1
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: parent.parent.modelData.icon
+                                    color: Core.Theme.foreground
+                                    font.family: Core.Theme.fontFamily
+                                    font.pixelSize: Core.UiStyle.iconSize + 2
+                                }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: parent.parent.modelData.label
+                                    color: Core.Theme.muted
+                                    font.family: Core.Theme.fontFamily
+                                    font.pixelSize: Core.UiStyle.fontCaption
+                                }
+                            }
+
+                            MouseArea {
+                                id: quickActionArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: popup.runQuickAction(modelData.action)
+                            }
+                            PressBounce { pressed: quickActionArea.pressed }
                         }
                     }
                 }

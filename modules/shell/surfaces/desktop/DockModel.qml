@@ -31,6 +31,12 @@ QtObject {
                                                       root.favoriteIds)
     }
 
+    property Connections sourceModelConnections: Connections {
+        target: root.sourceToplevels
+        ignoreUnknownSignals: true
+        function onValuesChanged() { root.rebuildTimer.restart() }
+    }
+
     function valuesOf(model) {
         if (!model)
             return []

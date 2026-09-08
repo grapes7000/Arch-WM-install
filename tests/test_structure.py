@@ -75,6 +75,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("property var groups: []", dock_model)
         self.assertNotIn("readonly property var groups: buildGroups(", dock_model)
         self.assertIn("onSourceToplevelsChanged: rebuildTimer.restart()", dock_model)
+        self.assertIn("function onValuesChanged()", dock_model)
 
     def test_dock_supports_pinning_launcher_and_hover_wave(self) -> None:
         dock_model = (
@@ -92,7 +93,7 @@ class StructureTests(unittest.TestCase):
             dock_window,
         )
         self.assertIn(
-            'Core.InteractiveShellController.launcher("open")',
+            'Core.InteractiveShellController.menu("open", root.screen)',
             dock_window,
         )
         self.assertIn("acceptedButtons: Qt.RightButton", dock_window)
@@ -110,6 +111,33 @@ class StructureTests(unittest.TestCase):
         self.assertNotIn(
             "color: groupMouse.containsMouse || modelData.active",
             dock_window,
+        )
+
+    def test_shell_context_menu_is_host_owned(self) -> None:
+        menu = (ROOT / "modules/shell/components/MenuPopup.qml").read_text(
+            encoding="utf-8"
+        )
+        controller = (
+            ROOT / "modules/shell/core/InteractiveShellController.qml"
+        ).read_text(encoding="utf-8")
+        bar = (
+            ROOT / "modules/shell/surfaces/bar/BarSurface.qml"
+        ).read_text(encoding="utf-8")
+        homepage = (
+            ROOT / "modules/shell/surfaces/homepage/HomepageSurface.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("function menu(action, screen)", controller)
+        self.assertIn("function runQuickAction(action)", menu)
+        self.assertIn("missioncenter", menu)
+        self.assertIn('action: "theme"', menu)
+        self.assertIn('action: "lock"', menu)
+        self.assertIn(
+            'Core.InteractiveShellController.menu("open", root.screen)',
+            bar,
+        )
+        self.assertIn(
+            'Core.InteractiveShellController.menu("open", root.screen)',
+            homepage,
         )
 
     def test_theme_reload_helpers_are_bounded(self) -> None:
@@ -294,7 +322,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.09.07.4")
+        self.assertEqual(version, "2026.09.07.5")
 
 
 if __name__ == "__main__":

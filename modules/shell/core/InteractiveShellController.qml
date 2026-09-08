@@ -64,6 +64,15 @@ QtObject {
         return invoke(root.dockController, action, [screen])
     }
 
+    function menu(action, screen) {
+        if (root.locked)
+            return false
+        const targetScreen = screen || ScreenResolver.resolve("")
+        if (!targetScreen)
+            return false
+        return invoke(root.menuController, action, [targetScreen])
+    }
+
     function homepage(action) {
         if (action === "show")
             root.homepageVisible = true
