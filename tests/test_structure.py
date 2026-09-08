@@ -74,8 +74,34 @@ class StructureTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("property var groups: []", dock_model)
         self.assertNotIn("readonly property var groups: buildGroups(", dock_model)
-        self.assertIn("onSourceToplevelsChanged: rebuildTimer.restart()", dock_model)
+        self.assertIn("onSourceToplevelsChanged: restartSettle()", dock_model)
         self.assertIn("function onValuesChanged()", dock_model)
+
+    def test_dock_model_tracks_late_toplevel_data(self) -> None:
+        """Hyprland toplevels are published before monitor/ipc/focus data lands.
+
+        A rebuild driven only by list membership sees monitor === null, rejects
+        every window, and leaves the dock stuck with no running apps.
+        """
+        dock_model = (
+            ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("property Instantiator toplevelWatcher", dock_model)
+        for handler in (
+            "function onMonitorChanged()",
+            "function onLastIpcObjectChanged()",
+            "function onActivatedChanged()",
+            "function onUrgentChanged()",
+        ):
+            self.assertIn(handler, dock_model)
+        self.assertIn("function hasPendingPlacement(", dock_model)
+        self.assertIn("settleAttempts >= maxSettleAttempts", dock_model)
+        self.assertIn("settleTimer.restart()", dock_model)
+        # Focus is only learned from the live event stream, so the initial
+        # clients snapshot must supply it instead.
+        self.assertIn("function isFocused(window, anyActivated)", dock_model)
+        self.assertIn("ipc.focusHistoryID === 0", dock_model)
+        self.assertNotIn("group.active || window.activated === true", dock_model)
 
     def test_dock_supports_pinning_launcher_and_hover_wave(self) -> None:
         dock_model = (
@@ -322,7 +348,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.09.07.5")
+        self.assertEqual(version, "2026.09.07.6")
 
 
 if __name__ == "__main__":

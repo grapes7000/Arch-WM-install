@@ -10,6 +10,10 @@ QtObject {
     property var favoriteIds: []
     property var groups: []
 
+    readonly property int settleIntervalMs: 120
+    readonly property int maxSettleAttempts: 40
+    property int settleAttempts: 0
+
     // Hyprland's toplevel list is live and can still be mid-mutation
     // (partway through applying a batched IPC update) when its change
     // signal fires. Rebuilding groups synchronously in that same call
@@ -17,24 +21,85 @@ QtObject {
     // and produced a reproducible native crash on startup. Deferring the
     // rebuild to the next event-loop tick lets the native update finish
     // first, so this only ever reads a settled toplevel list.
-    onSourceToplevelsChanged: rebuildTimer.restart()
+    onSourceToplevelsChanged: restartSettle()
     onDesktopEntriesChanged: rebuildTimer.restart()
     onFavoriteIdsChanged: rebuildTimer.restart()
     onMonitorNameChanged: rebuildTimer.restart()
-    Component.onCompleted: rebuildTimer.restart()
+    Component.onCompleted: restartSettle()
 
     property Timer rebuildTimer: Timer {
         interval: 0
-        onTriggered: root.groups = root.buildGroups(root.valuesOf(root.sourceToplevels),
-                                                      root.valuesOf(root.desktopEntries),
-                                                      root.monitorName,
-                                                      root.favoriteIds)
+        onTriggered: root.rebuild()
+    }
+
+    // Quickshell publishes a HyprlandToplevel the moment the window enters
+    // the toplevel list, then fills in `monitor`, `lastIpcObject` and the
+    // focus flags asynchronously a few hundred milliseconds later. A rebuild
+    // driven only by list membership therefore reads bare objects whose
+    // monitor is still null, rejects every window, and leaves the dock
+    // permanently stuck with no running apps. This timer re-checks until
+    // every toplevel has resolved placement.
+    property Timer settleTimer: Timer {
+        interval: root.settleIntervalMs
+        onTriggered: root.rebuild()
     }
 
     property Connections sourceModelConnections: Connections {
         target: root.sourceToplevels
         ignoreUnknownSignals: true
-        function onValuesChanged() { root.rebuildTimer.restart() }
+        function onValuesChanged() { root.restartSettle() }
+    }
+
+    // Late-arriving toplevel data (and later focus/urgency changes) never
+    // touch the list itself, so the list-level signal above cannot see them.
+    property Instantiator toplevelWatcher: Instantiator {
+        model: root.sourceToplevels
+        delegate: QtObject {
+            required property var modelData
+            readonly property var watched: modelData
+            property Connections toplevelConnections: Connections {
+                target: watched
+                ignoreUnknownSignals: true
+                function onMonitorChanged() { root.restartSettle() }
+                function onLastIpcObjectChanged() { root.restartSettle() }
+                function onActivatedChanged() { root.rebuildTimer.restart() }
+                function onUrgentChanged() { root.rebuildTimer.restart() }
+            }
+        }
+    }
+
+    function restartSettle() {
+        settleAttempts = 0
+        rebuildTimer.restart()
+    }
+
+    function isPlacementResolved(window) {
+        return !!(window && window.monitor)
+    }
+
+    function hasPendingPlacement(toplevels) {
+        for (const window of toplevels) {
+            if (!isPlacementResolved(window))
+                return true
+        }
+        return false
+    }
+
+    function rebuild() {
+        const toplevels = valuesOf(sourceToplevels)
+        groups = buildGroups(toplevels,
+                             valuesOf(desktopEntries),
+                             monitorName,
+                             favoriteIds)
+
+        if (!hasPendingPlacement(toplevels)) {
+            settleAttempts = 0
+            return
+        }
+        if (settleAttempts >= maxSettleAttempts)
+            return
+        settleAttempts++
+        settleTimer.restart()
     }
 
     function valuesOf(model) {
@@ -108,6 +173,15 @@ QtObject {
         return windowMonitorName(window) === targetMonitor
     }
 
+    function isFocused(window, anyActivated) {
+        if (!window)
+            return false
+        if (anyActivated)
+            return window.activated === true
+        const ipc = window.lastIpcObject || ({})
+        return ipc.focusHistoryID === 0
+    }
+
     function identityFor(window, entries) {
         const appIdentity = firstIdentity(window)
         const entry = entryFor(appIdentity, entries)
@@ -128,6 +202,18 @@ QtObject {
     }
 
     function buildGroups(toplevels, entries, targetMonitor, favorites) {
+        // Quickshell only learns focus from Hyprland's live event stream, so
+        // right after startup every toplevel reports activated === false. The
+        // `clients` snapshot does carry focus order, so fall back to it until
+        // the first real focus event arrives.
+        let anyActivated = false
+        for (const window of toplevels) {
+            if (window && window.activated === true) {
+                anyActivated = true
+                break
+            }
+        }
+
         const byKey = ({})
         for (const window of toplevels) {
             if (!isMappedOnMonitor(window, targetMonitor))
@@ -152,7 +238,7 @@ QtObject {
                 byKey[identity.key] = group
             }
             group.windows.push(window)
-            group.active = group.active || window.activated === true
+            group.active = group.active || isFocused(window, anyActivated)
             group.urgent = group.urgent || window.urgent === true
         }
 
