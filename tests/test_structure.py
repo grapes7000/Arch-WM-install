@@ -76,6 +76,32 @@ class StructureTests(unittest.TestCase):
         self.assertNotIn("readonly property var groups: buildGroups(", dock_model)
         self.assertIn("onSourceToplevelsChanged: rebuildTimer.restart()", dock_model)
 
+    def test_dock_supports_pinning_launcher_and_hover_wave(self) -> None:
+        dock_model = (
+            ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
+        ).read_text(encoding="utf-8")
+        dock_window = (
+            ROOT / "modules/shell/surfaces/desktop/TaskDockWindow.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("property var favoriteIds: []", dock_model)
+        self.assertIn("pinned: true", dock_model)
+        self.assertIn(
+            "favoriteIds: Services.LauncherStateService.favorites",
+            dock_window,
+        )
+        self.assertIn(
+            'Core.InteractiveShellController.launcher("open")',
+            dock_window,
+        )
+        self.assertIn("acceptedButtons: Qt.RightButton", dock_window)
+        self.assertIn("border.width: 0", dock_window)
+        self.assertIn("radius: height / 2", dock_window)
+        self.assertIn("Math.abs(index - root.hoveredGroupIndex)", dock_window)
+        self.assertNotIn(
+            "color: groupMouse.containsMouse || modelData.active",
+            dock_window,
+        )
+
     def test_theme_reload_helpers_are_bounded(self) -> None:
         legacy_engine = (
             ROOT / "modules/theme-engine/bin/theme"
@@ -256,7 +282,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.07.22")
+        self.assertEqual(version, "2026.09.07.1")
 
 
 if __name__ == "__main__":

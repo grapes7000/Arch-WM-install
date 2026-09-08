@@ -7,6 +7,7 @@ QtObject {
     property string monitorName: ""
     property var sourceToplevels: []
     property var desktopEntries: []
+    property var favoriteIds: []
     property var groups: []
 
     // Hyprland's toplevel list is live and can still be mid-mutation
@@ -18,6 +19,7 @@ QtObject {
     // first, so this only ever reads a settled toplevel list.
     onSourceToplevelsChanged: rebuildTimer.restart()
     onDesktopEntriesChanged: rebuildTimer.restart()
+    onFavoriteIdsChanged: rebuildTimer.restart()
     onMonitorNameChanged: rebuildTimer.restart()
     Component.onCompleted: rebuildTimer.restart()
 
@@ -25,7 +27,8 @@ QtObject {
         interval: 0
         onTriggered: root.groups = root.buildGroups(root.valuesOf(root.sourceToplevels),
                                                       root.valuesOf(root.desktopEntries),
-                                                      root.monitorName)
+                                                      root.monitorName,
+                                                      root.favoriteIds)
     }
 
     function valuesOf(model) {
@@ -68,6 +71,22 @@ QtObject {
         return null
     }
 
+    function entryForId(desktopId, entries) {
+        for (const entry of entries) {
+            if (entry.id === desktopId)
+                return entry
+        }
+        return null
+    }
+
+    function identityForEntry(entry) {
+        const startupKey = normalize(entry ? entry.startupClass : "")
+        if (startupKey)
+            return { key: "startup:" + startupKey, entry }
+        const entryKey = normalize(entry ? entry.id : "")
+        return entryKey ? { key: "entry:" + entryKey, entry } : null
+    }
+
     function windowMonitorName(window) {
         if (!window || !window.monitor)
             return ""
@@ -102,7 +121,7 @@ QtObject {
         }
     }
 
-    function buildGroups(toplevels, entries, targetMonitor) {
+    function buildGroups(toplevels, entries, targetMonitor, favorites) {
         const byKey = ({})
         for (const window of toplevels) {
             if (!isMappedOnMonitor(window, targetMonitor))
@@ -117,6 +136,9 @@ QtObject {
                         ? identity.entry.name : identity.appIdentity,
                     icon: identity.entry && identity.entry.icon
                         ? identity.entry.icon : "application-x-executable",
+                    entry: identity.entry,
+                    desktopId: identity.entry ? identity.entry.id : "",
+                    pinned: false,
                     windows: [],
                     active: false,
                     urgent: false
@@ -128,10 +150,43 @@ QtObject {
             group.urgent = group.urgent || window.urgent === true
         }
 
+        const favoriteList = Array.isArray(favorites) ? favorites : []
+        for (const desktopId of favoriteList) {
+            const entry = entryForId(desktopId, entries)
+            const identity = identityForEntry(entry)
+            if (!identity)
+                continue
+            let group = byKey[identity.key]
+            if (!group) {
+                group = {
+                    key: identity.key,
+                    name: entry.name || desktopId,
+                    icon: entry.icon || "application-x-executable",
+                    entry,
+                    desktopId,
+                    pinned: true,
+                    windows: [],
+                    active: false,
+                    urgent: false
+                }
+                byKey[identity.key] = group
+            } else {
+                group.entry = entry
+                group.desktopId = desktopId
+                group.pinned = true
+            }
+        }
+
         const result = []
         for (const key in byKey)
             result.push(byKey[key])
-        result.sort((left, right) => left.name.localeCompare(right.name))
+        result.sort((left, right) => {
+            if (left.pinned && right.pinned)
+                return favoriteList.indexOf(left.desktopId) - favoriteList.indexOf(right.desktopId)
+            if (left.pinned !== right.pinned)
+                return left.pinned ? -1 : 1
+            return left.name.localeCompare(right.name)
+        })
         return result
     }
 }
