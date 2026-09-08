@@ -13,7 +13,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from installer.runtime import configured_services, manifest, services_apply
-from installer.runtime import Context, Options
+from installer.runtime import Context, HYPR_FOREIGN_DIRECTORIES, Options
 from installer.state import StateStore
 from installer.entry import (
     THEME_COMMANDS,
@@ -467,6 +467,67 @@ class ShellStageCheckTests(unittest.TestCase):
                     )
                 )
                 self.assertFalse(shell_check(context))
+            finally:
+                for key, value in previous.items():
+                    if value is None:
+                        os.environ.pop(key, None)
+                    else:
+                        os.environ[key] = value
+
+
+class HyprlandPayloadInstallTests(unittest.TestCase):
+    def test_install_preserves_directories_owned_by_other_stages(self) -> None:
+        """The Hyprland payload must not delete the user's theme collection.
+
+        Installing the payload replaces the whole ~/.config/hypr tree, but the
+        theme engine keeps themes and rendered wallpapers inside it. Those are
+        not part of the payload, so a plain replacement removed them and only
+        an unrelated backup held the sole remaining copy.
+        """
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            environment = {
+                "HOME": str(root / "home"),
+                "XDG_CONFIG_HOME": str(root / "config"),
+                "XDG_DATA_HOME": str(root / "data"),
+                "XDG_STATE_HOME": str(root / "state"),
+            }
+            previous = {key: os.environ.get(key) for key in environment}
+            os.environ.update(environment)
+            try:
+                source = root / "payload"
+                (source / "conf").mkdir(parents=True)
+                (source / "hyprland.lua").write_text("-- new\n", encoding="utf-8")
+                (source / "conf/keybinds.lua").write_text("-- keys\n", encoding="utf-8")
+
+                target = pathlib.Path(os.environ["XDG_CONFIG_HOME"]) / "hypr"
+                (target / "themes").mkdir(parents=True)
+                (target / "wallpapers").mkdir(parents=True)
+                (target / "themes/y2k.json").write_text("{}\n", encoding="utf-8")
+                (target / "wallpapers/y2k.png").write_bytes(b"\x89PNG")
+                # Belongs to the payload and is expected to be replaced.
+                (target / "hyprland.lua").write_text("-- old\n", encoding="utf-8")
+                (target / "stale.lua").write_text("-- removed\n", encoding="utf-8")
+
+                options = Options(command="install")
+                context = Context(ROOT, options)
+                context.install(
+                    source,
+                    target,
+                    preserve=HYPR_FOREIGN_DIRECTORIES,
+                )
+
+                self.assertEqual(
+                    (target / "themes/y2k.json").read_text(encoding="utf-8"), "{}\n"
+                )
+                self.assertEqual(
+                    (target / "wallpapers/y2k.png").read_bytes(), b"\x89PNG"
+                )
+                self.assertEqual(
+                    (target / "hyprland.lua").read_text(encoding="utf-8"), "-- new\n"
+                )
+                self.assertTrue((target / "conf/keybinds.lua").is_file())
+                self.assertFalse((target / "stale.lua").exists())
             finally:
                 for key, value in previous.items():
                     if value is None:

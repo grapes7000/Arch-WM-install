@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+# Recomputed whenever modules/hyprland/config changes, alongside a bump to that
+# payload's .arch-wm-version. See the test that consumes it for why the two
+# have to move together.
+HYPRLAND_PAYLOAD_DIGEST = (
+    "8efc44a887424bf76ea0d90441c99de47835163a0b4d753432358fd049dc412c"
+)
 
 
 class StructureTests(unittest.TestCase):
@@ -244,7 +252,54 @@ class StructureTests(unittest.TestCase):
         self.assertIn("theme-sync.py", autostart)
         self.assertIn("command -v dunst >/dev/null 2>&1 && dunst", autostart)
         self.assertIn("arch-wm-regreet-theme --watch", autostart)
-        self.assertEqual(version, "2026.08.07.5")
+        self.assertEqual(version, "2026.09.08.1")
+
+    def test_hyprland_payload_version_tracks_its_contents(self) -> None:
+        """Editing the payload without bumping its version deploys nothing.
+
+        The Hyprland stage decides whether it has work to do by comparing
+        modules/hyprland/config/.arch-wm-version against the copy installed
+        under ~/.config/hypr. Nothing else about the payload is inspected, so
+        an edited config file leaves the stage reporting itself satisfied
+        while the change sits undeployed. Hashing the payload here forces the
+        contents and the version marker to move together.
+        """
+        config = ROOT / "modules/hyprland/config"
+        digest = hashlib.sha256()
+        for path in sorted(config.rglob("*")):
+            if path.is_dir():
+                continue
+            relative = path.relative_to(config)
+            # Excluded so that bumping the marker is not itself a payload
+            # change, which would make the recorded digest unreachable.
+            if relative.name == ".arch-wm-version":
+                continue
+            digest.update(f"{relative}\0".encode())
+            digest.update(path.read_bytes())
+        self.assertEqual(digest.hexdigest(), HYPRLAND_PAYLOAD_DIGEST)
+
+    def test_brightness_keys_do_not_depend_on_an_uninstalled_binary(self) -> None:
+        """brightnessctl is not a hard dependency of the brightness keys.
+
+        The keys used to call it unconditionally, so on a machine without it
+        they silently did nothing and no OSD ever appeared. The shell owns
+        brightness through logind now, with brightnessctl left as a fallback.
+        """
+        keybinds = (
+            ROOT / "modules/hyprland/config/conf/keybinds.lua"
+        ).read_text(encoding="utf-8")
+        for key, direction in (
+            ("XF86MonBrightnessUp", "up"),
+            ("XF86MonBrightnessDown", "down"),
+        ):
+            self.assertIn(key, keybinds)
+            binding = keybinds.split(key, 1)[1].split("hl.bind(", 1)[0]
+            self.assertIn(f"qs -c arch-wm ipc call brightness {direction}", binding)
+            self.assertLess(
+                binding.index("qs -c arch-wm ipc call brightness"),
+                binding.index("brightnessctl"),
+                f"{key} must reach the shell before falling back to brightnessctl",
+            )
 
     def test_universal_theme_contract_drives_shell_and_hyprland(self) -> None:
         schema = json.loads(

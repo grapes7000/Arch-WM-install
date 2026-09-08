@@ -165,7 +165,14 @@ class Context:
         elif not self.options.dry_run:
             self.state.record_created_path(target)
 
-    def install(self, source: Path, target: Path, *, executable: bool = False) -> None:
+    def install(
+        self,
+        source: Path,
+        target: Path,
+        *,
+        executable: bool = False,
+        preserve: Sequence[str] = (),
+    ) -> None:
         source = source.resolve()
         if not source.exists():
             raise InstallError(f"installation source is missing: {source}")
@@ -182,14 +189,36 @@ class Context:
         self.emit(f"  install {source} -> {target}")
         if self.options.dry_run:
             return
-        remove_path(target)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if source.is_dir():
-            shutil.copytree(source, target, symlinks=True)
-        else:
+        if not source.is_dir():
+            remove_path(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
             if executable:
                 target.chmod(0o755)
+            return
+
+        # Replacing the tree wholesale is what stops deleted files from
+        # lingering, but entries named here belong to another owner and are not
+        # recreated by this copy, so they are carried across the replacement
+        # rather than deleted along with everything else.
+        with tempfile.TemporaryDirectory(prefix=".arch-wm-preserve.") as holding:
+            carried = []
+            for name in preserve:
+                current = target / name
+                if not (current.exists() or current.is_symlink()):
+                    continue
+                shutil.move(str(current), str(Path(holding) / name))
+                carried.append(name)
+
+            remove_path(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(source, target, symlinks=True)
+
+            for name in carried:
+                restored = target / name
+                remove_path(restored)
+                shutil.move(str(Path(holding) / name), str(restored))
+                self.emit(f"  preserve {restored}")
 
     def write(self, target: Path, text: str, mode: int = 0o644) -> None:
         if target.is_file() and target.read_text(encoding="utf-8") == text:
@@ -368,12 +397,23 @@ def theme_verify(ctx: Context) -> bool:
     return current.get("name") == ctx.options.theme
 
 
+# Installed inside the Hyprland config directory but owned by the theme engine
+# rather than by this payload. The Hyprland install replaces its whole tree, so
+# without carrying these across, a user's theme collection and rendered
+# wallpapers would be removed by an unrelated stage.
+HYPR_FOREIGN_DIRECTORIES = ("themes", "wallpapers")
+
+
 def hypr_check(ctx: Context) -> bool:
     return (ctx.config / "hypr/.arch-wm-managed").is_file()
 
 
 def hypr_apply(ctx: Context) -> None:
-    ctx.install(ctx.root / "modules/hyprland/config", ctx.config / "hypr")
+    ctx.install(
+        ctx.root / "modules/hyprland/config",
+        ctx.config / "hypr",
+        preserve=HYPR_FOREIGN_DIRECTORIES,
+    )
     ctx.run([str(ctx.home / ".local/bin/theme"), ctx.options.theme])
 
 
