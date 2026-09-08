@@ -101,6 +101,7 @@ PanelWindow {
         sourceToplevels: Hyprland.toplevels
         desktopEntries: DesktopEntries.applications
         favoriteIds: Services.LauncherStateService.favorites
+        focusedWorkspace: Hyprland.focusedWorkspace
     }
 
     Item {

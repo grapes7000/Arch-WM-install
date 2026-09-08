@@ -10,9 +10,17 @@ QtObject {
     property var favoriteIds: []
     property var groups: []
 
+    // Changing workspace does not touch the toplevel list or any toplevel
+    // property, so the dock needs an explicit signal to re-evaluate which
+    // window is visible and focused. Bound by the host to Hyprland's focused
+    // workspace purely as a change trigger; the per-window test below uses
+    // each window's own monitor so multi-monitor setups stay correct.
+    property var focusedWorkspace: null
+
     readonly property int settleIntervalMs: 120
     readonly property int maxSettleAttempts: 40
     property int settleAttempts: 0
+    property bool sawFocusEvent: false
 
     // Hyprland's toplevel list is live and can still be mid-mutation
     // (partway through applying a batched IPC update) when its change
@@ -25,6 +33,7 @@ QtObject {
     onDesktopEntriesChanged: rebuildTimer.restart()
     onFavoriteIdsChanged: rebuildTimer.restart()
     onMonitorNameChanged: rebuildTimer.restart()
+    onFocusedWorkspaceChanged: rebuildTimer.restart()
     Component.onCompleted: restartSettle()
 
     property Timer rebuildTimer: Timer {
@@ -64,6 +73,7 @@ QtObject {
                 function onLastIpcObjectChanged() { root.restartSettle() }
                 function onActivatedChanged() { root.rebuildTimer.restart() }
                 function onUrgentChanged() { root.rebuildTimer.restart() }
+                function onWorkspaceChanged() { root.rebuildTimer.restart() }
             }
         }
     }
@@ -87,10 +97,28 @@ QtObject {
 
     function rebuild() {
         const toplevels = valuesOf(sourceToplevels)
+
+        // Quickshell only learns focus from Hyprland's live event stream, so
+        // right after startup every toplevel reports activated === false. The
+        // `clients` snapshot carries focus order, so use it until the first
+        // real focus event arrives. This has to latch: the snapshot goes stale
+        // the moment focus moves, and falling back to it again later (for
+        // example on an empty workspace, where nothing is activated) would
+        // resurrect a long-dead focus and mark a hidden window as focused.
+        if (!sawFocusEvent) {
+            for (const window of toplevels) {
+                if (window && window.activated === true) {
+                    sawFocusEvent = true
+                    break
+                }
+            }
+        }
+
         groups = buildGroups(toplevels,
                              valuesOf(desktopEntries),
                              monitorName,
-                             favoriteIds)
+                             favoriteIds,
+                             !sawFocusEvent)
 
         if (!hasPendingPlacement(toplevels)) {
             settleAttempts = 0
@@ -173,13 +201,30 @@ QtObject {
         return windowMonitorName(window) === targetMonitor
     }
 
-    function isFocused(window, anyActivated) {
-        if (!window)
+    function isFocused(window, useSnapshotFocus) {
+        if (!window || !isOnActiveWorkspace(window))
             return false
-        if (anyActivated)
+        if (!useSnapshotFocus)
             return window.activated === true
         const ipc = window.lastIpcObject || ({})
         return ipc.focusHistoryID === 0
+    }
+
+    // A window that lives on a workspace the monitor is not currently showing
+    // is never the focused window, no matter what the focus flags say. This
+    // also keeps the dock honest when the user switches to an empty workspace,
+    // where Hyprland reports no activated toplevel at all.
+    function isOnActiveWorkspace(window) {
+        if (!window || !window.workspace || !window.monitor)
+            return false
+        const workspaceId = window.workspace.id
+        const activeWorkspace = window.monitor.activeWorkspace
+        if (activeWorkspace && workspaceId === activeWorkspace.id)
+            return true
+        // Special (scratchpad) workspaces overlay the monitor's normal
+        // workspace, so they are visible without ever being the monitor's
+        // active workspace.
+        return !!(focusedWorkspace && focusedWorkspace.id === workspaceId)
     }
 
     function identityFor(window, entries) {
@@ -201,19 +246,7 @@ QtObject {
         }
     }
 
-    function buildGroups(toplevels, entries, targetMonitor, favorites) {
-        // Quickshell only learns focus from Hyprland's live event stream, so
-        // right after startup every toplevel reports activated === false. The
-        // `clients` snapshot does carry focus order, so fall back to it until
-        // the first real focus event arrives.
-        let anyActivated = false
-        for (const window of toplevels) {
-            if (window && window.activated === true) {
-                anyActivated = true
-                break
-            }
-        }
-
+    function buildGroups(toplevels, entries, targetMonitor, favorites, useSnapshotFocus) {
         const byKey = ({})
         for (const window of toplevels) {
             if (!isMappedOnMonitor(window, targetMonitor))
@@ -238,7 +271,7 @@ QtObject {
                 byKey[identity.key] = group
             }
             group.windows.push(window)
-            group.active = group.active || isFocused(window, anyActivated)
+            group.active = group.active || isFocused(window, useSnapshotFocus)
             group.urgent = group.urgent || window.urgent === true
         }
 

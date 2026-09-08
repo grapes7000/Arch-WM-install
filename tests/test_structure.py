@@ -97,9 +97,35 @@ class StructureTests(unittest.TestCase):
         self.assertIn("function hasPendingPlacement(", dock_model)
         self.assertIn("settleAttempts >= maxSettleAttempts", dock_model)
         self.assertIn("settleTimer.restart()", dock_model)
+
+    def test_dock_focus_is_workspace_aware(self) -> None:
+        """The focused pill must never point at a window the user cannot see.
+
+        Quickshell learns focus from the live event stream, so at startup no
+        toplevel is activated and the clients snapshot has to stand in. That
+        snapshot goes stale the moment focus moves, and Hyprland reports no
+        activated toplevel at all on an empty workspace, so the fallback has to
+        latch off permanently and every focus test has to be gated on the
+        window actually being on the visible workspace.
+        """
+        dock_model = (
+            ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
+        ).read_text(encoding="utf-8")
+        dock_window = (
+            ROOT / "modules/shell/surfaces/desktop/TaskDockWindow.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("property bool sawFocusEvent: false", dock_model)
+        self.assertIn("if (!sawFocusEvent) {", dock_model)
+        self.assertIn("function isOnActiveWorkspace(window)", dock_model)
+        self.assertIn("if (!window || !isOnActiveWorkspace(window))", dock_model)
+        self.assertIn("monitor.activeWorkspace", dock_model)
+        self.assertIn("property var focusedWorkspace: null", dock_model)
+        self.assertIn("onFocusedWorkspaceChanged: rebuildTimer.restart()", dock_model)
+        self.assertIn("function onWorkspaceChanged()", dock_model)
+        self.assertIn("focusedWorkspace: Hyprland.focusedWorkspace", dock_window)
         # Focus is only learned from the live event stream, so the initial
         # clients snapshot must supply it instead.
-        self.assertIn("function isFocused(window, anyActivated)", dock_model)
+        self.assertIn("function isFocused(window, useSnapshotFocus)", dock_model)
         self.assertIn("ipc.focusHistoryID === 0", dock_model)
         self.assertNotIn("group.active || window.activated === true", dock_model)
 
@@ -348,7 +374,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.09.07.6")
+        self.assertEqual(version, "2026.09.07.7")
 
 
 if __name__ == "__main__":
