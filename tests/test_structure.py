@@ -374,7 +374,71 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.09.07.7")
+        self.assertEqual(version, "2026.09.08.1")
+
+    def test_launcher_supports_switchable_list_and_grid_views(self) -> None:
+        launcher = (
+            ROOT / "modules/shell/surfaces/bar/LauncherOverlay.qml"
+        ).read_text(encoding="utf-8")
+        service = (
+            ROOT / "modules/shell/services/LauncherStateService.qml"
+        ).read_text(encoding="utf-8")
+
+        # The mode is persisted alongside favorites and recents.
+        self.assertIn('readonly property var viewModes: ["list", "grid"]', service)
+        self.assertIn("function setViewMode(mode)", service)
+        self.assertIn("function toggleViewMode()", service)
+        self.assertIn("viewMode: root.normalizeViewMode(value.viewMode)", service)
+        self.assertIn("viewMode: root.viewMode", service)
+        # Schema version must stay at 1 so existing favorites survive the upgrade.
+        self.assertIn("readonly property int schemaVersion: 1", service)
+
+        self.assertIn(
+            'readonly property bool gridMode: Services.LauncherStateService.viewMode === "grid"',
+            launcher,
+        )
+        self.assertIn("id: appGrid", launcher)
+        self.assertIn("visible: !root.gridMode", launcher)
+        self.assertIn("visible: root.gridMode", launcher)
+        self.assertIn("Services.LauncherStateService.setViewMode(modelData.mode)", launcher)
+
+    def test_launcher_grid_icons_are_bare_until_hovered(self) -> None:
+        launcher = (
+            ROOT / "modules/shell/surfaces/bar/LauncherOverlay.qml"
+        ).read_text(encoding="utf-8")
+
+        # Bare icon by default, homepage shortcut treatment once lit.
+        self.assertIn(
+            'color: gridCell.lit\n                                    '
+            "? Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.76)\n"
+            '                                    : "transparent"',
+            launcher,
+        )
+        self.assertIn("border.width: gridCell.lit ? Core.Theme.borderWidth : 0", launcher)
+        self.assertIn("radius: Math.max(12, Core.Theme.radius + 2)", launcher)
+
+        # Grid keyboard navigation moves by a whole row.
+        self.assertIn(
+            "Keys.onDownPressed: root.moveSelection(root.gridMode ? root.gridColumns : 1)",
+            launcher,
+        )
+
+    def test_launcher_grid_labels_render_below_the_icon(self) -> None:
+        launcher = (
+            ROOT / "modules/shell/surfaces/bar/LauncherOverlay.qml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("id: gridTooltip", launcher)
+        self.assertIn("root.showTooltip(gridTile, gridCell.index, gridCell.modelData.name)", launcher)
+        # Prefer below the icon, flipping above only when the row would clip.
+        self.assertIn(
+            "y: root.hoverBottomY + Core.UiStyle.spacingXs + height <= root.hoverMaxY\n"
+            "                        ? root.hoverBottomY + Core.UiStyle.spacingXs\n"
+            "                        : root.hoverTopY - height - Core.UiStyle.spacingXs",
+            launcher,
+        )
+        # Long names stay inside the card.
+        self.assertIn("Math.min(launcherCard.width - width - Core.UiStyle.spacingXs,", launcher)
 
 
 if __name__ == "__main__":

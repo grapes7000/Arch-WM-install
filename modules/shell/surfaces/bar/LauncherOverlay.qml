@@ -15,6 +15,17 @@ Scope {
     property string category: "All"
     property int selectedIndex: 0
     property int appsRevision: 0
+    property string hoverLabel: ""
+    property int hoverIndex: -1
+    property real hoverCenterX: 0
+    property real hoverTopY: 0
+    property real hoverBottomY: 0
+    property real hoverMaxY: 0
+    readonly property bool gridMode: Services.LauncherStateService.viewMode === "grid"
+    readonly property int gridCellBase: 92
+    readonly property int gridTileSize: 66
+    readonly property int gridIconSize: 46
+    readonly property int gridColumns: Math.max(1, appGrid.columns)
     readonly property var categories: [
         { name: "All", icon: "applications-all" },
         { name: "Favorites", icon: "starred" },
@@ -83,10 +94,11 @@ Scope {
         root.query = ""
         root.category = "All"
         root.selectedIndex = 0
+        root.hoverLabel = ""
         Qt.callLater(() => searchField.forceActiveFocus())
         return true
     }
-    function close() { root.query = ""; return session.close() }
+    function close() { root.query = ""; root.hoverLabel = ""; return session.close() }
     function toggle(screen) { return session.visible ? root.close() : root.open(screen) }
     function launch(entry) {
         if (!entry || Services.LockStateService.locked) return false
@@ -96,7 +108,28 @@ Scope {
         return true
     }
 
-    onResultsChanged: selectedIndex = Math.max(0, Math.min(selectedIndex, results.length - 1))
+    function moveSelection(delta) {
+        if (root.results.length === 0) return
+        root.selectedIndex = Math.max(0, Math.min(root.results.length - 1, root.selectedIndex + delta))
+    }
+
+    function showTooltip(item, index, label) {
+        const top = item.mapToItem(launcherCard, item.width / 2, 0)
+        const bottom = item.mapToItem(launcherCard, item.width / 2, item.height)
+        const gridTop = appGrid.mapToItem(launcherCard, 0, 0)
+        root.hoverCenterX = top.x
+        root.hoverTopY = top.y
+        root.hoverBottomY = bottom.y
+        root.hoverMaxY = gridTop.y + appGrid.height
+        root.hoverIndex = index
+        root.hoverLabel = String(label || "")
+    }
+
+    onGridModeChanged: root.hoverLabel = ""
+    onResultsChanged: {
+        selectedIndex = Math.max(0, Math.min(selectedIndex, results.length - 1))
+        root.hoverLabel = ""
+    }
 
     LauncherSession { id: session; locked: Services.LockStateService.locked }
     Binding {
@@ -181,33 +214,139 @@ Scope {
                     anchors.margins: Core.UiStyle.spacingLg
                     spacing: Core.UiStyle.spacingSm
 
-                    TextField {
-                        id: searchField
+                    RowLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: Core.UiStyle.controlHeightLarge
-                        placeholderText: "Search applications"
-                        text: root.query
-                        color: Core.Theme.foreground
-                        placeholderTextColor: Core.Theme.muted
-                        font.family: Core.Theme.fontFamily
-                        font.pixelSize: Core.UiStyle.fontBody
-                        leftPadding: Core.UiStyle.spacingMd
-                        rightPadding: Core.UiStyle.spacingMd
-                        selectionColor: Core.Theme.selected
-                        background: Rectangle {
-                            color: Core.Theme.surfaceBase
-                            radius: Core.UiStyle.radiusControl
-                            border.width: Core.UiStyle.focusWidth
-                            border.color: searchField.activeFocus
-                                ? Core.Theme.accent
-                                : Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.70)
+                        spacing: Core.UiStyle.spacingSm
+
+                        TextField {
+                            id: searchField
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Core.UiStyle.controlHeightLarge
+                            placeholderText: "Search applications"
+                            text: root.query
+                            color: Core.Theme.foreground
+                            placeholderTextColor: Core.Theme.muted
+                            font.family: Core.Theme.fontFamily
+                            font.pixelSize: Core.UiStyle.fontBody
+                            leftPadding: Core.UiStyle.spacingMd
+                            rightPadding: Core.UiStyle.spacingMd
+                            selectionColor: Core.Theme.selected
+                            background: Rectangle {
+                                color: Core.Theme.surfaceBase
+                                radius: Core.UiStyle.radiusControl
+                                border.width: Core.UiStyle.focusWidth
+                                border.color: searchField.activeFocus
+                                    ? Core.Theme.accent
+                                    : Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.70)
+                            }
+                            onTextChanged: root.query = text
+                            Keys.onUpPressed: root.moveSelection(root.gridMode ? -root.gridColumns : -1)
+                            Keys.onDownPressed: root.moveSelection(root.gridMode ? root.gridColumns : 1)
+                            Keys.onLeftPressed: (event) => {
+                                if (root.gridMode && searchField.text.length === 0)
+                                    root.moveSelection(-1)
+                                else
+                                    event.accepted = false
+                            }
+                            Keys.onRightPressed: (event) => {
+                                if (root.gridMode && searchField.text.length === 0)
+                                    root.moveSelection(1)
+                                else
+                                    event.accepted = false
+                            }
+                            Keys.onReturnPressed: root.launch(root.results[root.selectedIndex])
+                            Keys.onEnterPressed: root.launch(root.results[root.selectedIndex])
+                            Keys.onEscapePressed: root.close()
                         }
-                        onTextChanged: root.query = text
-                        Keys.onUpPressed: root.selectedIndex = Math.max(0, root.selectedIndex - 1)
-                        Keys.onDownPressed: root.selectedIndex = Math.min(root.results.length - 1, root.selectedIndex + 1)
-                        Keys.onReturnPressed: root.launch(root.results[root.selectedIndex])
-                        Keys.onEnterPressed: root.launch(root.results[root.selectedIndex])
-                        Keys.onEscapePressed: root.close()
+
+                        Rectangle {
+                            id: viewToggle
+                            Layout.preferredWidth: viewToggleRow.implicitWidth + Core.UiStyle.spacingXs * 2
+                            Layout.preferredHeight: Core.UiStyle.controlHeightLarge
+                            radius: Core.UiStyle.radiusControl
+                            color: Core.Theme.surfaceBase
+                            border.width: Core.UiStyle.borderWidth
+                            border.color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.70)
+
+                            RowLayout {
+                                id: viewToggleRow
+                                anchors.centerIn: parent
+                                spacing: Core.UiStyle.spacingXs
+
+                                Repeater {
+                                    model: [
+                                        { mode: "list", label: "List view" },
+                                        { mode: "grid", label: "Grid view" }
+                                    ]
+
+                                    delegate: Rectangle {
+                                        id: modeButton
+                                        required property var modelData
+                                        readonly property bool current: Services.LauncherStateService.viewMode === modelData.mode
+                                        Layout.preferredWidth: Core.UiStyle.controlHeight
+                                        Layout.preferredHeight: Core.UiStyle.controlHeight - Core.UiStyle.grid
+                                        radius: Core.UiStyle.radiusControl
+                                        color: current
+                                            ? Core.Theme.alphaColor(Core.Theme.selected, 0.16)
+                                            : (modeArea.containsMouse
+                                               ? Core.Theme.alphaColor(Core.Theme.surfaceHover, 0.55)
+                                               : "transparent")
+                                        border.width: Core.UiStyle.borderWidth
+                                        border.color: current
+                                            ? Core.Theme.alphaColor(Core.Theme.accent, 0.55)
+                                            : "transparent"
+
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale)
+                                            }
+                                        }
+
+                                        Column {
+                                            visible: modeButton.modelData.mode === "list"
+                                            anchors.centerIn: parent
+                                            spacing: 2
+                                            Repeater {
+                                                model: 3
+                                                delegate: Rectangle {
+                                                    width: 13
+                                                    height: 2
+                                                    radius: 1
+                                                    color: modeButton.current ? Core.Theme.accent : Core.Theme.foreground
+                                                }
+                                            }
+                                        }
+
+                                        Grid {
+                                            visible: modeButton.modelData.mode === "grid"
+                                            anchors.centerIn: parent
+                                            columns: 2
+                                            spacing: 3
+                                            Repeater {
+                                                model: 4
+                                                delegate: Rectangle {
+                                                    width: 5
+                                                    height: 5
+                                                    radius: 1
+                                                    color: modeButton.current ? Core.Theme.accent : Core.Theme.foreground
+                                                }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: modeArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            onClicked: {
+                                                Services.LauncherStateService.setViewMode(modelData.mode)
+                                                searchField.forceActiveFocus()
+                                            }
+                                        }
+                                        Components.PressBounce { pressed: modeArea.pressed }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     ListView {
@@ -269,6 +408,7 @@ Scope {
                         id: appList
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        visible: !root.gridMode
                         model: root.results
                         currentIndex: root.selectedIndex
                         clip: true
@@ -382,6 +522,147 @@ Scope {
                             text: "No matching applications"
                             color: Core.Theme.muted
                         }
+                    }
+
+                    GridView {
+                        id: appGrid
+                        readonly property int columns: Math.max(1, Math.floor(width / root.gridCellBase))
+
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.topMargin: Core.UiStyle.spacingXs
+                        visible: root.gridMode
+                        model: root.results
+                        currentIndex: root.selectedIndex
+                        clip: true
+                        cellWidth: Math.floor(width / columns)
+                        cellHeight: root.gridCellBase
+
+                        ScrollBar.vertical: ScrollBar {
+                            policy: ScrollBar.AsNeeded
+                            contentItem: Rectangle {
+                                implicitWidth: Core.UiStyle.grid
+                                radius: Core.UiStyle.radiusControl
+                                color: Core.Theme.accent
+                                opacity: parent.pressed ? 0.9 : 0.42
+                            }
+                        }
+
+                        delegate: Item {
+                            id: gridCell
+                            required property var modelData
+                            required property int index
+                            readonly property bool selected: index === root.selectedIndex
+                            readonly property bool lit: gridArea.containsMouse || selected
+
+                            width: appGrid.cellWidth
+                            height: appGrid.cellHeight
+
+                            Rectangle {
+                                id: gridTile
+                                anchors.centerIn: parent
+                                width: root.gridTileSize
+                                height: root.gridTileSize
+                                radius: Math.max(12, Core.Theme.radius + 2)
+                                color: gridCell.lit
+                                    ? Core.Theme.alphaColor(Core.Theme.surfaceElevated, 0.76)
+                                    : "transparent"
+                                border.width: gridCell.lit ? Core.Theme.borderWidth : 0
+                                border.color: Core.Theme.alphaColor(Core.Theme.accent, gridCell.selected ? 0.82 : 0.42)
+                                scale: gridArea.containsMouse && !Core.UiStyle.quietButtons ? 1.06 : 1.0
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale)
+                                    }
+                                }
+                                Behavior on scale {
+                                    NumberAnimation {
+                                        duration: Math.round(Core.Theme.animationMs * Core.Theme.motionScale)
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+
+                                IconImage {
+                                    anchors.centerIn: parent
+                                    implicitSize: root.gridIconSize
+                                    source: Quickshell.iconPath(gridCell.modelData.icon, "application-x-executable")
+                                }
+
+                                Rectangle {
+                                    visible: Services.LauncherStateService.isFavorite(gridCell.modelData.id)
+                                    width: 5
+                                    height: 5
+                                    radius: 2.5
+                                    color: Core.Theme.accent
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: Core.UiStyle.grid
+                                }
+                            }
+
+                            MouseArea {
+                                id: gridArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    root.selectedIndex = gridCell.index
+                                    root.showTooltip(gridTile, gridCell.index, gridCell.modelData.name)
+                                }
+                                onExited: {
+                                    if (root.hoverIndex === gridCell.index)
+                                        root.hoverLabel = ""
+                                }
+                                onClicked: (mouse) => {
+                                    if (mouse.button === Qt.RightButton)
+                                        Services.LauncherStateService.toggleFavorite(gridCell.modelData.id)
+                                    else
+                                        root.launch(gridCell.modelData)
+                                }
+                            }
+                            Components.PressBounce {
+                                target: gridTile
+                                pressed: gridArea.pressed
+                            }
+                        }
+
+                        Text {
+                            font.family: Core.Theme.fontFamily
+                            font.pixelSize: Core.UiStyle.fontBody
+                            anchors.centerIn: parent
+                            visible: appGrid.count === 0
+                            text: "No matching applications"
+                            color: Core.Theme.muted
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: gridTooltip
+                    visible: root.gridMode && root.hoverLabel.length > 0
+                    z: 30
+                    radius: Core.UiStyle.radiusControl
+                    color: Core.Theme.alphaColor(Core.Theme.surfaceElevated, 1.0)
+                    border.width: Core.UiStyle.borderWidth
+                    border.color: Core.Theme.alphaColor(Core.Theme.barOutlineColor, 0.80)
+                    width: tooltipLabel.implicitWidth + Core.UiStyle.spacingSm * 2
+                    height: tooltipLabel.implicitHeight + Core.UiStyle.spacingXs * 2
+                    x: Math.max(Core.UiStyle.spacingXs,
+                                Math.min(launcherCard.width - width - Core.UiStyle.spacingXs,
+                                         root.hoverCenterX - width / 2))
+                    y: root.hoverBottomY + Core.UiStyle.spacingXs + height <= root.hoverMaxY
+                        ? root.hoverBottomY + Core.UiStyle.spacingXs
+                        : root.hoverTopY - height - Core.UiStyle.spacingXs
+
+                    Text {
+                        id: tooltipLabel
+                        anchors.centerIn: parent
+                        text: root.hoverLabel
+                        color: Core.Theme.foreground
+                        font.family: Core.Theme.fontFamily
+                        font.pixelSize: Core.UiStyle.fontCaption
                     }
                 }
             }

@@ -9,6 +9,7 @@ Singleton {
 
     readonly property int schemaVersion: 1
     readonly property int recentLimit: 10
+    readonly property var viewModes: ["list", "grid"]
     readonly property string stateHome: {
         const configured = Quickshell.env("XDG_STATE_HOME")
         return configured || (Quickshell.env("HOME") + "/.local/state")
@@ -18,12 +19,13 @@ Singleton {
 
     property var favorites: []
     property var recents: []
+    property string viewMode: "list"
     property string pendingContents: ""
 
     signal stateSaved()
 
     function emptyState() {
-        return { schemaVersion: root.schemaVersion, favorites: [], recents: [] }
+        return { schemaVersion: root.schemaVersion, favorites: [], recents: [], viewMode: "list" }
     }
 
     function knownDesktopIds() {
@@ -46,13 +48,18 @@ Singleton {
         return result
     }
 
+    function normalizeViewMode(value) {
+        return root.viewModes.indexOf(value) !== -1 ? value : "list"
+    }
+
     function normalize(value, knownIds) {
         if (!value || value.schemaVersion !== root.schemaVersion)
             return root.emptyState()
         return {
             schemaVersion: root.schemaVersion,
             favorites: root.uniqueKnown(value.favorites, knownIds, 0),
-            recents: root.uniqueKnown(value.recents, knownIds, root.recentLimit)
+            recents: root.uniqueKnown(value.recents, knownIds, root.recentLimit),
+            viewMode: root.normalizeViewMode(value.viewMode)
         }
     }
 
@@ -70,6 +77,20 @@ Singleton {
         const normalized = root.parse(contents)
         root.favorites = normalized.favorites
         root.recents = normalized.recents
+        root.viewMode = normalized.viewMode
+    }
+
+    function setViewMode(mode) {
+        const next = root.normalizeViewMode(mode)
+        if (next === root.viewMode)
+            return false
+        root.viewMode = next
+        root.save()
+        return true
+    }
+
+    function toggleViewMode() {
+        return root.setViewMode(root.viewMode === "grid" ? "list" : "grid")
     }
 
     function isFavorite(desktopId) {
@@ -110,7 +131,8 @@ Singleton {
         root.pendingContents = JSON.stringify({
             schemaVersion: root.schemaVersion,
             favorites: root.favorites,
-            recents: root.recents
+            recents: root.recents,
+            viewMode: root.viewMode
         }, null, 2) + "\n"
 
         if (directoryProcess.running)
