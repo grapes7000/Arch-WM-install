@@ -6,6 +6,7 @@ import "services" as Services
 import "surfaces/bar"
 import "surfaces/desktop"
 import "surfaces/homepage"
+import "surfaces/osd"
 
 ShellRoot {
     // Sets the process-wide default font so every Text/TextInput that
@@ -46,6 +47,28 @@ ShellRoot {
         function toggle(): bool { return Core.InteractiveShellController.dock("toggle") }
     }
 
+    // Brightness is driven through the shell rather than an external helper so
+    // that the OSD is shown and so the machine does not need brightnessctl or a
+    // setuid binary installed.
+    IpcHandler {
+        target: "brightness"
+
+        function up(): bool { return Services.BrightnessService.adjust(5) }
+        function down(): bool { return Services.BrightnessService.adjust(-5) }
+        function set(percent: int): bool { return Services.BrightnessService.set(percent) }
+        function get(): int { return Services.BrightnessService.percent }
+    }
+
+    IpcHandler {
+        target: "audio"
+
+        function up(): bool { return Services.AudioService.adjustVolume(5) }
+        function down(): bool { return Services.AudioService.adjustVolume(-5) }
+        function mute(): bool { return Services.AudioService.toggleMute() }
+        function micMute(): bool { return Services.AudioService.toggleSourceMute("@DEFAULT_AUDIO_SOURCE@") }
+        function set(percent: int): bool { return Services.AudioService.setVolume(percent) }
+    }
+
     IpcHandler {
         target: "homepage"
 
@@ -57,6 +80,7 @@ ShellRoot {
     BarSurface {}
     HomepageSurface {}
     TaskDockSurface {}
+    OsdSurface {}
 
     // The legacy DesktopSurface is intentionally disabled while the homepage
     // provides the desktop dashboard. Running both creates duplicate clock and

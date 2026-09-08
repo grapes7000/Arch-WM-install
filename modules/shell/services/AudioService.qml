@@ -2,140 +2,145 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import Quickshell.Services.Pipewire
 
+// Audio state comes straight from the PipeWire registry. Node properties only
+// stay live while the node is bound, so every audio node this service reports
+// is held by the tracker below.
 Singleton {
     id: root
 
-    property int volume: 0
-    property bool muted: false
-    property var sinks: []
-    property var sources: []
-    property var streams: []
-    property string error: ""
-    property string _operation: ""
+    readonly property var defaultSink: Pipewire.defaultAudioSink
+    readonly property var defaultSource: Pipewire.defaultAudioSource
 
-    function clear() {
-        volume = 0
-        muted = false
-        sinks = []
-        sources = []
-        streams = []
+    readonly property var audioNodes: {
+        const nodes = Pipewire.nodes ? Pipewire.nodes.values : []
+        const collected = []
+        for (const node of nodes) {
+            if (node && node.audio)
+                collected.push(node)
+        }
+        return collected
     }
 
-    function parse(contents) {
-        let section = ""
-        let audioSection = false
-        const parsed = { sinks: [], sources: [], streams: [] }
-        for (const raw of contents.split("\n")) {
-            const heading = raw.trim()
-            if (heading === "Audio") {
-                audioSection = true
-                section = ""
+    readonly property var sinks: root.describe(node => node.isSink && !node.isStream, root.defaultSink)
+    readonly property var sources: root.describe(node => !node.isSink && !node.isStream, root.defaultSource)
+    readonly property var streams: root.describe(node => node.isStream, null)
+
+    readonly property int volume: root.readVolume(root.defaultSink)
+    readonly property bool muted: root.readMuted(root.defaultSink)
+    readonly property int sourceVolume: root.readVolume(root.defaultSource)
+    readonly property bool sourceMuted: root.readMuted(root.defaultSource)
+
+    // A node reports zeroed audio until PipeWire finishes binding it, so gate
+    // consumers on the default sink actually being bound rather than on the
+    // registry merely existing.
+    readonly property bool ready: !!(root.defaultSink && root.defaultSink.ready && root.defaultSink.audio)
+    readonly property string error: {
+        if (!Pipewire.ready)
+            return "PipeWire registry unavailable"
+        if (!root.defaultSink)
+            return "No default audio sink"
+        return ""
+    }
+
+    function readVolume(node) {
+        if (!node || !node.audio)
+            return 0
+        return Math.max(0, Math.min(100, Math.round(node.audio.volume * 100)))
+    }
+
+    function readMuted(node) {
+        return !!(node && node.audio && node.audio.muted)
+    }
+
+    function nodeLabel(node) {
+        return String(node.description || node.nickname || node.name || ("node " + node.id))
+    }
+
+    function describe(predicate, defaultNode) {
+        const rows = []
+        for (const node of root.audioNodes) {
+            if (!predicate(node))
                 continue
-            }
-            if (heading === "Video" || heading === "Settings") {
-                audioSection = false
-                section = ""
-                continue
-            }
-            const sectionMatch = audioSection ? heading.match(/(Sinks|Sources|Streams):$/) : null
-            if (sectionMatch) {
-                section = sectionMatch[1].toLowerCase()
-                continue
-            }
-            if (!section) continue
-            const match = raw.match(/^[^0-9*]*([*]?)\s*(\d+)\.\s+(.+?)\s+\[vol:\s*([0-9.]+)(?:\s+(MUTED))?\]\s*$/)
-            if (!match) continue
-            parsed[section].push({
-                id: Number(match[2]),
-                name: match[3].trim(),
-                volume: Math.max(0, Math.min(100, Math.round(Number(match[4]) * 100))),
-                muted: match[5] === "MUTED",
-                isDefault: match[1] === "*"
+            rows.push({
+                id: node.id,
+                name: root.nodeLabel(node),
+                volume: root.readVolume(node),
+                muted: root.readMuted(node),
+                isDefault: !!defaultNode && node.id === defaultNode.id
             })
         }
-        if (parsed.sinks.length === 0 && parsed.sources.length === 0 && parsed.streams.length === 0) {
-            clear()
-            error = "wpctl returned no audio devices"
+        return rows
+    }
+
+    // Accepts a numeric PipeWire node id or the wpctl-style default aliases the
+    // previous shell-based implementation took, so callers did not have to change.
+    function resolveNode(id) {
+        if (id === "@DEFAULT_AUDIO_SINK@" || id === "@DEFAULT_SINK@")
+            return root.defaultSink
+        if (id === "@DEFAULT_AUDIO_SOURCE@" || id === "@DEFAULT_SOURCE@")
+            return root.defaultSource
+        const numeric = Number(id)
+        for (const node of root.audioNodes) {
+            if (node.id === numeric)
+                return node
+        }
+        return null
+    }
+
+    function applyVolume(id, percent) {
+        const node = root.resolveNode(id)
+        if (!node || !node.audio)
             return false
-        }
-        sinks = parsed.sinks
-        sources = parsed.sources
-        streams = parsed.streams
-        const defaultSink = parsed.sinks.find(row => row.isDefault) || parsed.sinks[0]
-        volume = defaultSink ? defaultSink.volume : 0
-        muted = defaultSink ? defaultSink.muted : false
-        error = ""
+        node.audio.muted = false
+        node.audio.volume = Math.max(0, Math.min(100, percent)) / 100
         return true
     }
 
-    function run(command, operation) {
-        if (serviceProcess.running) return false
-        _operation = operation
-        serviceProcess.command = command
-        serviceProcess.running = true
-        watchdog.restart()
+    function applyMuteToggle(id) {
+        const node = root.resolveNode(id)
+        if (!node || !node.audio)
+            return false
+        node.audio.muted = !node.audio.muted
         return true
     }
 
-    function refresh() { return run(["wpctl", "status", "-n"], "poll") }
-    function setVolume(percent) { return setSinkVolume("@DEFAULT_AUDIO_SINK@", percent) }
-    function setSinkVolume(id, percent) {
-        return run(["wpctl", "set-volume", String(id), Math.max(0, Math.min(100, percent)) + "%"], "action")
-    }
-    function setSourceVolume(id, percent) {
-        return run(["wpctl", "set-volume", String(id), Math.max(0, Math.min(100, percent)) + "%"], "action")
-    }
-    function setStreamVolume(id, percent) {
-        return run(["wpctl", "set-volume", String(id), Math.max(0, Math.min(100, percent)) + "%"], "action")
-    }
-    function toggleMute() { return toggleSinkMute("@DEFAULT_AUDIO_SINK@") }
-    function toggleSinkMute(id) { return run(["wpctl", "set-mute", String(id), "toggle"], "action") }
-    function toggleSourceMute(id) { return run(["wpctl", "set-mute", String(id), "toggle"], "action") }
-    function toggleStreamMute(id) { return run(["wpctl", "set-mute", String(id), "toggle"], "action") }
-    function setDefaultSink(id) { return run(["wpctl", "set-default", String(id)], "action") }
-    function setDefaultSource(id) { return run(["wpctl", "set-default", String(id)], "action") }
+    function setVolume(percent) { return root.applyVolume("@DEFAULT_AUDIO_SINK@", percent) }
+    function setSinkVolume(id, percent) { return root.applyVolume(id, percent) }
+    function setSourceVolume(id, percent) { return root.applyVolume(id, percent) }
+    function setStreamVolume(id, percent) { return root.applyVolume(id, percent) }
 
-    Process {
-        id: serviceProcess
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (root._operation === "poll") root.parse(text)
-            }
-        }
-        onExited: (exitCode, exitStatus) => {
-            watchdog.stop()
-            const operation = root._operation
-            root._operation = ""
-            command = []
-            if (exitCode !== 0) {
-                root.clear()
-                root.error = operation + " failed (exit " + exitCode + ")"
-            } else if (operation === "action") {
-                Qt.callLater(root.refresh)
-            }
-        }
+    function adjustVolume(delta) {
+        return root.applyVolume("@DEFAULT_AUDIO_SINK@", root.volume + delta)
     }
 
-    Timer {
-        id: watchdog
-        interval: 15000
-        onTriggered: {
-            if (!serviceProcess.running) return
-            serviceProcess.running = false
-            root.clear()
-            root.error = root._operation + " timed out"
-            root._operation = ""
-            serviceProcess.command = []
-        }
+    function toggleMute() { return root.applyMuteToggle("@DEFAULT_AUDIO_SINK@") }
+    function toggleSinkMute(id) { return root.applyMuteToggle(id) }
+    function toggleSourceMute(id) { return root.applyMuteToggle(id) }
+    function toggleStreamMute(id) { return root.applyMuteToggle(id) }
+
+    function setDefaultSink(id) {
+        const node = root.resolveNode(id)
+        if (!node)
+            return false
+        Pipewire.preferredDefaultAudioSink = node
+        return true
     }
 
-    Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.refresh()
+    function setDefaultSource(id) {
+        const node = root.resolveNode(id)
+        if (!node)
+            return false
+        Pipewire.preferredDefaultAudioSource = node
+        return true
+    }
+
+    // The registry is event driven, so there is nothing to poll. Kept so callers
+    // written against the previous polling service keep working.
+    function refresh() { return Pipewire.ready }
+
+    PwObjectTracker {
+        objects: root.audioNodes
     }
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../schemas/widget-manifest.schema.json",
+  "id": "tray",
+  "name": "System Tray",
+  "entry": "Widget.qml",
+  "surfaces": ["bar"],
+  "variants": ["compact", "standard"],
+  "lockSafe": false,
+  "services": ["tray"],
+  "capabilities": ["tray.activate", "tray.menu"],
+  "constraints": {
+    "compact": {"minWidth": 16, "minHeight": 16},
+    "standard": {"minWidth": 16, "minHeight": 24}
+  }
+}

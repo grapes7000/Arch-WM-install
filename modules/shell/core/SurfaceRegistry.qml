@@ -12,7 +12,9 @@ QtObject {
                 "launcher.open",
                 "drawer.open",
                 "session.lock",
-                "notification.dismiss"
+                "notification.dismiss",
+                "tray.activate",
+                "tray.menu"
             ]
         },
         desktop: {
