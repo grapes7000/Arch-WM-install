@@ -95,8 +95,15 @@ class StructureTests(unittest.TestCase):
         )
         self.assertIn("acceptedButtons: Qt.RightButton", dock_window)
         self.assertIn("border.width: 0", dock_window)
-        self.assertIn("radius: height / 2", dock_window)
+        self.assertIn(
+            "radius: Math.min(height / 2, Core.Theme.radius * 1.5)",
+            dock_window,
+        )
         self.assertIn("Math.abs(index - root.hoveredGroupIndex)", dock_window)
+        self.assertIn("width: parent.width - Core.Theme.gap", dock_window)
+        self.assertIn("visible: modelData.windows.length > 0", dock_window)
+        self.assertIn("target: iconVisual", dock_window)
+        self.assertNotIn("onExited:", dock_window)
         self.assertNotIn(
             "color: groupMouse.containsMouse || modelData.active",
             dock_window,
@@ -282,7 +289,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.09.07.1")
+        self.assertEqual(version, "2026.09.07.2")
 
 
 if __name__ == "__main__":

@@ -198,7 +198,7 @@ PanelWindow {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Core.Theme.gap
             color: Core.Theme.alphaColor(Core.Theme.surface, 0.58)
-            radius: height / 2
+            radius: Math.min(height / 2, Core.Theme.radius * 1.5)
             border.width: 0
             opacity: root.shown ? 1 : 0
             transform: Translate {
@@ -226,7 +226,14 @@ PanelWindow {
             Row {
                 id: dockRow
                 anchors.centerIn: parent
-                spacing: Core.Theme.gap
+                spacing: 0
+
+                HoverHandler {
+                    onHoveredChanged: {
+                        if (!hovered)
+                            root.hoveredGroupIndex = -1
+                    }
+                }
 
                 Repeater {
                     model: dockModel.groups
@@ -237,23 +244,48 @@ PanelWindow {
                         required property int index
                         readonly property real lift: root.hoveredGroupIndex < 0
                             ? 0 : Math.max(0, 18 - Math.abs(index - root.hoveredGroupIndex) * 8)
-                        width: Core.Theme.barHeight
+                        width: Core.Theme.barHeight + Core.Theme.gap
                         height: Core.Theme.barHeight
-                        transform: Translate {
-                            y: -groupButton.lift
-                            Behavior on y {
-                                NumberAnimation {
-                                    duration: Math.max(120, Core.Theme.animationMs)
-                                    easing.type: Easing.OutCubic
+
+                        Item {
+                            id: iconVisual
+                            width: Core.Theme.barHeight
+                            height: Core.Theme.barHeight
+                            anchors.centerIn: parent
+                            transform: Translate {
+                                y: -groupButton.lift
+                                Behavior on y {
+                                    NumberAnimation {
+                                        duration: Math.max(120, Core.Theme.animationMs)
+                                        easing.type: Easing.OutCubic
+                                    }
                                 }
                             }
-                        }
 
-                        IconImage {
-                            anchors.centerIn: parent
-                            width: parent.width - Core.Theme.gap * 2
-                            height: width
-                            source: Quickshell.iconPath(modelData.icon, true)
+                            IconImage {
+                                anchors.centerIn: parent
+                                width: parent.width - Core.Theme.gap
+                                height: width
+                                source: Quickshell.iconPath(modelData.icon, true)
+                            }
+
+                            Rectangle {
+                                visible: modelData.windows.length > 0
+                                width: modelData.active ? 12 : 6
+                                height: 4
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                radius: height / 2
+                                color: modelData.urgent ? Core.Theme.urgent
+                                    : (modelData.active ? Core.Theme.accent : Core.Theme.accent2)
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: Math.max(100, Core.Theme.animationMs)
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
                         }
 
                         MouseArea {
@@ -262,13 +294,12 @@ PanelWindow {
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton
                             onEntered: root.hoveredGroupIndex = index
-                            onExited: {
-                                if (root.hoveredGroupIndex === index)
-                                    root.hoveredGroupIndex = -1
-                            }
                             onClicked: root.chooseGroup(modelData)
                         }
-                        Components.PressBounce { pressed: groupMouse.pressed }
+                        Components.PressBounce {
+                            target: iconVisual
+                            pressed: groupMouse.pressed
+                        }
                     }
                 }
             }
