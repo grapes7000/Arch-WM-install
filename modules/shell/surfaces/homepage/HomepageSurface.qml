@@ -31,9 +31,9 @@ Scope {
             readonly property real sideWidth: compact ? 310 : 340
             readonly property real clusterWidth: homeWidth + sideGap + sideWidth
             readonly property real sideTop: compact ? 52 : 90
-            readonly property real mediaHeight: compact ? 180 : 195
+            readonly property real mediaHeight: compact ? 196 : 211
             readonly property real activityTop: sideTop + mediaHeight + (compact ? 14 : 16)
-            readonly property real activityHeight: compact ? 220 : 235
+            readonly property real activityHeight: compact ? 236 : 251
             readonly property real appClusterTop: activityTop + activityHeight
                 + (compact ? 20 : 24)
             readonly property int surfacePadding: compact ? 18 : 24
@@ -134,6 +134,11 @@ Scope {
                 id: contentLayer
                 anchors.fill: parent
                 opacity: root.anyWindowOpen ? 0 : 1
+
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: Core.InteractiveShellController.menu("open", root.screen)
+                }
 
                 Behavior on opacity {
                     NumberAnimation {

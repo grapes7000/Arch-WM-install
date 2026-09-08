@@ -14,6 +14,7 @@ PanelWindow {
     required property var modelData
     property bool shown: false
     property string selectedGroupKey: ""
+    property int hoveredGroupIndex: -1
     readonly property var selectedGroup: {
         for (const group of dockModel.groups) {
             if (group.key === selectedGroupKey)
@@ -51,6 +52,7 @@ PanelWindow {
         hideTimer.stop()
         shown = false
         selectedGroupKey = ""
+        hoveredGroupIndex = -1
         return true
     }
 
@@ -75,8 +77,17 @@ PanelWindow {
     }
 
     function chooseGroup(group) {
-        if (!group || group.windows.length === 0)
+        if (!group)
             return
+        if (group.windows.length === 0) {
+            const entry = group.desktopId ? DesktopEntries.byId(group.desktopId) : null
+            if (!entry)
+                return
+            Services.LauncherStateService.recordLaunch(group.desktopId)
+            entry.execute()
+            close()
+            return
+        }
         if (group.windows.length === 1) {
             focusWindow(group.windows[0])
             return
@@ -89,6 +100,8 @@ PanelWindow {
         monitorName: root.modelData ? root.modelData.name : ""
         sourceToplevels: Hyprland.toplevels
         desktopEntries: DesktopEntries.applications
+        favoriteIds: Services.LauncherStateService.favorites
+        focusedWorkspace: Hyprland.focusedWorkspace
     }
 
     Item {
@@ -186,10 +199,9 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Core.Theme.gap
-            color: Core.Theme.surface
-            radius: Core.Theme.radius
-            border.width: Core.Theme.borderWidth
-            border.color: Core.Theme.accent2
+            color: Core.Theme.alphaColor(Core.Theme.surface, 0.58)
+            radius: Math.min(height / 2, Core.Theme.radius * 2.25)
+            border.width: 0
             opacity: root.shown ? 1 : 0
             transform: Translate {
                 y: root.shown ? 0 : Core.Theme.gap * 2
@@ -208,47 +220,80 @@ PanelWindow {
                 }
             }
 
+            TapHandler {
+                acceptedButtons: Qt.RightButton
+                onTapped: Core.InteractiveShellController.menu("open", root.screen)
+            }
+
             Row {
                 id: dockRow
                 anchors.centerIn: parent
-                spacing: Core.Theme.gap
+                spacing: 0
+
+                HoverHandler {
+                    onHoveredChanged: {
+                        if (!hovered)
+                            root.hoveredGroupIndex = -1
+                    }
+                }
 
                 Repeater {
                     model: dockModel.groups
 
-                    Rectangle {
+                    Item {
                         id: groupButton
                         required property var modelData
-                        width: Core.Theme.barHeight
+                        required property int index
+                        readonly property real lift: root.hoveredGroupIndex < 0
+                            ? 0 : Math.max(0, 18 - Math.abs(index - root.hoveredGroupIndex) * 8)
+                        width: Core.Theme.barHeight + Core.Theme.gap
                         height: Core.Theme.barHeight
-                        radius: Core.Theme.radius
-                        color: groupMouse.containsMouse || modelData.active
-                            ? Core.Theme.accent : Core.Theme.background
-                        border.width: Core.Theme.borderWidth
-                        border.color: modelData.urgent
-                            ? Core.Theme.urgent : Core.Theme.accent2
 
-                        IconImage {
+                        Item {
+                            id: iconVisual
+                            width: Core.Theme.barHeight
+                            height: Core.Theme.barHeight
                             anchors.centerIn: parent
-                            width: parent.width - Core.Theme.gap * 2
-                            height: width
-                            source: Quickshell.iconPath(modelData.icon, true)
+                            transform: Translate {
+                                y: -groupButton.lift
+                                Behavior on y {
+                                    NumberAnimation {
+                                        duration: Math.max(120, Core.Theme.animationMs)
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+
+                            IconImage {
+                                anchors.centerIn: parent
+                                width: parent.width
+                                height: width
+                                source: Quickshell.iconPath(modelData.icon, true)
+                            }
                         }
 
                         Rectangle {
-                            visible: modelData.windows.length > 1
-                            width: Core.Theme.gap * 2
-                            height: width
-                            anchors.right: parent.right
+                            width: modelData.active ? 16 : 9
+                            height: 5
+                            anchors.horizontalCenter: parent.horizontalCenter
                             anchors.bottom: parent.bottom
-                            radius: width / 2
-                            color: Core.Theme.accent2
+                            anchors.bottomMargin: -Math.max(3, Core.Theme.gap / 2)
+                            radius: height / 2
+                            color: modelData.urgent ? Core.Theme.urgent
+                                : (modelData.active ? Core.Theme.accent : Core.Theme.foreground)
+                            opacity: modelData.running ? 1 : 0
+                            z: 2
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData.windows.length
-                                color: Core.Theme.background
-                                font.pixelSize: Math.max(11, Core.Theme.gap)
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: Math.max(100, Core.Theme.animationMs)
+                                }
+                            }
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Math.max(100, Core.Theme.animationMs)
+                                    easing.type: Easing.OutCubic
+                                }
                             }
                         }
 
@@ -256,9 +301,14 @@ PanelWindow {
                             id: groupMouse
                             anchors.fill: parent
                             hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton
+                            onEntered: root.hoveredGroupIndex = index
                             onClicked: root.chooseGroup(modelData)
                         }
-                        Components.PressBounce { pressed: groupMouse.pressed }
+                        Components.PressBounce {
+                            target: iconVisual
+                            pressed: groupMouse.pressed
+                        }
                     }
                 }
             }

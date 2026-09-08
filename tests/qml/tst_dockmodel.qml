@@ -51,6 +51,32 @@ TestCase {
         compare(model.groups[0].windows.length, 1)
     }
 
+    function test_favorites_are_pinned_and_merged_with_running_apps() {
+        const entries = [
+            { id: "org.kde.konsole.desktop", startupClass: "Konsole", name: "Konsole", icon: "konsole" },
+            { id: "org.mozilla.firefox.desktop", startupClass: "firefox", name: "Firefox", icon: "firefox" }
+        ]
+        const model = createTemporaryObject(dockModelComponent, this)
+        verify(model)
+
+        const pinnedOnly = model.buildGroups([], entries, "DP-1", [
+            "org.mozilla.firefox.desktop"
+        ])
+        compare(pinnedOnly.length, 1)
+        compare(pinnedOnly[0].desktopId, "org.mozilla.firefox.desktop")
+        compare(pinnedOnly[0].pinned, true)
+        compare(pinnedOnly[0].running, false)
+        compare(pinnedOnly[0].windows.length, 0)
+
+        const merged = model.buildGroups([
+            fakeWindow("0x3", "DP-1", "firefox", "Browser", "2")
+        ], entries, "DP-1", ["org.mozilla.firefox.desktop"])
+        compare(merged.length, 1)
+        compare(merged[0].pinned, true)
+        compare(merged[0].running, true)
+        compare(merged[0].windows.length, 1)
+    }
+
     function fakeWindow(address, monitor, appClass, title, workspace, mapped) {
         return {
             address,

@@ -74,7 +74,123 @@ class StructureTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("property var groups: []", dock_model)
         self.assertNotIn("readonly property var groups: buildGroups(", dock_model)
-        self.assertIn("onSourceToplevelsChanged: rebuildTimer.restart()", dock_model)
+        self.assertIn("onSourceToplevelsChanged: restartSettle()", dock_model)
+        self.assertIn("function onValuesChanged()", dock_model)
+
+    def test_dock_model_tracks_late_toplevel_data(self) -> None:
+        """Hyprland toplevels are published before monitor/ipc/focus data lands.
+
+        A rebuild driven only by list membership sees monitor === null, rejects
+        every window, and leaves the dock stuck with no running apps.
+        """
+        dock_model = (
+            ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("property Instantiator toplevelWatcher", dock_model)
+        for handler in (
+            "function onMonitorChanged()",
+            "function onLastIpcObjectChanged()",
+            "function onActivatedChanged()",
+            "function onUrgentChanged()",
+        ):
+            self.assertIn(handler, dock_model)
+        self.assertIn("function hasPendingPlacement(", dock_model)
+        self.assertIn("settleAttempts >= maxSettleAttempts", dock_model)
+        self.assertIn("settleTimer.restart()", dock_model)
+
+    def test_dock_focus_is_workspace_aware(self) -> None:
+        """The focused pill must never point at a window the user cannot see.
+
+        Quickshell learns focus from the live event stream, so at startup no
+        toplevel is activated and the clients snapshot has to stand in. That
+        snapshot goes stale the moment focus moves, and Hyprland reports no
+        activated toplevel at all on an empty workspace, so the fallback has to
+        latch off permanently and every focus test has to be gated on the
+        window actually being on the visible workspace.
+        """
+        dock_model = (
+            ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
+        ).read_text(encoding="utf-8")
+        dock_window = (
+            ROOT / "modules/shell/surfaces/desktop/TaskDockWindow.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("property bool sawFocusEvent: false", dock_model)
+        self.assertIn("if (!sawFocusEvent) {", dock_model)
+        self.assertIn("function isOnActiveWorkspace(window)", dock_model)
+        self.assertIn("if (!window || !isOnActiveWorkspace(window))", dock_model)
+        self.assertIn("monitor.activeWorkspace", dock_model)
+        self.assertIn("property var focusedWorkspace: null", dock_model)
+        self.assertIn("onFocusedWorkspaceChanged: rebuildTimer.restart()", dock_model)
+        self.assertIn("function onWorkspaceChanged()", dock_model)
+        self.assertIn("focusedWorkspace: Hyprland.focusedWorkspace", dock_window)
+        # Focus is only learned from the live event stream, so the initial
+        # clients snapshot must supply it instead.
+        self.assertIn("function isFocused(window, useSnapshotFocus)", dock_model)
+        self.assertIn("ipc.focusHistoryID === 0", dock_model)
+        self.assertNotIn("group.active || window.activated === true", dock_model)
+
+    def test_dock_supports_pinning_launcher_and_hover_wave(self) -> None:
+        dock_model = (
+            ROOT / "modules/shell/surfaces/desktop/DockModel.qml"
+        ).read_text(encoding="utf-8")
+        dock_window = (
+            ROOT / "modules/shell/surfaces/desktop/TaskDockWindow.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("property var favoriteIds: []", dock_model)
+        self.assertIn("pinned: true", dock_model)
+        self.assertIn("running: true", dock_model)
+        self.assertNotIn("entry: identity.entry", dock_model)
+        self.assertIn(
+            "favoriteIds: Services.LauncherStateService.favorites",
+            dock_window,
+        )
+        self.assertIn(
+            'Core.InteractiveShellController.menu("open", root.screen)',
+            dock_window,
+        )
+        self.assertIn("acceptedButtons: Qt.RightButton", dock_window)
+        self.assertIn("border.width: 0", dock_window)
+        self.assertIn(
+            "radius: Math.min(height / 2, Core.Theme.radius * 2.25)",
+            dock_window,
+        )
+        self.assertIn("Math.abs(index - root.hoveredGroupIndex)", dock_window)
+        self.assertIn("width: parent.width", dock_window)
+        self.assertIn("opacity: modelData.running ? 1 : 0", dock_window)
+        self.assertIn("anchors.bottomMargin: -Math.max(3, Core.Theme.gap / 2)", dock_window)
+        self.assertIn("target: iconVisual", dock_window)
+        self.assertNotIn("onExited:", dock_window)
+        self.assertNotIn(
+            "color: groupMouse.containsMouse || modelData.active",
+            dock_window,
+        )
+
+    def test_shell_context_menu_is_host_owned(self) -> None:
+        menu = (ROOT / "modules/shell/components/MenuPopup.qml").read_text(
+            encoding="utf-8"
+        )
+        controller = (
+            ROOT / "modules/shell/core/InteractiveShellController.qml"
+        ).read_text(encoding="utf-8")
+        bar = (
+            ROOT / "modules/shell/surfaces/bar/BarSurface.qml"
+        ).read_text(encoding="utf-8")
+        homepage = (
+            ROOT / "modules/shell/surfaces/homepage/HomepageSurface.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("function menu(action, screen)", controller)
+        self.assertIn("function runQuickAction(action)", menu)
+        self.assertIn("missioncenter", menu)
+        self.assertIn('action: "theme"', menu)
+        self.assertIn('action: "lock"', menu)
+        self.assertIn(
+            'Core.InteractiveShellController.menu("open", root.screen)',
+            bar,
+        )
+        self.assertIn(
+            'Core.InteractiveShellController.menu("open", root.screen)',
+            homepage,
+        )
 
     def test_theme_reload_helpers_are_bounded(self) -> None:
         legacy_engine = (
@@ -114,12 +230,17 @@ class StructureTests(unittest.TestCase):
         autostart = (
             ROOT / "modules/hyprland/config/conf/autostart.lua"
         ).read_text(encoding="utf-8")
+        repair = (ROOT / "scripts/force-shell-repair.sh").read_text(encoding="utf-8")
         version = (
             ROOT / "modules/hyprland/config/.arch-wm-version"
         ).read_text(encoding="utf-8").strip()
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
         self.assertNotIn("&& qs --no-duplicate;", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
+        self.assertIn("qs --no-duplicate --config arch-wm", repair)
+        self.assertNotIn("pkill", repair)
+        self.assertIn("quiet_ticks >= 110", repair)
+        self.assertIn("quiet_ticks=0", repair)
         self.assertIn("theme-sync.py", autostart)
         self.assertIn("command -v dunst >/dev/null 2>&1 && dunst", autostart)
         self.assertIn("arch-wm-regreet-theme --watch", autostart)
@@ -253,7 +374,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.08.07.22")
+        self.assertEqual(version, "2026.09.07.7")
 
 
 if __name__ == "__main__":

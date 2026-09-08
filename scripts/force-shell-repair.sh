@@ -36,9 +36,28 @@ if grep -R -n -F 'required property var context' "$TARGET/widgets"; then
 fi
 
 mkdir -p "$STATE"
-qs kill -c arch-wm >/dev/null 2>&1 || pkill -x qs >/dev/null 2>&1 || true
-sleep 1
-nohup qs -c arch-wm >"$LOG" 2>&1 &
+qs kill -c arch-wm >/dev/null 2>&1 || true
+# A crashed Quickshell process may spend up to ten seconds in its recovery
+# path before registering a replacement instance. Require an uninterrupted
+# quiet window after the last recovered instance is stopped.
+quiet_ticks=0
+for _ in {1..300}; do
+    if qs list -c arch-wm 2>/dev/null | grep -q '^Instance '; then
+        qs kill -c arch-wm >/dev/null 2>&1 || true
+        quiet_ticks=0
+    else
+        quiet_ticks=$((quiet_ticks + 1))
+        if ((quiet_ticks >= 110)); then
+            break
+        fi
+    fi
+    sleep 0.1
+done
+if ((quiet_ticks < 110)); then
+    echo 'Repair aborted: Quickshell did not remain stopped.' >&2
+    exit 1
+fi
+nohup qs --no-duplicate --config arch-wm >"$LOG" 2>&1 &
 sleep 3
 
 if grep -Fq 'Required property context was not initialized' "$LOG"; then
