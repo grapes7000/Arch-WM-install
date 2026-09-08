@@ -114,12 +114,15 @@ class StructureTests(unittest.TestCase):
         autostart = (
             ROOT / "modules/hyprland/config/conf/autostart.lua"
         ).read_text(encoding="utf-8")
+        repair = (ROOT / "scripts/force-shell-repair.sh").read_text(encoding="utf-8")
         version = (
             ROOT / "modules/hyprland/config/.arch-wm-version"
         ).read_text(encoding="utf-8").strip()
         self.assertIn("qs --no-duplicate --config arch-wm", autostart)
         self.assertNotIn("&& qs --no-duplicate;", autostart)
         self.assertNotIn("qs -c arch-wm", autostart)
+        self.assertIn("qs --no-duplicate --config arch-wm", repair)
+        self.assertNotIn("pkill", repair)
         self.assertIn("theme-sync.py", autostart)
         self.assertIn("command -v dunst >/dev/null 2>&1 && dunst", autostart)
         self.assertIn("arch-wm-regreet-theme --watch", autostart)
