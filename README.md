@@ -72,9 +72,9 @@ Arch-WM-install/
 
 ## Theme Engine
 
-The installer pins `grapes7000/themes` to an exact reviewed commit and verifies the catalog before installing it. It does **not** execute the old upstream installer, install Oh My Zsh, prompt for broad package changes, or import Eww.
+The installer clones `grapes7000/themes` at install time (shallow clone of `main`), runs its `install.sh --targets full`, and then verifies that `~/.local/bin/theme` and the requested theme exist before the stage passes. It does **not** execute the old upstream installer, install Oh My Zsh, prompt for broad package changes, or import Eww.
 
-The installed catalog contains all 40 upstream themes, including:
+The installed catalog is whatever `grapes7000/themes` ships on `main` (currently 53 themes), including:
 
 - Catppuccin Mocha, Macchiato, Frappe, and Latte
 - Dracula and Dracula Light
