@@ -14,6 +14,34 @@ Scope {
 
     MenuPopup { id: menuPopup }
 
+    // The tray menu is owned here rather than by the tray widget because
+    // widgets are not allowed to create windows. A single instance is enough
+    // for every monitor: the anchor item determines which bar window it
+    // attaches to.
+    TrayMenu { id: trayMenu }
+
+    QtObject {
+        id: trayMenuController
+
+        function open(item, anchorItem, screen) {
+            if (menuPopup.menuOpen)
+                menuPopup.close()
+            return trayMenu.openFor(item, anchorItem)
+        }
+
+        function close() {
+            trayMenu.close()
+            return true
+        }
+    }
+
+    Binding {
+        target: Core.InteractiveShellController
+        property: "trayMenuController"
+        value: trayMenuController
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
     function open(screen) {
         if (menuPopup.menuOpen)
             return true

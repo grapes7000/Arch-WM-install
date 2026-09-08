@@ -122,9 +122,12 @@ hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tru
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
+-- Brightness is routed through the shell so the OSD appears and so the
+-- backlight can be driven via logind, which needs no root and no helper
+-- binary. brightnessctl remains a fallback for a shell that is not running.
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(
-    "brightnessctl -e4 -n2 set 5%+"
+    "qs -c arch-wm ipc call brightness up || brightnessctl -e4 -n2 set 5%+"
 ), { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(
-    "brightnessctl -e4 -n2 set 5%-"
+    "qs -c arch-wm ipc call brightness down || brightnessctl -e4 -n2 set 5%-"
 ), { locked = true, repeating = true })

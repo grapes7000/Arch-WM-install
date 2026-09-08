@@ -85,6 +85,16 @@
       "panel": true
     },
     {
+      "id": "tray",
+      "name": "System Tray",
+      "entry": "Widget.qml",
+      "surfaces": ["bar"],
+      "variants": ["compact", "standard"],
+      "lockSafe": false,
+      "services": ["tray"],
+      "capabilities": ["tray.activate", "tray.menu"]
+    },
+    {
       "id": "notifications",
       "name": "Notifications",
       "entry": "Widget.qml",

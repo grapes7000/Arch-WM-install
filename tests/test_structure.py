@@ -374,7 +374,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("focus: popup.menuOpen", popup)
         self.assertIn("Keys.onEscapePressed: popup.close()", popup)
         self.assertIn("width: 340", popup)
-        self.assertEqual(version, "2026.09.08.1")
+        self.assertEqual(version, "2026.09.08.2")
 
     def test_launcher_supports_switchable_list_and_grid_views(self) -> None:
         launcher = (
@@ -439,6 +439,115 @@ class StructureTests(unittest.TestCase):
         )
         # Long names stay inside the card.
         self.assertIn("Math.min(launcherCard.width - width - Core.UiStyle.spacingXs,", launcher)
+
+    def test_audio_service_uses_native_pipewire_not_cli_polling(self) -> None:
+        service = (ROOT / "modules/shell/services/AudioService.qml").read_text(encoding="utf-8")
+
+        self.assertIn("import Quickshell.Services.Pipewire", service)
+        # Nodes only publish live audio data while they are tracked.
+        self.assertIn("PwObjectTracker", service)
+        # Consumers need a way to tell a real reading from an unbound node,
+        # which otherwise reports zero volume.
+        self.assertIn("readonly property bool ready:", service)
+        self.assertIn("root.defaultSink.ready", service)
+        # The old implementation shelled out to wpctl on a repeating timer.
+        self.assertNotIn("wpctl set-volume", service)
+        self.assertNotIn("Process {", service)
+        self.assertNotIn("Timer {", service)
+
+    def test_brightness_service_needs_no_helper_binary(self) -> None:
+        service = (ROOT / "modules/shell/services/BrightnessService.qml").read_text(encoding="utf-8")
+
+        # logind grants the active session backlight access, so no setuid
+        # helper, root, or brightnessctl install is required.
+        self.assertIn("org.freedesktop.login1.Session", service)
+        self.assertIn("SetBrightness", service)
+        # sysfs supports change notification, so external adjustments are
+        # picked up without polling.
+        self.assertIn("watchChanges: true", service)
+        self.assertNotIn("Timer {", service)
+        # A fully dark panel cannot be undone by the user.
+        self.assertIn("readonly property int minimumPercent: 1", service)
+
+        registered = (ROOT / "modules/shell/services/qmldir").read_text(encoding="utf-8")
+        self.assertIn("singleton BrightnessService 1.0 BrightnessService.qml", registered)
+        self.assertIn("singleton TrayService 1.0 TrayService.qml", registered)
+
+    def test_tray_widget_is_a_portable_package_that_owns_no_window(self) -> None:
+        manifest = json.loads(
+            (ROOT / "modules/shell/widgets/tray/manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(manifest["id"], "tray")
+        self.assertEqual(manifest["surfaces"], ["bar"])
+        # Tray items expose arbitrary application menus, so the widget must
+        # never be offered to the lock surface.
+        self.assertFalse(manifest["lockSafe"])
+        self.assertIn("tray.menu", manifest["capabilities"])
+
+        widget = (ROOT / "modules/shell/widgets/tray/Widget.qml").read_text(encoding="utf-8")
+        for window_type in ("PanelWindow", "FloatingWindow", "PopupWindow", "Lockscreen"):
+            self.assertNotIn(window_type, widget)
+        # The menu is opened by asking the host surface instead.
+        self.assertIn('root.context.request("tray.menu"', widget)
+
+        registry = json.loads(
+            (ROOT / "modules/shell/generated/widgets.json").read_text(encoding="utf-8")
+        )
+        self.assertIn("tray", [entry["id"] for entry in registry["widgets"]])
+
+        layout = json.loads(
+            (ROOT / "modules/shell/layouts/bar.default.json").read_text(encoding="utf-8")
+        )
+        self.assertIn("tray", [item["widget"] for item in layout["regions"]["end"]])
+
+    def test_tray_menu_is_hosted_by_the_bar_surface(self) -> None:
+        surface = (ROOT / "modules/shell/surfaces/bar/BarSurface.qml").read_text(encoding="utf-8")
+        self.assertIn("TrayMenu { id: trayMenu }", surface)
+        self.assertIn('property: "trayMenuController"', surface)
+
+        controller = (
+            ROOT / "modules/shell/core/InteractiveShellController.qml"
+        ).read_text(encoding="utf-8")
+        self.assertIn('if (capability === "tray.menu")', controller)
+        # Locking must not leave an application menu on screen.
+        self.assertIn("closeController(root.trayMenuController)", controller)
+
+        registry = (ROOT / "modules/shell/core/SurfaceRegistry.qml").read_text(encoding="utf-8")
+        self.assertIn('"tray.menu"', registry)
+
+        menu = (ROOT / "modules/shell/components/TrayMenu.qml").read_text(encoding="utf-8")
+        # Submenus are drilled into in place rather than opened as nested
+        # layer-shell popups.
+        self.assertIn("function descend(entry)", menu)
+        self.assertIn("function ascend()", menu)
+        self.assertIn("readonly property var visibleEntries:", menu)
+
+    def test_osd_surface_is_informational_only(self) -> None:
+        osd = (ROOT / "modules/shell/surfaces/osd/OsdSurface.qml").read_text(encoding="utf-8")
+
+        # An OSD appears while the user is typing, so it must never take input.
+        self.assertIn("focusable: false", osd)
+        self.assertIn("mask: Region {}", osd)
+        self.assertIn("exclusionMode: ExclusionMode.Ignore", osd)
+        # It reacts to the value changing, so it works for hardware keys, the
+        # bar widgets, and external tools alike.
+        self.assertIn("function onVolumeChanged()", osd)
+        self.assertIn("function onPercentChanged()", osd)
+        # Startup value settling is not a user action.
+        self.assertIn("property bool armed: false", osd)
+        # The reading must be committed before the kind, or the first rendered
+        # frame carries the previous value.
+        self.assertIn(
+            "        osdScope.value = nextValue;\n"
+            "        osdScope.muted = !!nextMuted;\n"
+            "        osdScope.kind = nextKind;",
+            osd,
+        )
+        self.assertIn("Services.LockStateService.locked", osd)
+
+        shell = (ROOT / "modules/shell/shell.qml").read_text(encoding="utf-8")
+        self.assertIn("OsdSurface {}", shell)
+        self.assertIn('target: "brightness"', shell)
 
 
 if __name__ == "__main__":

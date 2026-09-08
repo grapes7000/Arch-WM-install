@@ -105,9 +105,11 @@ class ShellServiceContractTests(unittest.TestCase):
     def service(self, name: str) -> str:
         return (SERVICES / f"{name}Service.qml").read_text(encoding="utf-8")
 
+    # AudioService is deliberately absent from the subprocess-based contracts
+    # below: it reads the PipeWire registry directly, so it owns no process, has
+    # no parser, and has no polling timer to bound.
     def test_each_shared_service_owns_one_process(self) -> None:
         for name in (
-            "Audio",
             "Network",
             "SystemStats",
             "Notification",
@@ -135,6 +137,17 @@ class ShellServiceContractTests(unittest.TestCase):
         for qmldir in (SERVICES / "qmldir", ROOT / "modules" / "shell" / "qmldir"):
             self.assertIn("singleton CavaService 1.0", qmldir.read_text(encoding="utf-8"))
 
+    def test_audio_service_is_event_driven(self) -> None:
+        source = self.service("Audio")
+        self.assertIn("import Quickshell.Services.Pipewire", source)
+        # No subprocess, no parser, and nothing to poll.
+        self.assertNotIn("Process {", source)
+        self.assertNotIn("Timer {", source)
+        self.assertNotIn("StdioCollector", source)
+        # The public surface the bar and drawers depend on must not regress.
+        for member in ("volume", "muted", "sinks", "sources", "streams", "setVolume", "toggleMute", "adjustVolume", "ready"):
+            self.assertRegex(source, rf"\b{member}\b", member)
+
     def test_shell_packages_contain_single_dunst_and_cava(self) -> None:
         packages = [
             line.strip()
@@ -154,7 +167,6 @@ class ShellServiceContractTests(unittest.TestCase):
             self.skipTest("Node.js is optional and is not installed on a fresh preflight VM")
 
         cases: dict[str, tuple[tuple[str, ...], str, dict[str, JsonValue], str, tuple[str, ...]]] = {
-            "Audio": (("clear", "parse"), "parse", {"volume": 75, "muted": True, "sinks": [{"id": 1}], "sources": [], "streams": [], "error": ""}, "not wpctl", ("volume", "muted", "sinks", "error")),
             "Network": (("splitEscaped", "clearActive", "parseStatus"), "parseStatus", {"connected": True, "ssid": "stale", "type": "wifi", "strength": 80, "ipAddress": "stale", "security": "WPA2", "downloadRate": "1 KiB/s", "uploadRate": "1 KiB/s", "activeConnection": {"name": "stale"}, "error": ""}, "malformed", ("connected", "ssid", "activeConnection", "error")),
             "SystemStats": (("clear", "parse"), "parse", {"cpuPercent": 80, "memoryPercent": 70, "diskPercent": 60, "uptime": "stale", "temperature": 40, "topProcesses": [{"pid": 1}], "error": ""}, "cpu=12\nmemory=nope", ("cpuPercent", "uptime", "topProcesses", "error")),
             "Notification": (("clearHistory", "parseHistory"), "parseHistory", {"count": 1, "recent": [{"summary": "stale"}], "error": ""}, "{", ("count", "recent", "error")),
@@ -172,7 +184,7 @@ class ShellServiceContractTests(unittest.TestCase):
                 self.assertFalse(result.has_stale)
 
     def test_failure_and_liveness_paths_are_bounded(self) -> None:
-        bounded = ("Audio", "Network", "SystemStats", "Notification", "Mpris", "Session", "Tailscale")
+        bounded = ("Network", "SystemStats", "Notification", "Mpris", "Session", "Tailscale")
         for name in bounded:
             source = self.service(name)
             self.assertIn("onExited:", source, name)

@@ -10,6 +10,7 @@
       {"instance": "clock-main", "widget": "clock", "variant": "compact"}
     ],
     "end": [
+      {"instance": "tray-main", "widget": "tray", "variant": "compact"},
       {"instance": "notifications-main", "widget": "notifications", "variant": "compact"},
       {"instance": "volume-main", "widget": "volume", "variant": "compact"},
       {"instance": "network-main", "widget": "network", "variant": "compact"},

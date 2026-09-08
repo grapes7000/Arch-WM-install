@@ -11,6 +11,8 @@ QtObject {
     property var drawerController: null
     property var dockController: null
     property var menuController: null
+    property var trayMenuController: null
+    property var osdController: null
 
     readonly property var drawerKinds: [
         "calendar",
@@ -86,7 +88,17 @@ QtObject {
     }
 
     function requestFromBar(capability, payload, screen) {
-        if (root.locked || capability !== "drawer.open" || !payload)
+        if (root.locked || !payload)
+            return false
+        // Tray menus are owned by the surface because widgets may not create
+        // windows, so the widget asks the bar to open one on its behalf.
+        if (capability === "tray.menu") {
+            closeController(root.launcherController)
+            closeController(root.drawerController)
+            closeController(root.menuController)
+            return invoke(root.trayMenuController, "open", [payload.item || null, payload.anchorItem || null, screen])
+        }
+        if (capability !== "drawer.open")
             return false
         const kind = typeof payload.kind === "string" ? payload.kind : ""
         if (root.drawerKinds.indexOf(kind) === -1)
@@ -110,6 +122,7 @@ QtObject {
     }
 
     function closeAll() {
+        closeController(root.trayMenuController)
         closeController(root.launcherController)
         closeController(root.drawerController)
         closeController(root.menuController)
