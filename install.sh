@@ -6,8 +6,9 @@ export PYTHONPATH="$ROOT_DIR${PYTHONPATH:+:$PYTHONPATH}"
 export PATH="$HOME/.local/bin:$PATH"
 
 run_install() {
+  # Portable Neovim configuration is owned by grapes7000/dotfiles and applied
+  # through linux-setup/Chezmoi. Arch-WM-install only owns desktop/session setup.
   python -m installer install "$@"
-  bash "$ROOT_DIR/scripts/install-nvim.sh" "$@"
 }
 
 command="${1:-install}"
