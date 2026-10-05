@@ -116,6 +116,7 @@ class ShellServiceContractTests(unittest.TestCase):
             "Mpris",
             "Session",
             "Cava",
+            "Bluetooth",
         ):
             processes = re.findall(r"^\s*Process\s*\{", self.service(name), re.MULTILINE)
             self.assertEqual(len(processes), 1, name)
@@ -127,6 +128,7 @@ class ShellServiceContractTests(unittest.TestCase):
             "SystemStats": ("temperature", "topProcesses", "uptime"),
             "Notification": ("recent", "dndEnabled", "toggleDnd"),
             "Cava": ("available", "running", "bars"),
+            "Bluetooth": ("powered", "devices", "scan", "pair", "connect", "disconnect"),
             "Session": ("pendingAction", "confirm", "error"),
         }
         for name, members in contracts.items():
@@ -184,7 +186,7 @@ class ShellServiceContractTests(unittest.TestCase):
                 self.assertFalse(result.has_stale)
 
     def test_failure_and_liveness_paths_are_bounded(self) -> None:
-        bounded = ("Network", "SystemStats", "Notification", "Mpris", "Session", "Tailscale")
+        bounded = ("Network", "SystemStats", "Notification", "Mpris", "Session", "Tailscale", "Bluetooth")
         for name in bounded:
             source = self.service(name)
             self.assertIn("onExited:", source, name)

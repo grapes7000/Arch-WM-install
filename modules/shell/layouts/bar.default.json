@@ -13,6 +13,7 @@
       {"instance": "tray-main", "widget": "tray", "variant": "compact"},
       {"instance": "notifications-main", "widget": "notifications", "variant": "compact"},
       {"instance": "volume-main", "widget": "volume", "variant": "compact"},
+      {"instance": "bluetooth-main", "widget": "bluetooth", "variant": "compact"},
       {"instance": "network-main", "widget": "network", "variant": "compact"},
       {"instance": "battery-main", "widget": "battery", "variant": "compact"},
       {"instance": "weather-main", "widget": "weather", "variant": "compact"},

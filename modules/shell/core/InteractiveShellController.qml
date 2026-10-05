@@ -17,6 +17,7 @@ QtObject {
     readonly property var drawerKinds: [
         "calendar",
         "audio",
+        "bluetooth",
         "network",
         "system",
         "notifications",
