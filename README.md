@@ -223,3 +223,7 @@ bash scripts/sync-upstreams.sh
 ```
 
 This copies the theme repository into `vendor/themes`, copies the Hyprland repository into `vendor/hyprland`, excludes all Eww paths, and records both source commit SHAs. Runtime installation never follows an unpinned mutable upstream branch.
+
+## Documentation audit
+
+See the [documentation and desktop architecture audit](docs/audits/2026-10-04-documentation-audit.md), prepared October 4, 2026. It records undocumented behavior, documentation discrepancies, and Quickshell/Hyprland ownership concerns against the reviewed commit.
