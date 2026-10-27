@@ -8,3 +8,9 @@ hl.window_rule({
 })
 -- Use the existing togglefloating binding to arrange an individual window.
 -- Quickshell's window-controls panel supplies maximize/minimize/restore/close.
+
+hl.env("GTK_THEME", "Chicago95-PinkPanel")
+hl.env("XCURSOR_THEME", "BrookeCursor")
+hl.env("XCURSOR_SIZE", "32")
+hl.env("QT_QUICK_CONTROLS_STYLE", "Basic")
+hl.env("QS_ICON_THEME", "Chicago95")

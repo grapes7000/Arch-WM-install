@@ -1,5 +1,7 @@
 # Arch WM Install
 
+> **Brooke branch:** On a fresh desktop-free CachyOS install, clone this branch and run `bash install.sh` as your normal user. It defaults to the complete Brooke profile and fetches pinned assets from the private `grapes7000/brooke-assets` repo (GitHub login is prompted). No separate base-desktop or overlay install is required. See [installation and VM test instructions](profiles/brooke/README.md). Actual graphical VM acceptance is pending.
+
 A public monorepo for installing and maintaining a custom Arch Linux desktop built around **Hyprland, Quickshell, a portable widget system, and one shared theme contract**.
 
 The project combines the responsibilities of:

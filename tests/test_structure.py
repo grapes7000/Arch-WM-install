@@ -12,7 +12,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 # payload's .arch-wm-version. See the test that consumes it for why the two
 # have to move together.
 HYPRLAND_PAYLOAD_DIGEST = (
-    "8efc44a887424bf76ea0d90441c99de47835163a0b4d753432358fd049dc412c"
+    "3bee44a6c97c27fc0cb27d5616b4fdefd2cce303da5ac6d6fee38540dc7edacf"
 )
 
 
@@ -252,7 +252,7 @@ class StructureTests(unittest.TestCase):
         self.assertIn("theme-sync.py", autostart)
         self.assertIn("command -v dunst >/dev/null 2>&1 && dunst", autostart)
         self.assertIn("arch-wm-regreet-theme --watch", autostart)
-        self.assertEqual(version, "2026.09.08.1")
+        self.assertEqual(version, "2026.10.27.brooke.1")
 
     def test_hyprland_payload_version_tracks_its_contents(self) -> None:
         """Editing the payload without bumping its version deploys nothing.

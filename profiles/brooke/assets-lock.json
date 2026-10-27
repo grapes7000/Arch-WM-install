@@ -1,0 +1,9 @@
+{
+  "repository": "grapes7000/brooke-assets",
+  "revision": "0f2d652dc2c1f9870ad0d40f17c52f35de418063",
+  "archive": "appearance.tar.xz",
+  "sha256": "85e6838d9afaf38007c79f1712c1cae41fa3c9a5cce400dcb1c7dad944f23456",
+  "files": {
+    "krita/BrookiePink.colors": "7b2971a8433bb357a92c304710ba9a78085ef8de752f84e1964bf47b259ee9d3"
+  }
+}

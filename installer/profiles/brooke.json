@@ -1,0 +1,6 @@
+{
+  "name": "brooke",
+  "description": "Brooke's complete floating-first CachyOS/Arch desktop with private appearance assets.",
+  "manifests": ["packages-base.txt", "packages-brooke.txt"],
+  "services": ["NetworkManager", "bluetooth", "power-profiles-daemon"]
+}

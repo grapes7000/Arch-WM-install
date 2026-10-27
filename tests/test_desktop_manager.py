@@ -82,7 +82,7 @@ class InstallWrapperTests(unittest.TestCase):
                 env=env,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(log.read_text().strip(), "-m installer install")
+            self.assertEqual(log.read_text().strip(), "-m installer install --profile brooke")
 
 
 class ManagerTests(unittest.TestCase):

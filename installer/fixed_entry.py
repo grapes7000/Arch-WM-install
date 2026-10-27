@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 from typing import Sequence
 
-from . import entry, runtime
+from . import entry, runtime, brooke
 
 THEMES_REPO = "https://github.com/grapes7000/themes.git"
 
@@ -106,6 +106,8 @@ def doctor_command(ctx: runtime.Context) -> int:
         "shell payload current": entry.shell_check(ctx),
         "ReGreet login": runtime.login_check(ctx),
     }
+    if brooke.enabled(ctx):
+        checks["Brooke private appearance payload"] = brooke.check(ctx)
     if ctx.profile.get("dotfiles"):
         checks["Chezmoi source"] = ctx.has("chezmoi") and (ctx.data / "chezmoi").is_dir()
 

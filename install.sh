@@ -8,6 +8,14 @@ export PATH="$HOME/.local/bin:$PATH"
 run_install() {
   # Portable Neovim configuration is owned by grapes7000/dotfiles and applied
   # through linux-setup/Chezmoi. Arch-WM-install only owns desktop/session setup.
+  # This development branch boots Brooke's desktop by default.
+  local has_profile=false
+  for arg in "$@"; do
+    case "$arg" in --profile|--profile=*) has_profile=true ;; esac
+  done
+  if [[ "$has_profile" == false ]]; then
+    set -- --profile brooke "$@"
+  fi
   python -m installer install "$@"
 }
 

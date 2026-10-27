@@ -26,6 +26,7 @@ STAGE_ORDER = (
     "40-theme-engine",
     "50-hyprland",
     "60-quickshell",
+    "65-brooke",
     "70-services",
     "75-login",
     "80-session",
@@ -68,6 +69,7 @@ class Options:
     only_stage: str | None = None
     verbose: bool = False
     remove_packages: bool = False
+    assets_dir: str | None = None
 
 
 class Context:
@@ -159,6 +161,13 @@ class Context:
 
     def _own(self, target: Path) -> None:
         assert self.state is not None
+        # A whole-tree backup/creation already owns every descendant. Recording
+        # child backups would recreate fragments after removing a fresh tree.
+        covered = [Path(value) for value in self.state.data.get("created_paths", [])]
+        covered += [Path(item["target"]) for item in self.state.data.get("backups", []) if item.get("kind") == "directory"]
+        if any(target != parent and target.is_relative_to(parent) for parent in covered):
+            self.emit(f"  parent ownership covers {target}")
+            return
         if target.exists() or target.is_symlink():
             self.emit(f"  backup {target}")
             self.state.backup_target(target, dry_run=self.options.dry_run)
@@ -750,8 +759,9 @@ def parser() -> argparse.ArgumentParser:
     commands = result.add_subparsers(dest="command", required=True)
 
     def common(target: argparse.ArgumentParser) -> None:
-        target.add_argument("--profile", choices=("minimal", "desktop", "workstation"), default="desktop")
+        target.add_argument("--profile", choices=("minimal", "desktop", "workstation", "brooke"), default="desktop")
         target.add_argument("--theme", default="y2k")
+        target.add_argument("--assets-dir", help="existing private Brooke asset repo checkout (otherwise fetched using GitHub CLI)")
         target.add_argument("--dry-run", action="store_true")
         target.add_argument("--noninteractive", action="store_true")
         target.add_argument("--no-aur", action="store_true")
@@ -789,6 +799,7 @@ def make_options(args: argparse.Namespace) -> Options:
         only_stage=getattr(args, "only_stage", None),
         verbose=getattr(args, "verbose", False),
         remove_packages=getattr(args, "remove_packages", False),
+        assets_dir=getattr(args, "assets_dir", None),
     )
 
 

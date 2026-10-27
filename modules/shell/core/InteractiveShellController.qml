@@ -33,10 +33,10 @@ QtObject {
         return controller[action].apply(controller, args) === true
     }
 
-    function launcher(action) {
+    function launcher(action, preferredScreen) {
         if (root.locked)
             return false
-        const screen = ScreenResolver.resolve("")
+        const screen = preferredScreen || ScreenResolver.resolve("")
         if (!screen)
             return false
         if (action === "open" || action === "toggle") {

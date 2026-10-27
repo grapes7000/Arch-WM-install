@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from . import runtime
+from . import runtime, brooke
 from .help import HELP_LAUNCHER, help_command, render_reference
 
 # Compatibility metadata for tests and the still-bundled fallback theme payload.
@@ -108,6 +108,7 @@ def hypr_check(ctx: runtime.Context) -> bool:
         (ctx.config / "hypr/.arch-wm-managed").is_file()
         and (ctx.config / "hypr/hyprland.lua").is_file()
         and payload_version_matches(source_version, installed_version)
+        and (not brooke.enabled(ctx) or brooke.hypr_check(ctx))
     )
 
 
@@ -131,6 +132,8 @@ def hypr_verify(ctx: runtime.Context) -> bool:
 
 def shell_payload_matches(ctx: runtime.Context) -> bool:
     """Return whether the installed Quickshell payload matches this checkout."""
+    if brooke.enabled(ctx):
+        return brooke.shell_payload_matches(ctx)
     source = ctx.root / "modules/shell"
     target = ctx.config / "quickshell/arch-wm"
     if not target.is_dir():
@@ -210,6 +213,8 @@ def session_verify(ctx: runtime.Context) -> bool:
 
 
 def validate_apply(ctx: runtime.Context) -> None:
+    if brooke.enabled(ctx):
+        brooke.validate(ctx)
     ctx.run([sys.executable, str(ctx.root / "scripts/validate-layouts.py")])
     ctx.run(
         [sys.executable, "-m", "unittest", "discover", "-s", str(ctx.root / "tests")]
@@ -256,10 +261,15 @@ def patch_runtime() -> None:
     """
     patched = []
     for stage in runtime.STAGES:
+        if stage.name == "65-brooke":
+            continue
         if stage.name == "50-hyprland":
-            patched.append(runtime.Stage(stage.name, hypr_check, runtime.hypr_apply, hypr_verify))
+            patched.append(runtime.Stage(stage.name, hypr_check, brooke.hypr_apply, hypr_verify))
         elif stage.name == "60-quickshell":
-            patched.append(runtime.Stage(stage.name, shell_check, runtime.shell_apply, shell_verify))
+            patched.append(runtime.Stage(stage.name, shell_check, brooke.shell_apply, shell_verify))
+            patched.append(runtime.Stage("65-brooke", brooke.check, brooke.apply, brooke.verify))
+        elif stage.name == "75-login":
+            patched.append(runtime.Stage(stage.name, stage.check, brooke.login_apply, stage.verify))
         elif stage.name == "80-session":
             patched.append(runtime.Stage(stage.name, session_check, session_apply, session_verify))
         elif stage.name == "90-validate":

@@ -9,7 +9,13 @@ import "../../surfaces/desktop" as Desktop
 import "../tray" as Tray
 Item {
     id: root
-    property var context
+    property var context: ({
+        variant: "compact",
+        settings: ({}),
+        locked: true,
+        allows: function() { return false },
+        request: function() { return false }
+    })
     readonly property var targetScreen: context.settings.screen || null
     readonly property bool bottom: context.settings.position === "bottom"
     readonly property var assets: context.settings.assets || ({})
@@ -67,7 +73,7 @@ Item {
                             if (context.locked || !modelData.windows.length) return
                             const w = modelData.windows[cycle++ % modelData.windows.length]
                             if (w.wayland) w.wayland.activate()
-                            else if (w.address) Hyprland.dispatch("focuswindow address:" + w.address)
+                            else if (w.address) Hyprland.dispatch('hl.dsp.focus({window = "address:' + w.address + '"})')
                         }
                     }
                 }
@@ -129,7 +135,7 @@ Item {
             visible: root.bottom
             label: "Screenshot"; icon: "applets-screenshooter"
             Layout.preferredWidth: 34; Layout.fillHeight: true
-            onClicked: root.run({command: ["hyprshot", "-m", "region"]})
+            onClicked: root.run({command: ["brooke-screenshot"]})
         }
         Repeater {
             model: root.bottom ? ["★", "✮", "✰", "✪"] : []
@@ -139,7 +145,7 @@ Item {
                 label: modelData
                 Layout.preferredWidth: 25; Layout.fillHeight: true
                 selected: Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.id === index + 1
-                onClicked: if (!context.locked) Hyprland.dispatch("workspace " + (index + 1))
+                onClicked: if (!context.locked) Hyprland.dispatch("hl.dsp.focus({workspace = " + (index + 1) + "})")
             }
         }
         ClassicButton {

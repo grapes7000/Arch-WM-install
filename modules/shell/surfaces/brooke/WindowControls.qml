@@ -23,11 +23,11 @@ PanelWindow {
         spacing: 4
         Repeater {
             model: [
-                {name: "Arrange", action: "togglefloating"},
-                {name: "Minimize", action: "movetoworkspacesilent special:brooke-minimized"},
-                {name: "Restore", action: "togglespecialworkspace brooke-minimized"},
-                {name: "Maximize", action: "fullscreen 1"},
-                {name: "Close", action: "killactive"}
+                {name: "Arrange", action: 'hl.dsp.window.float({action = "toggle"})'},
+                {name: "Minimize", action: 'hl.dsp.window.move({workspace = "special:brooke-minimized", follow = false})'},
+                {name: "Restore", action: 'hl.dsp.workspace.toggle_special("brooke-minimized")'},
+                {name: "Maximize", action: 'hl.dsp.window.fullscreen({mode = "maximized", action = "toggle"})'},
+                {name: "Close", action: 'hl.dsp.window.close()'}
             ]
             Brooke.ClassicButton {
                 required property var modelData
