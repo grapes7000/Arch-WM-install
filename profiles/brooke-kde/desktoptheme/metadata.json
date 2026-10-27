@@ -1,0 +1,16 @@
+{
+  "KPackageStructure": "Plasma/Theme",
+  "KPlugin": {
+    "Id": "brooke-classic",
+    "Name": "Brooke Classic",
+    "Description": "Hot pink, charcoal, Chicago95 icons and classic panels",
+    "Version": "0.1.0",
+    "License": "MIT",
+    "Authors": [
+      {
+        "Name": "Brooke desktop project"
+      }
+    ]
+  },
+  "X-Plasma-API": "5.0"
+}

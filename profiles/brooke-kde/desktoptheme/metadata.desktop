@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Brooke Classic
+Comment=Classic striped panels
+Type=Service
+X-KDE-PluginInfo-Name=brooke-classic
+X-KDE-PluginInfo-Version=0.1.0
+X-KDE-PluginInfo-License=MIT
+[Settings]
+FallbackTheme=default
