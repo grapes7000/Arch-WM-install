@@ -23,8 +23,12 @@ def theme_installed(ctx: runtime.Context) -> bool:
     return (ctx.home / ".local/bin/theme").is_file()
 
 
+def selected_theme(ctx: runtime.Context) -> str:
+    return brooke.theme_name(ctx) if brooke.enabled(ctx) else ctx.options.theme
+
+
 def theme_available(ctx: runtime.Context) -> bool:
-    return (theme_dir(ctx) / f"{ctx.options.theme}.json").is_file()
+    return (theme_dir(ctx) / f"{selected_theme(ctx)}.json").is_file()
 
 
 def active_theme(ctx: runtime.Context) -> str | None:
@@ -35,7 +39,7 @@ def active_theme(ctx: runtime.Context) -> str | None:
 
 
 def theme_check(ctx: runtime.Context) -> bool:
-    return theme_installed(ctx) and theme_available(ctx) and active_theme(ctx) == ctx.options.theme
+    return theme_installed(ctx) and theme_available(ctx) and active_theme(ctx) == selected_theme(ctx)
 
 
 def install_or_refresh_themes(ctx: runtime.Context) -> None:
@@ -59,8 +63,17 @@ def theme_apply(ctx: runtime.Context) -> None:
 
     # Arch-WM is the user-facing desktop installer. Keep the themes repository
     # separate internally, but fetch/install it automatically when needed.
-    if not theme_installed(ctx) or not theme_available(ctx):
+    catalog_present = bool(list(theme_dir(ctx).glob("*.json")))
+    if not theme_installed(ctx) or not catalog_present or (not brooke.enabled(ctx) and not theme_available(ctx)):
         install_or_refresh_themes(ctx)
+
+    if brooke.enabled(ctx):
+        if not ctx.options.dry_run and not theme_cmd.is_file():
+            raise runtime.InstallError("standalone theme installer completed but ~/.local/bin/theme is missing")
+        # Fresh installs have no compositor or wallpaper IPC socket. Generate
+        # the versioned Brooke contract without calling Theme Studio live apply.
+        brooke.prepare_theme(ctx)
+        return
 
     if not ctx.options.dry_run and not theme_cmd.is_file():
         raise runtime.InstallError("standalone theme installer completed but ~/.local/bin/theme is missing")
@@ -76,7 +89,7 @@ def theme_apply(ctx: runtime.Context) -> None:
 def theme_verify(ctx: runtime.Context) -> bool:
     if ctx.options.dry_run:
         return True
-    ok = theme_installed(ctx) and theme_available(ctx) and active_theme(ctx) == ctx.options.theme
+    ok = theme_installed(ctx) and theme_available(ctx) and active_theme(ctx) == selected_theme(ctx)
     if not ok:
         ctx.emit(
             "  theme verification failed: expected standalone themes paths "

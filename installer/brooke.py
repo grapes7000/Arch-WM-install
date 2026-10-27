@@ -166,9 +166,29 @@ def hypr_check(ctx):
             and (ctx.config/'hypr/hyprland.lua').read_text()==(ctx.root/'modules/hyprland/config/hyprland.lua').read_text()+'\nrequire("conf.brooke")\n')
     except OSError:return False
 
+def theme_name(ctx):
+    return runtime.json_file(ctx.root/'profiles/brooke/theme.json')['name']
+
+
+def prepare_theme(ctx):
+    name=theme_name(ctx)
+    ctx.emit('  generating Brooke theme files offline (no running desktop required)')
+    ctx.install(ctx.root/'profiles/brooke/theme.json',ctx.config/'hypr/themes'/f'{name}.json')
+    for filename in ['theme','ui-style']:
+        ctx.install(ctx.root/f'profiles/brooke/{filename}.json',ctx.config/f'theme-engine/generated/{filename}.json')
+    ctx.write(ctx.config/'hypr/generated/theme.lua',lua_appearance(ctx))
+    ctx.write(ctx.config/'hypr/generated/.active',name+'\n')
+
+
 def hypr_apply(ctx):
-    runtime.hypr_apply(ctx)
-    if enabled(ctx):configure_hypr(ctx)
+    if not enabled(ctx):
+        runtime.hypr_apply(ctx)
+        return
+    # runtime.hypr_apply runs `theme NAME` after copying files. That invokes
+    # wallpaper/reload IPC and cannot run before the first graphical login.
+    ctx.install(ctx.root/'modules/hyprland/config',ctx.config/'hypr',preserve=runtime.HYPR_FOREIGN_DIRECTORIES)
+    configure_hypr(ctx)
+    prepare_theme(ctx)
 
 def shell_apply(ctx):
     runtime.shell_apply(ctx)

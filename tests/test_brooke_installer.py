@@ -33,6 +33,30 @@ class BrookeInstallerTests(unittest.TestCase):
             self.assertFalse(ctx.profile.get('dotfiles'))
             opts=runtime.make_options(runtime.parser().parse_args(['install','--profile','brooke','--assets-dir','/example']))
             self.assertEqual(opts.assets_dir,'/example')
+            self.assertEqual(opts.theme,'brooke-chicago95')
+    def test_theme_and_compositor_install_without_a_live_session(self):
+        from installer import fixed_entry
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx=self.context(Path(tmp))
+            theme=ctx.home/'.local/bin/theme'
+            theme.parent.mkdir(parents=True,exist_ok=True)
+            theme.write_text('#!/bin/sh\necho live-theme-command-must-not-run >&2\nexit 97\n')
+            theme.chmod(0o755)
+            catalog=ctx.config/'hypr/themes';catalog.mkdir(parents=True)
+            (catalog/'y2k.json').write_text('{}')
+            def reject_external(command,**kwargs):
+                self.fail('Offline setup invoked external command: '+str(command))
+            ctx.run=reject_external
+            with patch.dict(os.environ,{'HYPRLAND_INSTANCE_SIGNATURE':'','WAYLAND_DISPLAY':''}):
+                fixed_entry.theme_apply(ctx)
+                self.assertTrue(fixed_entry.theme_verify(ctx))
+                self.assertEqual(fixed_entry.active_theme(ctx),'brooke-chicago95')
+                brooke.hypr_apply(ctx)
+                self.assertTrue(fixed_entry.theme_verify(ctx))
+                self.assertIn('hl.config',(ctx.config/'hypr/generated/theme.lua').read_text())
+            self.assertTrue((catalog/'y2k.json').is_file())
+            self.assertTrue((catalog/'brooke-chicago95.json').is_file())
+
     def test_stage_order_and_patch_is_idempotent(self):
         before=runtime.STAGES
         try:

@@ -760,7 +760,7 @@ def parser() -> argparse.ArgumentParser:
 
     def common(target: argparse.ArgumentParser) -> None:
         target.add_argument("--profile", choices=("minimal", "desktop", "workstation", "brooke"), default="desktop")
-        target.add_argument("--theme", default="y2k")
+        target.add_argument("--theme", default=None)
         target.add_argument("--assets-dir", help="existing private Brooke asset repo checkout (otherwise fetched using GitHub CLI)")
         target.add_argument("--dry-run", action="store_true")
         target.add_argument("--noninteractive", action="store_true")
@@ -790,7 +790,7 @@ def make_options(args: argparse.Namespace) -> Options:
     return Options(
         command=args.command,
         profile=getattr(args, "profile", "desktop"),
-        theme=getattr(args, "theme", "y2k"),
+        theme=getattr(args, "theme", None) or ("brooke-chicago95" if getattr(args, "profile", "desktop") == "brooke" else "y2k"),
         dry_run=getattr(args, "dry_run", False),
         noninteractive=getattr(args, "noninteractive", False),
         no_aur=getattr(args, "no_aur", False),

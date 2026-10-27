@@ -9,7 +9,7 @@ cd Arch-WM-install
 bash install.sh
 ```
 
-This branch defaults to the complete `brooke` profile. No separate base-desktop or overlay installation is required. The installer handles packages, the existing standalone theme engine, Hyprland, Quickshell, GTK styling, fonts/icons/cursors, wallpaper, Dunst, services, and the ReGreet login screen. After successful installation, reboot and choose Hyprland at login.
+This branch defaults to the complete `brooke` profile and its `brooke-chicago95` custom theme, not stock Y2K. Theme and compositor files are generated offline before the first graphical login. No separate base-desktop or overlay installation is required. The installer handles packages, the existing standalone theme engine, Hyprland, Quickshell, GTK styling, fonts/icons/cursors, wallpaper, Dunst, services, and the ReGreet login screen. After successful installation, reboot and choose Hyprland at login.
 
 It downloads assets from **grapes7000/brooke-assets**, a private repo. The first run prompts for GitHub CLI authentication if needed; complete the device-code sign-in using a browser on another device if the VM has no browser yet. No token is embedded in this repo. The private commit and SHA-256 are pinned in `assets-lock.json`. Payload parts are reassembled and verified before extraction.
 
