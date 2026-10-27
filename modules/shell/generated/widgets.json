@@ -5,135 +5,301 @@
       "id": "workspaces",
       "name": "Workspaces",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": false,
-      "services": ["hyprland"],
-      "capabilities": ["workspace.switch"]
+      "services": [
+        "hyprland"
+      ],
+      "capabilities": [
+        "workspace.switch"
+      ]
     },
     {
       "id": "active-window",
       "name": "Active Window",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": false,
-      "services": ["active-window"],
+      "services": [
+        "active-window"
+      ],
       "capabilities": []
     },
     {
       "id": "clock",
       "name": "Clock",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop", "lockscreen"],
-      "variants": ["compact", "standard", "expanded"],
+      "surfaces": [
+        "bar",
+        "desktop",
+        "lockscreen"
+      ],
+      "variants": [
+        "compact",
+        "standard",
+        "expanded"
+      ],
       "lockSafe": true,
-      "services": ["time"],
-      "capabilities": ["drawer.open"]
+      "services": [
+        "time"
+      ],
+      "capabilities": [
+        "drawer.open"
+      ]
     },
     {
       "id": "system-stats",
       "name": "System Stats",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop"],
-      "variants": ["compact", "standard", "expanded"],
+      "surfaces": [
+        "bar",
+        "desktop"
+      ],
+      "variants": [
+        "compact",
+        "standard",
+        "expanded"
+      ],
       "lockSafe": false,
-      "services": ["system-stats"],
-      "capabilities": ["drawer.open"],
+      "services": [
+        "system-stats"
+      ],
+      "capabilities": [
+        "drawer.open"
+      ],
       "panel": true
     },
     {
       "id": "battery",
       "name": "Battery",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop", "lockscreen"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop",
+        "lockscreen"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": true,
-      "services": ["power"],
-      "capabilities": ["drawer.open"]
+      "services": [
+        "power"
+      ],
+      "capabilities": [
+        "drawer.open"
+      ]
     },
     {
       "id": "media",
       "name": "Media",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop", "lockscreen"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop",
+        "lockscreen"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": true,
-      "services": ["mpris"],
-      "capabilities": ["media.control", "drawer.open"],
+      "services": [
+        "mpris"
+      ],
+      "capabilities": [
+        "media.control",
+        "drawer.open"
+      ],
       "panel": true
     },
     {
       "id": "volume",
       "name": "Volume",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": false,
-      "services": ["audio"],
-      "capabilities": ["audio.control", "drawer.open"]
+      "services": [
+        "audio"
+      ],
+      "capabilities": [
+        "audio.control",
+        "drawer.open"
+      ]
     },
     {
       "id": "bluetooth",
       "name": "Bluetooth",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": false,
-      "services": ["bluetooth"],
-      "capabilities": ["drawer.open"]
+      "services": [
+        "bluetooth"
+      ],
+      "capabilities": [
+        "drawer.open"
+      ]
     },
     {
       "id": "network",
       "name": "Network",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop", "lockscreen"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop",
+        "lockscreen"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": true,
-      "services": ["network"],
-      "capabilities": ["drawer.open"],
+      "services": [
+        "network"
+      ],
+      "capabilities": [
+        "drawer.open"
+      ],
       "panel": true
     },
     {
       "id": "tray",
       "name": "System Tray",
       "entry": "Widget.qml",
-      "surfaces": ["bar"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": false,
-      "services": ["tray"],
-      "capabilities": ["tray.activate", "tray.menu"]
+      "services": [
+        "tray"
+      ],
+      "capabilities": [
+        "tray.activate",
+        "tray.menu"
+      ]
     },
     {
       "id": "notifications",
       "name": "Notifications",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": false,
-      "services": ["notifications"],
-      "capabilities": ["notification.dismiss", "drawer.open"]
+      "services": [
+        "notifications"
+      ],
+      "capabilities": [
+        "notification.dismiss",
+        "drawer.open"
+      ]
     },
     {
       "id": "session",
       "name": "Session",
       "entry": "Widget.qml",
-      "surfaces": ["bar"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": false,
-      "services": ["session"],
-      "capabilities": ["session.lock", "drawer.open"]
+      "services": [
+        "session"
+      ],
+      "capabilities": [
+        "session.lock",
+        "drawer.open"
+      ]
     },
     {
       "id": "weather",
       "name": "Weather",
       "entry": "Widget.qml",
-      "surfaces": ["bar", "desktop", "lockscreen"],
-      "variants": ["compact", "standard"],
+      "surfaces": [
+        "bar",
+        "desktop",
+        "lockscreen"
+      ],
+      "variants": [
+        "compact",
+        "standard"
+      ],
       "lockSafe": true,
-      "services": ["weather"],
-      "capabilities": ["drawer.open"],
+      "services": [
+        "weather"
+      ],
+      "capabilities": [
+        "drawer.open"
+      ],
       "panel": true
+    },
+    {
+      "id": "brooke-panel",
+      "name": "Brooke classic panel",
+      "entry": "Widget.qml",
+      "surfaces": [
+        "bar"
+      ],
+      "variants": [
+        "compact"
+      ],
+      "capabilities": [
+        "drawer.open",
+        "tray.activate",
+        "tray.menu"
+      ],
+      "services": [
+        "audio",
+        "power",
+        "tray"
+      ],
+      "lockSafe": false,
+      "constraints": {
+        "compact": {
+          "minWidth": 320,
+          "minHeight": 25
+        }
+      }
     }
   ]
 }

@@ -184,7 +184,7 @@ Singleton {
         ? 0.40 : Math.max(0, Math.min(1, Number(style.shadow_opacity)))
     readonly property string shadowColor: style.shadow_color || roles.shadow || background
 
-    readonly property string fontFamily: "Inter"
+    readonly property string fontFamily: (data.typography || {}).font_family || "Inter"
 
     function applyHomepageImages(baseData) {
         const merged = Object.assign({}, baseData || root.data)
@@ -254,3 +254,4 @@ Singleton {
         root.refreshHomepageImages()
     }
 }
+

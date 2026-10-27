@@ -23,7 +23,8 @@ QtObject {
         "notifications",
         "session",
         "weather",
-        "battery"
+        "battery",
+        "media"
     ]
 
     function invoke(controller, action, args) {
@@ -135,3 +136,4 @@ QtObject {
             closeAll()
     }
 }
+

@@ -8,7 +8,7 @@ Item {
     // Workspaces and the tray are strips whose individual entries already own
     // their interaction chrome, and whose contents vary at runtime. Keep the
     // strip itself bare in every UI style so it does not draw an empty pill.
-    readonly property var _bareWidgets: ["workspaces", "tray"]
+    readonly property var _bareWidgets: ["workspaces", "tray", "brooke-panel"]
     readonly property bool pillEnabled: root.surfaceKind === "bar"
         && root._bareWidgets.indexOf(root.widgetId) === -1
     readonly property real pillPadding: Core.UiStyle.spacingSm
@@ -160,3 +160,4 @@ Item {
     Component.onCompleted: Qt.callLater(reloadWidget)
     Component.onDestruction: clearWidget()
 }
+

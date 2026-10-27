@@ -18,7 +18,8 @@ QtObject {
         "notifications",
         "session",
         "weather",
-        "battery"
+        "battery",
+        "media"
     ]
 
     function open(kind, targetAnchor, targetScreen) {
@@ -46,3 +47,4 @@ QtObject {
             close()
     }
 }
+

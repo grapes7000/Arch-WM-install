@@ -1,0 +1,27 @@
+{
+  "surface": "bar",
+  "regions": {
+    "start": [
+      {
+        "instance": "brooke-top",
+        "widget": "brooke-panel",
+        "variant": "compact",
+        "settings": {
+          "position": "top",
+          "height": 29,
+          "exclusive": true
+        }
+      },
+      {
+        "instance": "brooke-bottom",
+        "widget": "brooke-panel",
+        "variant": "compact",
+        "settings": {
+          "position": "bottom",
+          "height": 41,
+          "exclusive": false
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "name": "brooke-classic",
+  "metrics": {
+    "grid": 4,
+    "spacing_xs": 3,
+    "spacing_sm": 6,
+    "spacing_md": 10,
+    "spacing_lg": 12,
+    "spacing_xl": 16,
+    "spacing_2xl": 20,
+    "spacing_3xl": 24,
+    "control_height_compact": 24,
+    "control_height": 30,
+    "control_height_large": 34,
+    "icon_size": 20,
+    "icon_box": 18,
+    "radius_control": 0,
+    "radius_surface": 0,
+    "radius_overlay": 0,
+    "border_width": 1,
+    "focus_width": 2,
+    "font_caption": 14,
+    "font_secondary": 15,
+    "font_body": 17,
+    "font_section": 18,
+    "font_title": 21
+  },
+  "patterns": {
+    "surface": "flat",
+    "button": "quiet",
+    "motion": "restrained"
+  }
+}

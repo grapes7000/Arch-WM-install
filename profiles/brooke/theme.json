@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "name": "brooke-chicago95",
+  "dark": true,
+  "roles": {
+    "bg": "#080808",
+    "bg_alt": "#181018",
+    "surface_0": "#bfbfbf",
+    "surface_1": "#292029",
+    "surface_2": "#382638",
+    "overlay": "#221922",
+    "hover": "#50304b",
+    "selected": "#c50183",
+    "text": "#fff1fb",
+    "text_dim": "#d3b9ce",
+    "focus": "#ff0091",
+    "border_normal": "#808080",
+    "border_subtle": "#606060",
+    "border_strong": "#ff0091",
+    "accent": "#ff0091",
+    "accent2": "#c50183",
+    "urgent": "#ff477e"
+  },
+  "typography": {
+    "font_family": "BlackChancery"
+  },
+  "style": {
+    "corner_radius": 0,
+    "gaps": 4,
+    "border_width": 2,
+    "animation_ms": 110,
+    "motion_scale": 0.5,
+    "surface_opacity": 1,
+    "blur_on": false
+  },
+  "components": {
+    "homepage": {
+      "bar_position": "top",
+      "drawer_opacity": 1
+    }
+  }
+}

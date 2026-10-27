@@ -1,0 +1,23 @@
+[global]
+    follow = mouse
+    origin = top-right
+    offset = (12, 40)
+    width = (280, 420)
+    font = BlackChancery 16
+    frame_width = 3
+    frame_color = "#ff0091"
+    corner_radius = 0
+    markup = no
+    format = "%a\n%s\n%b"
+[urgency_low]
+    background = "#181018"
+    foreground = "#fff1fb"
+    timeout = 11
+[urgency_normal]
+    background = "#181018"
+    foreground = "#fff1fb"
+    timeout = 11
+[urgency_critical]
+    background = "#50002d"
+    foreground = "#ffffff"
+    timeout = 0

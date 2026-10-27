@@ -11,6 +11,7 @@ import "../../components" as Components
 Scope {
     id: root
 
+    property bool bottomLeft: false
     property string query: ""
     property string category: "All"
     property int selectedIndex: 0
@@ -189,15 +190,20 @@ Scope {
 
         Rectangle {
             anchors.fill: parent
-            color: Core.Theme.alphaColor(Core.Theme.background, 0.78)
+            color: Core.Theme.alphaColor(Core.Theme.background, root.bottomLeft ? 0.0 : 0.78)
             opacity: Math.max(0.0, Math.min(1.0, launcherWindow.revealProgress))
             MouseArea { anchors.fill: parent; onClicked: root.close() }
 
             Rectangle {
                 id: launcherCard
-                anchors.centerIn: parent
-                width: Math.min(parent.width - Core.UiStyle.spacing3xl * 2, 820)
-                height: Math.min(parent.height - Core.UiStyle.spacing3xl * 2, 600)
+                anchors.horizontalCenter: root.bottomLeft ? undefined : parent.horizontalCenter
+                anchors.verticalCenter: root.bottomLeft ? undefined : parent.verticalCenter
+                anchors.left: root.bottomLeft ? parent.left : undefined
+                anchors.bottom: root.bottomLeft ? parent.bottom : undefined
+                anchors.leftMargin: root.bottomLeft ? 4 : 0
+                anchors.bottomMargin: root.bottomLeft ? 45 : 0
+                width: Math.min(parent.width - 8, root.bottomLeft ? 600 : 820)
+                height: Math.min(parent.height - 80, root.bottomLeft ? 500 : 600)
                 radius: Core.UiStyle.radiusOverlay
                 color: Core.Theme.surfaceOverlay
                 border.width: Core.UiStyle.borderWidth
@@ -669,3 +675,4 @@ Scope {
         }
     }
 }
+

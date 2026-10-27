@@ -1,0 +1,28 @@
+{
+  "id": "brooke-panel",
+  "name": "Brooke classic panel",
+  "entry": "Widget.qml",
+  "surfaces": [
+    "bar"
+  ],
+  "variants": [
+    "compact"
+  ],
+  "capabilities": [
+    "drawer.open",
+    "tray.activate",
+    "tray.menu"
+  ],
+  "services": [
+    "audio",
+    "power",
+    "tray"
+  ],
+  "lockSafe": false,
+  "constraints": {
+    "compact": {
+      "minWidth": 320,
+      "minHeight": 25
+    }
+  }
+}

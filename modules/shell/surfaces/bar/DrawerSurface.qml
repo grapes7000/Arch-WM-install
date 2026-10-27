@@ -17,6 +17,7 @@ Scope {
         notifications: Qt.resolvedUrl("../../widgets/notifications/Panel.qml"),
         session: Qt.resolvedUrl("../../widgets/session/Panel.qml"),
         weather: Qt.resolvedUrl("../../widgets/weather/Panel.qml"),
+        media: Qt.resolvedUrl("../../widgets/media/Panel.qml"),
         battery: Qt.resolvedUrl("../../widgets/battery/Panel.qml")
     })
 
@@ -160,3 +161,4 @@ Scope {
         }
     }
 }
+
