@@ -3,7 +3,7 @@ ColorScheme=BrookeClassic
 font=BlackChancery,12,-1,5,50,0,0,0,0,0
 menuFont=BlackChancery,12,-1,5,50,0,0,0,0,0
 [kdeglobals][kdeglobals][Icons]
-Theme=Chicago95
+Theme=BrookeChicago95
 [plasmarc][Theme]
 name=brooke-classic
 [kcminputrc][Mouse]

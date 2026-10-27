@@ -26,12 +26,12 @@ when applying it there, include the desktop layout to get the panels/wallpaper.
 
 ## Appearance
 
-- Exact exported wallpaper, Chicago95 icons, BrookeCursor-48 and original fonts
+- Exact exported wallpaper, Chicago95 artwork with KDE-compatible icon aliases, BrookeCursor-48 and original fonts
   fetched from the pinned, checksum-verified private appearance archive.
 - Hot pink/fuchsia selection and title bars; charcoal app views; gray controls.
 - Original Chicago95-PinkPanel styling for GTK apps.
 - Custom opaque panel frame embedding the original exported bar texture, with square beveled edges.
-- Top panel: trash, clock and system tray (network, audio, battery, etc.).
+- Top panel: trash, solid-backed clock with calendar popup and system tray (network, audio, battery, etc.).
 - Bottom panel: star launcher, exported application launchers plus running apps, pager and show desktop. Missing applications are reported and omitted until installed.
 - Standard Breeze window decorations with minimize/maximize/close buttons.
 - One panel pair on Plasma's default screen; wallpaper on all desktops.
@@ -89,3 +89,25 @@ adds launchers for applications newly installed by the full installer.
 Session identity is now supplied by the selected session, rather than a global
 user environment file labeling Plasma as Hyprland. Log out/reboot after updating
 so the old environment is replaced. Do not use --resume to skip these repairs.
+
+## Icon coverage and panel fixes
+
+The selectable **Brooke Chicago95** icon theme inherits Chicago95 and adds
+aliases for KDE folder/place/category/application names using the original
+artwork. It is selected for both GTK and KDE, so Thunar, Dolphin, file dialogs,
+and the application launcher share artwork where their requested names match.
+Breeze/hicolor provide missing symbols; applications with embedded icons or
+sandboxed runtimes may require their own settings.
+
+Panel SVG centers now explicitly tile instead of stretching across a monitor,
+and use one-pixel layout margins. The clock has an opaque gray face for
+contrast and opens a month calendar. The application menu uses Brooke's star.
+Reapply and log out/in to flush existing Plasma theme and icon caches:
+
+```bash
+git pull --ff-only
+python scripts/install-brooke-kde.py --apply
+```
+
+This resets the panel layout to the updated template and prints a backup path.
+It does not require reinstalling Hyprland or changing the login manager again.

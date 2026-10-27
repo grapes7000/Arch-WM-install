@@ -97,3 +97,15 @@ inactiveBlend=96,96,96
 
 [KDE]
 contrast=7
+
+[Colors:Header]
+BackgroundNormal=197,1,131
+BackgroundAlternate=197,1,131
+ForegroundNormal=255,255,255
+ForegroundInactive=235,235,235
+DecorationFocus=255,0,145
+DecorationHover=255,0,145
+
+[Colors:Header][Inactive]
+BackgroundNormal=96,96,96
+ForegroundNormal=235,235,235

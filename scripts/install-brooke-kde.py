@@ -76,6 +76,9 @@ def launcher_files(model,asset_root,which=shutil.which):
             continue
         icon=str(entry.get('icon','application-x-executable')).replace('@DATA@',asset_root.as_uri())
         if icon.startswith('file:'):icon=unquote(urlparse(icon).path)
+        if icon.startswith('/') and not Path(icon).is_file():
+            print('Missing exported launcher image:',icon)
+            icon=Path(command[0]).name
         name=str(entry.get('name','Application')).replace('\n',' ').replace('\r',' ')
         icon=icon.replace('\n','').replace('\r','')
         filename=f'brooke-classic-launcher-{i}.desktop'
@@ -84,11 +87,70 @@ def launcher_files(model,asset_root,which=shutil.which):
     return result
 
 
+ICON_ALIASES = {
+    'org.kde.dolphin': ['system-file-manager', 'Thunar', 'thunar', 'folder'],
+    'org.kde.konsole': ['utilities-terminal', 'Terminal', 'terminal'],
+    'systemsettings': ['preferences-system', 'preferences-desktop'],
+    'org.kde.krita': ['krita', 'applications-graphics'],
+    'applications-all': ['applications-other', 'applications-accessories', 'folder'],
+    'applications-development': ['applications-development', 'applications-accessories'],
+    'applications-education': ['applications-education', 'applications-science'],
+    'applications-games': ['applications-games', 'games'],
+    'applications-graphics': ['applications-graphics', 'graphics'],
+    'applications-internet': ['applications-internet', 'applications-network', 'web-browser'],
+    'applications-multimedia': ['applications-multimedia', 'multimedia-player'],
+    'applications-office': ['applications-office', 'x-office-document'],
+    'applications-system': ['applications-system', 'preferences-system'],
+    'applications-utilities': ['applications-accessories', 'applications-utilities'],
+    'folder-documents': ['folder-documents', 'folder'],
+    'folder-downloads': ['folder-downloads', 'folder-download', 'folder'],
+    'folder-pictures': ['folder-pictures', 'folder-image', 'folder'],
+    'folder-music': ['folder-music', 'folder-sound', 'folder'],
+    'folder-videos': ['folder-videos', 'folder-video', 'folder'],
+    'user-home': ['user-home', 'folder-home', 'folder'],
+    'user-desktop': ['user-desktop', 'desktop', 'folder'],
+    'document-open': ['document-open', 'folder-open', 'folder'],
+    'document-new': ['document-new', 'text-x-generic'],
+    'system-file-manager': ['system-file-manager', 'Thunar', 'folder'],
+}
+
+
+def build_icon_bridge(original,destination,star=None):
+    """Reuse Chicago95 artwork under icon names requested by KDE applications."""
+    index={}
+    for path in sorted(original.rglob('*')):
+        if path.is_file() and path.suffix.lower() in {'.svg','.png','.xpm'}:
+            index.setdefault(path.stem,[]).append(path)
+    destination.mkdir(parents=True,exist_ok=True)
+    aliases={};directories=set()
+    for name,candidates in ICON_ALIASES.items():
+        source=next((index[c][0] for c in candidates if c in index),None)
+        if source is None:continue
+        context='places' if name.startswith(('folder-','user-')) else ('categories' if name.startswith('applications-') else ('actions' if name.startswith('document-') else 'apps'))
+        directory=('scalable/' if source.suffix.lower()=='.svg' else '48x48/')+context
+        target=destination/directory/(name+source.suffix.lower())
+        target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
+        directories.add(directory);aliases[name]=str(source.relative_to(original))
+    if star and star.is_file():
+        directory='48x48/apps';target=destination/directory/('brooke-star'+star.suffix)
+        target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(star,target);directories.add(directory)
+    text='[Icon Theme]\nName=Brooke Chicago95\nComment=Original Chicago95 icons with KDE name aliases\nInherits=Chicago95,breeze,hicolor\nDirectories='+','.join(sorted(directories))+'\n'
+    for directory in sorted(directories):
+        text+='\n['+directory+']\nSize=48\nContext='+{'apps':'Applications','places':'Places','categories':'Categories','actions':'Actions'}[directory.split('/')[-1]]+'\nType='+('Scalable\nMinSize=8\nMaxSize=256\n' if directory.startswith('scalable') else 'Fixed\n')
+    (destination/'index.theme').write_text(text)
+    (destination/'aliases.json').write_text(json.dumps(aliases,indent=2)+'\n')
+    return aliases
+
+
 def textured_panel(svg,texture):
     import base64,re
     encoded=base64.b64encode(texture).decode('ascii')
     pattern='<pattern id="stripes" width="128" height="32" patternUnits="userSpaceOnUse"><image width="128" height="32" preserveAspectRatio="none" xlink:href="data:image/jpeg;base64,'+encoded+'"/></pattern>'
-    return re.sub(r'<pattern\b.*?</pattern>',lambda _:pattern,svg,flags=re.S).replace('<svg xmlns=', '<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns=',1)
+    svg=re.sub(r'<pattern\b.*?</pattern>',lambda _:pattern,svg,flags=re.S)
+    # FrameSvg scales its center by default, magnifying the embedded pattern
+    # to the entire monitor width. Tile the native SVG center instead.
+    svg=svg.replace('</svg>','<rect id="hint-tile-center" x="92" y="92" width="1" height="1"/></svg>')
+    return svg.replace('<svg xmlns=', '<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns=',1)
 
 
 def install(args):
@@ -130,6 +192,9 @@ def install(args):
             # Every included theme/cursor/font unit is backed up independently.
             for category in ['themes','icons']:
                 for item in (folder/category).iterdir():backup.install(item,data/category/item.name)
+            bridge=folder/'bridge'
+            build_icon_bridge(folder/'icons/Chicago95',bridge,folder/'assets/star.png')
+            backup.install(bridge,data/'icons/BrookeChicago95')
             backup.install(folder/'fonts',data/'fonts/brooke')
             backup.install(wallpaper,data/'wallpapers/BrookeClassic/wallpaper.jpeg')
             asset_root=data/'brooke-kde/private-assets'
@@ -148,6 +213,7 @@ def install(args):
             layout=look/'contents/layouts/org.kde.plasma.desktop-layout.js'
             layout.write_text(layout.read_text().replace('@WALLPAPER_URL@',json.dumps((data/'wallpapers/BrookeClassic/wallpaper.jpeg').as_uri())).replace('@LAUNCHERS@',json.dumps(pinned)))
             backup.install(package/'desktoptheme',data/'plasma/desktoptheme/brooke-classic')
+            backup.install(package/'clock',data/'plasma/plasmoids/org.brooke.classic.clock')
             texture=(folder/'assets/stripes.jpg').read_bytes()
             style=data/'plasma/desktoptheme/brooke-classic'
             svg=textured_panel((style/'widgets/panel-background.svg').read_text(),texture)
@@ -164,6 +230,11 @@ def install(args):
             run(['plasma-apply-lookandfeel','--apply','org.brooke.classic.desktop','--resetLayout'])
             run(['plasma-apply-colorscheme','BrookeClassic'])
             run(['plasma-apply-desktoptheme','brooke-classic'])
+            run(['kwriteconfig6','--file','kdeglobals','--group','Icons','--key','Theme','BrookeChicago95'])
+            run(['kwriteconfig6','--file','kcminputrc','--group','Mouse','--key','cursorTheme','BrookeCursor-48'])
+            for key,value in [('library','org.kde.breeze'),('ButtonsOnLeft','M'),('ButtonsOnRight','IAX')]:
+                run(['kwriteconfig6','--file','kwinrc','--group','org.kde.kdecoration2','--key',key,value])
+            if shutil.which('kbuildsycoca6'):run(['kbuildsycoca6','--noincremental'])
             for key in ['font','menuFont','toolBarFont']:
                 run(['kwriteconfig6','--file','kdeglobals','--group','General','--key',key,'BlackChancery,12,-1,5,50,0,0,0,0,0'])
             for version in ['3.0','4.0']:
@@ -173,7 +244,7 @@ def install(args):
                 settings=configparser.ConfigParser(interpolation=None);settings.optionxform=str
                 if target.exists():settings.read(target)
                 if not settings.has_section('Settings'):settings.add_section('Settings')
-                for key,value in {'gtk-theme-name':'Chicago95-PinkPanel','gtk-icon-theme-name':'Chicago95','gtk-font-name':'BlackChancery 16','gtk-cursor-theme-name':'BrookeCursor-48','gtk-cursor-theme-size':'48'}.items():settings.set('Settings',key,value)
+                for key,value in {'gtk-theme-name':'Chicago95-PinkPanel','gtk-icon-theme-name':'BrookeChicago95','gtk-font-name':'BlackChancery 16','gtk-cursor-theme-name':'BrookeCursor-48','gtk-cursor-theme-size':'48'}.items():settings.set('Settings',key,value)
                 with target.open('w') as f:settings.write(f)
         print('Installed Brooke Classic. '+('Log out and back into Plasma.' if args.apply else 'Select it in System Settings > Colors & Themes > Global Theme. Enable desktop layout to install the panels and wallpaper.'))
         print('Rollback: python scripts/install-brooke-kde.py --rollback '+str(backup.path))

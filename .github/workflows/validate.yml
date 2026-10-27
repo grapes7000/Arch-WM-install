@@ -36,7 +36,7 @@ jobs:
             archlinux:latest \
             bash -lc '
               set -euo pipefail
-              pacman -Syu --noconfirm --needed qt6-declarative quickshell lua >/dev/null
+              pacman -Syu --noconfirm --needed qt6-declarative quickshell lua libplasma >/dev/null
               # Verify every required Brooke package is in the synced official repos.
               sed -e "/^[[:space:]]*#/d" -e "/^[[:space:]]*$/d" \
                 manifests/packages-base.txt manifests/packages-brooke.txt \
@@ -44,6 +44,7 @@ jobs:
               /usr/lib/qt6/bin/qmllint -I modules/shell \
                 modules/shell/shell.qml \
                 modules/shell/brooke.qml \
+                profiles/brooke-kde/clock/contents/ui/main.qml \
                 modules/shell/surfaces/brooke/*.qml \
                 modules/shell/widgets/brooke-panel/*.qml \
                 modules/shell/surfaces/homepage/*.qml \
@@ -71,4 +72,5 @@ jobs:
             modules/theme-engine/bin/wallgen
       - name: Enforce no Eww paths
         run: bash scripts/check-legacy-widget-free.sh
+
 
