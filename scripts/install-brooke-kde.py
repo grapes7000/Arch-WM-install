@@ -55,6 +55,42 @@ def restore(directory):
     print('Restored backup. Log out and back in to reload Plasma.')
 
 
+def desktop_exec(command):
+    # Desktop Entry Exec has its own quoting rules; it is not a shell command.
+    def quote(arg):
+        value=str(arg).replace('%','%%')
+        for char in ['\\', '"', '`', '$']:
+            value=value.replace(char,'\\'+char)
+        return '"'+value+'"'
+    return ' '.join(quote(arg) for arg in command)
+
+
+def launcher_files(model,asset_root,which=shutil.which):
+    from urllib.parse import unquote,urlparse
+    result=[]
+    for i,entry in enumerate(model.get('launchers',[])):
+        command=entry.get('command')
+        if not isinstance(command,list) or not command or not all(isinstance(a,str) for a in command):continue
+        if not which(command[0]):
+            print('Launcher application not installed:',entry.get('name',command[0]))
+            continue
+        icon=str(entry.get('icon','application-x-executable')).replace('@DATA@',asset_root.as_uri())
+        if icon.startswith('file:'):icon=unquote(urlparse(icon).path)
+        name=str(entry.get('name','Application')).replace('\n',' ').replace('\r',' ')
+        icon=icon.replace('\n','').replace('\r','')
+        filename=f'brooke-classic-launcher-{i}.desktop'
+        content=f'[Desktop Entry]\nType=Application\nName={name}\nIcon={icon}\nExec={desktop_exec(command)}\nTerminal=false\nCategories=Utility;\n'
+        result.append((filename,content))
+    return result
+
+
+def textured_panel(svg,texture):
+    import base64,re
+    encoded=base64.b64encode(texture).decode('ascii')
+    pattern='<pattern id="stripes" width="128" height="32" patternUnits="userSpaceOnUse"><image width="128" height="32" preserveAspectRatio="none" xlink:href="data:image/jpeg;base64,'+encoded+'"/></pattern>'
+    return re.sub(r'<pattern\b.*?</pattern>',lambda _:pattern,svg,flags=re.S).replace('<svg xmlns=', '<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns=',1)
+
+
 def install(args):
     from installer.brooke import assemble_archive, validate_archive
     if os.geteuid()==0:raise RuntimeError('Run as your regular desktop user, without sudo')
@@ -63,7 +99,7 @@ def install(args):
     state=Path(os.environ.get('XDG_STATE_HOME',home/'.local/state'))/'brooke-kde'
     if args.rollback:
         restore(Path(args.rollback).expanduser().resolve());return
-    required=['fc-cache']+(['plasma-apply-lookandfeel','plasma-apply-colorscheme','kwriteconfig6'] if args.apply else [])
+    required=['fc-cache']+(['plasma-apply-lookandfeel','plasma-apply-colorscheme','plasma-apply-desktoptheme','kwriteconfig6'] if args.apply else [])
     for name in required:
         if not shutil.which(name):raise RuntimeError('Missing command: '+name)
     if args.apply and 'KDE' not in os.environ.get('XDG_CURRENT_DESKTOP','').upper():
@@ -96,12 +132,28 @@ def install(args):
                 for item in (folder/category).iterdir():backup.install(item,data/category/item.name)
             backup.install(folder/'fonts',data/'fonts/brooke')
             backup.install(wallpaper,data/'wallpapers/BrookeClassic/wallpaper.jpeg')
+            asset_root=data/'brooke-kde/private-assets'
+            backup.install(folder/'assets',asset_root/'assets')
+            model=json.loads((folder/'assets.json').read_text())
+            launchers=launcher_files(model,asset_root)
+            for filename,content in launchers:
+                target=data/'applications'/filename;backup.remember(target)
+                target.parent.mkdir(parents=True,exist_ok=True);target.write_text(content)
+            pinned=['applications:'+name for name,_ in launchers]
+            if not pinned:
+                pinned=['applications:org.kde.dolphin.desktop','applications:systemsettings.desktop']
             package=ROOT/'profiles/brooke-kde'
             look=data/'plasma/look-and-feel/org.brooke.classic.desktop'
             backup.install(package/'look-and-feel',look)
             layout=look/'contents/layouts/org.kde.plasma.desktop-layout.js'
-            layout.write_text(layout.read_text().replace('@WALLPAPER_URL@',json.dumps((data/'wallpapers/BrookeClassic/wallpaper.jpeg').as_uri())))
+            layout.write_text(layout.read_text().replace('@WALLPAPER_URL@',json.dumps((data/'wallpapers/BrookeClassic/wallpaper.jpeg').as_uri())).replace('@LAUNCHERS@',json.dumps(pinned)))
             backup.install(package/'desktoptheme',data/'plasma/desktoptheme/brooke-classic')
+            texture=(folder/'assets/stripes.jpg').read_bytes()
+            style=data/'plasma/desktoptheme/brooke-classic'
+            svg=textured_panel((style/'widgets/panel-background.svg').read_text(),texture)
+            for variant in ['', 'opaque', 'translucent']:
+                panel=style/variant/'widgets/panel-background.svg'
+                panel.parent.mkdir(parents=True,exist_ok=True);panel.write_text(svg)
             backup.install(package/'BrookeClassic.colors',data/'color-schemes/BrookeClassic.colors')
         run(['fc-cache','-f'])
         if args.apply:
@@ -111,6 +163,7 @@ def install(args):
             # Brooke's two panels and wallpaper using Plasma's own APIs.
             run(['plasma-apply-lookandfeel','--apply','org.brooke.classic.desktop','--resetLayout'])
             run(['plasma-apply-colorscheme','BrookeClassic'])
+            run(['plasma-apply-desktoptheme','brooke-classic'])
             for key in ['font','menuFont','toolBarFont']:
                 run(['kwriteconfig6','--file','kdeglobals','--group','General','--key',key,'BlackChancery,12,-1,5,50,0,0,0,0,0'])
             for version in ['3.0','4.0']:

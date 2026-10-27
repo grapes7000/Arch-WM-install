@@ -36,7 +36,7 @@ class BrookeKdeTests(unittest.TestCase):
         if not shutil.which('node'):self.skipTest('node unavailable')
         template=(ROOT/'profiles/brooke-kde/look-and-feel/contents/layouts/org.kde.plasma.desktop-layout.js').read_text()
         url='file:///home/test/a%20b/quote%22wallpaper.jpeg'
-        layout=template.replace('@WALLPAPER_URL@',json.dumps(url))
+        layout=template.replace('@WALLPAPER_URL@',json.dumps(url)).replace('@LAUNCHERS@',json.dumps(['applications:example.desktop']))
         harness='''const assert = require('assert');
 const created=[];const d={writeConfig(k,v){this[k]=v}};
 function Panel(){this.widgets=[];this.writeConfig=function(k,v){this[k]=v};this.addWidget=function(id){this.widgets.push(id);return {writeConfig(){}}};created.push(this)}
@@ -45,3 +45,15 @@ function desktops(){return [d]}
 assert.equal(created.length,2);assert.equal(created[0].location,'top');assert.equal(created[1].location,'bottom');assert.equal(created[0].floating,false);assert.equal(d.Image,'''+json.dumps(url)+''');
 '''
         subprocess.run(['node','-e',harness],check=True,capture_output=True)
+
+    def test_launchers_use_exported_commands_and_asset_paths(self):
+        model={'launchers':[{'name':'Paint','command':['krita','a b.kra'],'icon':'@DATA@/assets/icons/krita.png'},{'name':'Missing','command':['missing']} ]}
+        files=kde.launcher_files(model,Path('/target/assets'),which=lambda name:name=='krita')
+        self.assertEqual(len(files),1)
+        self.assertIn('Icon=/target/assets/assets/icons/krita.png',files[0][1])
+        self.assertIn('Exec="krita" "a b.kra"',files[0][1])
+    def test_panel_embeds_actual_texture(self):
+        svg=(ROOT/'profiles/brooke-kde/desktoptheme/widgets/panel-background.svg').read_text()
+        rendered=kde.textured_panel(svg,b'image-data')
+        ET.fromstring(rendered)
+        self.assertIn('data:image/jpeg;base64,aW1hZ2UtZGF0YQ==',rendered)

@@ -607,14 +607,15 @@ def dotfiles_verify(ctx: Context) -> bool:
 
 
 def session_check(ctx: Context) -> bool:
-    return (ctx.config / "environment.d/90-arch-wm.conf").is_file()
+    try:
+        return (ctx.config / "environment.d/90-arch-wm.conf").read_text() == "QT_QPA_PLATFORM=wayland;xcb\nMOZ_ENABLE_WAYLAND=1\n"
+    except OSError:
+        return False
 
 
 def session_apply(ctx: Context) -> None:
     ctx.write(
         ctx.config / "environment.d/90-arch-wm.conf",
-        "XDG_CURRENT_DESKTOP=Hyprland\n"
-        "XDG_SESSION_DESKTOP=Hyprland\n"
         "QT_QPA_PLATFORM=wayland;xcb\n"
         "MOZ_ENABLE_WAYLAND=1\n",
     )
@@ -626,7 +627,7 @@ def session_apply(ctx: Context) -> None:
 
 
 def session_verify(ctx: Context) -> bool:
-    return ctx.options.dry_run or (ctx.config / "environment.d/90-arch-wm.conf").is_file()
+    return ctx.options.dry_run or session_check(ctx)
 
 
 def validate_check(_: Context) -> bool:
@@ -818,3 +819,4 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (InstallError, FileNotFoundError, json.JSONDecodeError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
+

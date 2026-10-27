@@ -30,9 +30,9 @@ when applying it there, include the desktop layout to get the panels/wallpaper.
   fetched from the pinned, checksum-verified private appearance archive.
 - Hot pink/fuchsia selection and title bars; charcoal app views; gray controls.
 - Original Chicago95-PinkPanel styling for GTK apps.
-- Custom opaque striped Plasma panel frame with square beveled edges.
+- Custom opaque panel frame embedding the original exported bar texture, with square beveled edges.
 - Top panel: trash, clock and system tray (network, audio, battery, etc.).
-- Bottom panel: star launcher, pinned/running apps, pager and show desktop.
+- Bottom panel: star launcher, exported application launchers plus running apps, pager and show desktop. Missing applications are reported and omitted until installed.
 - Standard Breeze window decorations with minimize/maximize/close buttons.
 - One panel pair on Plasma's default screen; wallpaper on all desktops.
 
@@ -44,7 +44,7 @@ larger than the requested 29/41 pixels depending on scale and widget size.
 This installer does not change the login manager, install a compositor, modify
 Hyprland configuration, install Krita resources, or include QuickShape. When
 both desktop sessions are installed, session selection belongs to the login
-manager. Keep CachyOS's Plasma/SDDM setup while evaluating this theme.
+manager. Use the full installer below if you also want Arch-WM's ReGreet login screen.
 
 ## Recovery
 
@@ -69,3 +69,23 @@ Developer references:
 - https://develop.kde.org/docs/plasma/theme/theme-porting-to-plasma6/
 - https://develop.kde.org/docs/plasma/scripting/api/
 - https://develop.kde.org/docs/plasma/theme/theme-details/
+
+## Install Hyprland alongside Plasma, using Arch-WM's login screen
+
+From this checkout, run:
+
+```bash
+git pull --ff-only
+bash install.sh
+python scripts/install-brooke-kde.py --apply
+```
+
+The full installer installs Hyprland/Quickshell and switches the login manager
+to Arch-WM's ReGreet. It does not uninstall Plasma. Reboot, then choose either
+Plasma or Hyprland from ReGreet's session selection before logging in. Running
+the Plasma theme installer afterward reapplies the shared GTK appearance and
+adds launchers for applications newly installed by the full installer.
+
+Session identity is now supplied by the selected session, rather than a global
+user environment file labeling Plasma as Hyprland. Log out/reboot after updating
+so the old environment is replaced. Do not use --resume to skip these repairs.
