@@ -7,8 +7,9 @@ ShellRoot {
     id: root
     property var panels: []
     Item { id: host; width: 1280; height: 41 }
-    Component.onCompleted: {
-        const component = Qt.createComponent("../../modules/shell/widgets/brooke-panel/Widget.qml", Component.PreferSynchronous)
+    Component.onCompleted: Qt.callLater(runTest)
+    function runTest() {
+        const component = Qt.createComponent("widgets/brooke-panel/Widget.qml", Component.PreferSynchronous)
         if (component.status !== Component.Ready) {
             console.error("BROOKE_SMOKE_FAILED", component.errorString())
             Qt.quit()
