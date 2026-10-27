@@ -37,6 +37,10 @@ jobs:
             bash -lc '
               set -euo pipefail
               pacman -Syu --noconfirm --needed qt6-declarative quickshell lua >/dev/null
+              # Verify every required Brooke package is in the synced official repos.
+              sed -e "/^[[:space:]]*#/d" -e "/^[[:space:]]*$/d" \
+                manifests/packages-base.txt manifests/packages-brooke.txt \
+                | xargs pacman -Si >/dev/null
               /usr/lib/qt6/bin/qmllint -I modules/shell \
                 modules/shell/shell.qml \
                 modules/shell/brooke.qml \

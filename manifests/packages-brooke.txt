@@ -51,8 +51,6 @@ krita
 pavucontrol
 fontconfig
 adwaita-icon-theme
-gtk-engines
-gtk-engine-murrine
 ttf-jetbrains-mono-nerd
 noto-fonts
 noto-fonts-emoji
