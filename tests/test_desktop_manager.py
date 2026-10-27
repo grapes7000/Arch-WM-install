@@ -174,7 +174,10 @@ class ManagerTests(unittest.TestCase):
                 (target / "partial.conf").write_text("partial\n")
                 raise RuntimeError("boom")
 
-            with patch.object(manager, "_links", side_effect=fail_links):
+            # This exercises rollback, so allow activation even when the test
+            # runner itself was launched from the installed Hyprland desktop.
+            with patch.dict(os.environ, {"HYPRLAND_INSTANCE_SIGNATURE": ""}), \
+                 patch.object(manager, "_links", side_effect=fail_links):
                 with self.assertRaises(ProfileError):
                     manager.activate_pending(apply=True)
 
