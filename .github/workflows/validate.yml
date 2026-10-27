@@ -51,6 +51,9 @@ jobs:
                 modules/shell/surfaces/bar/BarSurface.qml \
                 modules/shell/surfaces/bar/DrawerSurface.qml \
                 modules/shell/surfaces/bar/LauncherOverlay.qml
+              QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+                timeout 30s dbus-run-session -- qs -p tests/smoke/brooke.qml 2>&1 | tee /tmp/brooke-smoke.log
+              grep -q "BROOKE_SMOKE_OK" /tmp/brooke-smoke.log
               find modules/hyprland/config -name "*.lua" -print0 | xargs -0 -n1 luac -p
             '
       - name: Check shell scripts
@@ -67,3 +70,4 @@ jobs:
             modules/theme-engine/bin/wallgen
       - name: Enforce no Eww paths
         run: bash scripts/check-legacy-widget-free.sh
+

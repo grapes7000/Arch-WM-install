@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import "../core" as Core
 
 Item {
@@ -141,12 +142,18 @@ Item {
 
         Text {
             font.family: Core.Theme.fontFamily
-            anchors.centerIn: parent
-            text: "!"
+            anchors.fill: parent
+            anchors.margins: 3
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+            text: root.widgetId + ": " + root.loadError.replace(/\n/g, " ")
             color: Core.Theme.urgent
             font.bold: true
-            font.pixelSize: Core.UiStyle.fontBody
+            font.pixelSize: 12
         }
+        MouseArea { id: errorHover; anchors.fill: parent; hoverEnabled: true }
+        ToolTip.visible: errorHover.containsMouse
+        ToolTip.text: root.loadError
     }
 
     Connections {

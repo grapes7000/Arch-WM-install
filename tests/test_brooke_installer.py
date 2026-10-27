@@ -86,6 +86,19 @@ class BrookeInstallerTests(unittest.TestCase):
                 self.assertEqual(model['launchers'][0]['command'],['brooke-screenshot'])
                 self.assertTrue((ctx.config/'hypr/generated/theme.lua').is_file())
                 self.assertTrue((ctx.config/'dunst/dunstrc').is_file())
+                # A compositor reinstall must not erase the stage-65 wallpaper.
+                brooke.hypr_apply(ctx)
+                self.assertTrue(brooke.check(ctx))
+                self.assertEqual((ctx.config/'hypr/hyprpaper.conf').read_text(),brooke.wallpaper_config(ctx))
+                # Reproduce the old empty-template failure and prove it repairs.
+                (ctx.config/'hypr/hyprpaper.conf').write_text('splash = false\nipc = true\n')
+                self.assertFalse(brooke.check(ctx))
+                brooke.apply(ctx)
+                self.assertTrue(brooke.check(ctx))
+                (ctx.config/'hypr/hyprpaper.conf').unlink()
+                self.assertFalse(brooke.check(ctx))
+                brooke.apply(ctx)
+                self.assertTrue(brooke.check(ctx))
             ctx.state.restore()
             self.assertFalse((ctx.data/'brooke-desktop/assets.json').exists())
     def test_brooke_shell_and_hyprland_payload_checks_survive_reinstall(self):

@@ -17,10 +17,10 @@ Item {
         request: function() { return false }
     })
     readonly property var targetScreen: context.settings.screen || null
-    readonly property bool bottom: context.settings.position === "bottom"
+    readonly property bool isBottom: context.settings.position === "bottom"
     readonly property var assets: context.settings.assets || ({})
     implicitWidth: 900
-    implicitHeight: bottom ? 37 : 25
+    implicitHeight: isBottom ? 37 : 25
     function run(entry) {
         if (context.locked || !entry || !entry.command || !entry.command.length) return
         Quickshell.execDetached(entry.command)
@@ -37,21 +37,21 @@ Item {
         anchors.fill: parent
         spacing: 4
         ClassicButton {
-            visible: root.bottom
+            visible: root.isBottom
             label: "★ Applications"
             icon: root.assets.star || ""
             Layout.preferredWidth: 66; Layout.fillHeight: true
             onClicked: Core.InteractiveShellController.launcher("toggle", root.targetScreen)
         }
         ClassicButton {
-            visible: !root.bottom
+            visible: !root.isBottom
             label: "Trash"; icon: "user-trash"
             Layout.preferredWidth: 25; Layout.fillHeight: true
             onClicked: root.run({command: ["gio", "open", "trash:///"]})
         }
         // The running-window strip shrinks before pinned launchers do.
         Flickable {
-            visible: root.bottom
+            visible: root.isBottom
             Layout.preferredWidth: Math.min(180, taskRow.width)
             Layout.maximumWidth: 180
             Layout.fillHeight: true
@@ -79,39 +79,39 @@ Item {
                 }
             }
         }
-        Item { visible: !root.bottom; Layout.fillWidth: true }
+        Item { visible: !root.isBottom; Layout.fillWidth: true }
         ClassicButton {
-            visible: !root.bottom
+            visible: !root.isBottom
             label: "Battery"; icon: "battery"
             Layout.preferredWidth: batteryText.implicitWidth + 34; Layout.fillHeight: true
             Text { id: batteryText; anchors.right: parent.right; anchors.rightMargin: 3; anchors.verticalCenter: parent.verticalCenter; text: Services.PowerService.available && Services.PowerService.percent >= 0 ? Services.PowerService.percent + "%" : "AC"; color: "black" }
             onClicked: context.request("drawer.open", {kind: "battery", anchorItem: root})
         }
         Rectangle {
-            visible: !root.bottom
+            visible: !root.isBottom
             color: "#bfbfbf"; border.color: "#111111"
             Layout.preferredWidth: timeText.implicitWidth + 12; Layout.fillHeight: true
             Text { id: timeText; anchors.centerIn: parent; text: Qt.formatTime(clock.date, "h:mm:ss ap"); color: "black"; font.family: "More Perfect DOS VGA"; font.italic: true; font.pixelSize: 21 }
             SystemClock { id: clock; precision: SystemClock.Seconds }
         }
         ClassicButton {
-            visible: !root.bottom
+            visible: !root.isBottom
             label: "Volume " + Services.AudioService.volume + "%"; icon: Services.AudioService.muted ? "audio-volume-muted" : "audio-volume-high"
             Layout.preferredWidth: 25; Layout.fillHeight: true
             onClicked: context.request("drawer.open", {kind: "audio", anchorItem: root})
             WheelHandler { onWheel: event => Services.AudioService.adjustVolume(event.angleDelta.y > 0 ? 5 : -5) }
         }
-        Tray.Widget { visible: !root.bottom; context: root.context; Layout.preferredWidth: implicitWidth; Layout.fillHeight: true }
+        Tray.Widget { visible: !root.isBottom; context: root.context; Layout.preferredWidth: implicitWidth; Layout.fillHeight: true }
         ClassicButton {
-            visible: !root.bottom
+            visible: !root.isBottom
             label: "Music"; icon: "multimedia-player"
             Layout.preferredWidth: 25; Layout.fillHeight: true
             onClicked: context.request("drawer.open", {kind: "media", anchorItem: root})
         }
-        Item { visible: !root.bottom; Layout.fillWidth: true }
+        Item { visible: !root.isBottom; Layout.fillWidth: true }
         Flickable {
-            Layout.fillWidth: root.bottom
-            Layout.preferredWidth: root.bottom ? 700 : topRow.width
+            Layout.fillWidth: root.isBottom
+            Layout.preferredWidth: root.isBottom ? 700 : topRow.width
             Layout.fillHeight: true
             clip: true
             contentWidth: topRow.width; contentHeight: height
@@ -120,10 +120,10 @@ Item {
                 id: topRow
                 height: parent.height; spacing: 5
                 Repeater {
-                    model: root.bottom ? (root.assets.launchers || []) : (root.assets.topLaunchers || [])
+                    model: root.isBottom ? (root.assets.launchers || []) : (root.assets.topLaunchers || [])
                     ClassicButton {
                         required property var modelData
-                        width: root.bottom ? 34 : 25; height: topRow.height
+                        width: root.isBottom ? 34 : 25; height: topRow.height
                         label: modelData.name; icon: modelData.icon || "application-x-executable"
                         available: !!modelData.command && modelData.command.length > 0
                         onClicked: root.run(modelData)
@@ -132,13 +132,13 @@ Item {
             }
         }
         ClassicButton {
-            visible: root.bottom
+            visible: root.isBottom
             label: "Screenshot"; icon: "applets-screenshooter"
             Layout.preferredWidth: 34; Layout.fillHeight: true
             onClicked: root.run({command: ["brooke-screenshot"]})
         }
         Repeater {
-            model: root.bottom ? ["★", "✮", "✰", "✪"] : []
+            model: root.isBottom ? ["★", "✮", "✰", "✪"] : []
             ClassicButton {
                 required property string modelData
                 required property int index
@@ -149,7 +149,7 @@ Item {
             }
         }
         ClassicButton {
-            visible: root.bottom
+            visible: root.isBottom
             label: "Window controls"; icon: "preferences-system-windows"
             Layout.preferredWidth: 32; Layout.fillHeight: true
             onClicked: if (!context.locked && context.settings.openControls) context.settings.openControls()

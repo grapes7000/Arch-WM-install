@@ -80,6 +80,10 @@ def assets_fetch(ctx):
     ctx.run(['git','-C',str(source),'checkout','--detach','FETCH_HEAD'])
     return source
 
+def wallpaper_config(ctx):
+    wallpaper=ctx.data/'brooke-desktop/assets/wallpaper.jpeg'
+    return f'splash = false\nipc = true\nwallpaper {{\n    monitor =\n    path = {wallpaper}\n    fit_mode = cover\n}}\n'
+
 def check(ctx):
     if not enabled(ctx):return True
     marker=ctx.data/'brooke-desktop/installed.json'
@@ -88,6 +92,7 @@ def check(ctx):
         return (current.get('sha256')==lock(ctx)['sha256'] and
             (ctx.data/'brooke-desktop/assets.json').is_file() and
             (ctx.data/'brooke-desktop/assets/wallpaper.jpeg').is_file() and
+            (ctx.config/'hypr/hyprpaper.conf').read_text()==wallpaper_config(ctx) and
             (ctx.config/'theme-engine/generated/theme.json').read_bytes()==(ctx.root/'profiles/brooke/theme.json').read_bytes() and
             (ctx.config/'dunst/dunstrc').is_file())
     except (OSError,ValueError):return False
@@ -132,9 +137,7 @@ def apply(ctx):
     for name in ['theme','ui-style']:
         ctx.install(ctx.root/f'profiles/brooke/{name}.json',ctx.config/f'theme-engine/generated/{name}.json')
     ctx.install(ctx.root/'profiles/brooke/dunstrc',ctx.config/'dunst/dunstrc')
-    wallpaper=ctx.data/'brooke-desktop/assets/wallpaper.jpeg'
-    # Current hyprpaper supports per-output wallpaper blocks; empty monitor matches all.
-    ctx.write(ctx.config/'hypr/hyprpaper.conf',f'splash = false\nipc = true\nwallpaper {{\n    monitor =\n    path = {wallpaper}\n    fit_mode = cover\n}}\n')
+    ctx.write(ctx.config/'hypr/hyprpaper.conf',wallpaper_config(ctx))
     for version in ['3.0','4.0']:
         ctx.write(ctx.config/f'gtk-{version}/settings.ini','[Settings]\ngtk-theme-name=Chicago95-PinkPanel\ngtk-icon-theme-name=Chicago95\ngtk-font-name=BlackChancery 16\ngtk-cursor-theme-name=BrookeCursor-48\ngtk-cursor-theme-size=48\n')
     ctx.write(ctx.config/'fontconfig/conf.d/99-brooke.conf','<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"><fontconfig><match target="font"><edit name="hinting" mode="assign"><bool>false</bool></edit></match></fontconfig>\n')
@@ -186,7 +189,7 @@ def hypr_apply(ctx):
         return
     # runtime.hypr_apply runs `theme NAME` after copying files. That invokes
     # wallpaper/reload IPC and cannot run before the first graphical login.
-    ctx.install(ctx.root/'modules/hyprland/config',ctx.config/'hypr',preserve=runtime.HYPR_FOREIGN_DIRECTORIES)
+    ctx.install(ctx.root/'modules/hyprland/config',ctx.config/'hypr',preserve=(*runtime.HYPR_FOREIGN_DIRECTORIES, 'hyprpaper.conf'))
     configure_hypr(ctx)
     prepare_theme(ctx)
 
