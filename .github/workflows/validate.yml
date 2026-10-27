@@ -39,6 +39,9 @@ jobs:
               pacman -Syu --noconfirm --needed qt6-declarative quickshell lua >/dev/null
               /usr/lib/qt6/bin/qmllint -I modules/shell \
                 modules/shell/shell.qml \
+                modules/shell/brooke.qml \
+                modules/shell/surfaces/brooke/*.qml \
+                modules/shell/widgets/brooke-panel/*.qml \
                 modules/shell/surfaces/homepage/*.qml \
                 modules/shell/surfaces/bar/BarMotionHost.qml \
                 modules/shell/surfaces/bar/BarSurface.qml \
